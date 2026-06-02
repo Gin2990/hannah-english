@@ -1,0 +1,122 @@
+<!-- Danh sách đề thi IELTS Full Test -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Scholarly Prep - Danh sách đề thi IELTS Full Test</title>
+    
+    <!-- Fonts & Icons -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#001e40",
+                        "primary-container": "#003366",
+                        "outline-variant": "#c3c6d1",
+                        background: "#f8f9fa",
+                        surface: "#ffffff"
+                    }
+                }
+            }
+        };
+    </script>
+    
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #f8f9fa;
+            color: #191c1d;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="text-sm">
+
+    <!-- TopNavBar -->
+    <header class="bg-surface border-b border-outline-variant sticky top-0 z-50">
+        <div class="flex justify-between items-center w-full px-6 max-w-7xl mx-auto h-16">
+            <div class="text-lg font-bold text-primary cursor-pointer" onclick="window.location.href='student_dashboard.html'">EduMetrics / Hannah English</div>
+            <nav class="hidden md:flex gap-6 items-center">
+                <a class="text-primary font-bold border-b-2 border-primary pb-1" href="student_dashboard.html">IELTS</a>
+                <a class="text-on-surface-variant hover:text-primary transition-colors font-medium" href="toeic_exams.html">TOEIC</a>
+                <a class="text-on-surface-variant hover:text-primary transition-colors font-medium" href="profile.html">Hồ sơ cá nhân</a>
+            </nav>
+            <div class="flex items-center gap-4">
+                <div class="relative hidden sm:block">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+                    <input class="pl-9 pr-4 py-1.5 bg-slate-50 border border-outline-variant rounded-lg focus:outline-none focus:border-primary text-xs w-60" placeholder="Tìm kiếm đề thi..." type="text"/>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-10">
+        <!-- Hero Section -->
+        <section class="mb-10">
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <div class="flex-1">
+                    <span class="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full text-xs font-bold mb-3 uppercase tracking-wider">IELTS Academic & General</span>
+                    <h1 class="font-bold text-3xl mb-4 text-primary tracking-tight">Thư viện IELTS Masterclass</h1>
+                    <p class="text-slate-500 text-sm max-w-2xl leading-relaxed">Tổng hợp các bộ đề thi IELTS thử nghiệm chất lượng cao bám sát cấu trúc đề thi chính thức của IDP và British Council. Chấm điểm trực tuyến và thống kê kết quả tức thì.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filter & Search Controls -->
+        <section class="bg-white p-4 rounded-xl border border-outline-variant mb-8 sticky top-20 z-40 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-2">
+                    <span class="font-medium text-slate-700 text-xs">Cấp độ:</span>
+                    <select class="border border-outline-variant rounded-lg px-2.5 py-1 text-xs focus:ring-1 focus:ring-primary">
+                        <option>Tất cả mức độ</option>
+                        <option>Dễ (5.0 - 6.0)</option>
+                        <option>Trung bình (6.5 - 7.0)</option>
+                        <option>Khó (7.5+)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="text-slate-400 text-xs font-medium" id="exams-count-label">
+                Đang nạp đề thi...
+            </div>
+        </section>
+
+        <!-- Exam Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="ielts-exams-grid">
+            <!-- Dynamically populated from ielts_exams.js -->
+            <div class="col-span-full text-center py-20 text-slate-450">
+                <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                Đang kết nối thư viện đề thi IELTS online...
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-50 border-t border-outline-variant py-10 mt-20">
+        <div class="flex flex-col md:flex-row justify-between items-center w-full px-6 max-w-7xl mx-auto gap-4">
+            <div class="flex flex-col gap-1">
+                <div class="font-bold text-primary">Hannah English & EduMetrics</div>
+                <p class="text-slate-400 text-xs">Nền tảng quản trị học thuật và luyện thi chất lượng cao.</p>
+            </div>
+            <div class="text-slate-400 text-xs">
+                © 2026 Hannah English Portal. Tất cả các quyền được bảo lưu.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Supabase SDK & Configuration & Session Control -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth_check.js"></script>
+    <script src="js/ielts_exams.js"></script>
+</body>
+</html>

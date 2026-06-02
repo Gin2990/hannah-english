@@ -1,0 +1,288 @@
+<!-- Trung tâm Tài nguyên (Resources Center) -->
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"outline-variant": "#c3c6d1", "on-background": "#191c1d", error: "#ba1a1a", primary: "#001e40", "surface-tint": "#3a5f94", "on-tertiary-fixed-variant": "#900723", "inverse-on-surface": "#f0f1f2", "primary-container": "#003366", "on-primary-container": "#799dd6", "tertiary-fixed-dim": "#ffb3b3", "surface-container-lowest": "#ffffff", "surface-container": "#edeeef", "surface-bright": "#f8f9fa", "inverse-primary": "#a7c8ff", "surface-variant": "#e1e3e4", "surface-container-high": "#e7e8e9", secondary: "#5d5e5f", "on-secondary": "#ffffff", "secondary-fixed-dim": "#c6c6c6", "on-secondary-fixed-variant": "#464747", "primary-fixed-dim": "#a7c8ff", "on-primary": "#ffffff", "inverse-surface": "#2e3132", "on-tertiary": "#ffffff", "surface-dim": "#d9dadb", "on-primary-fixed-variant": "#1f477b", tertiary: "#45000b", "on-secondary-fixed": "#1a1c1c", outline: "#737780", "on-surface": "#191c1d", "surface-container-highest": "#e1e3e4", "primary-fixed": "#d5e3ff", "on-tertiary-fixed": "#40000a", "on-primary-fixed": "#001b3c", "on-error": "#ffffff", "on-error-container": "#93000a", "on-secondary-container": "#626363", "tertiary-container": "#6d0017", background: "#f8f9fa", "secondary-container": "#e0dfdf", "secondary-fixed": "#e3e2e2", surface: "#f8f9fa", "tertiary-fixed": "#ffdad9", "surface-container-low": "#f3f4f5", "on-surface-variant": "#43474f", "error-container": "#ffdad6", "on-tertiary-container": "#ff6a73"}, borderRadius: {DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem"}, spacing: {"space-3xl": "64px", "margin-mobile": "16px", base: "4px", "space-md": "16px", gutter: "24px", "space-xs": "4px", "space-sm": "8px", "space-2xl": "48px", "container-max-width": "1280px", "space-lg": "24px", "space-xl": "32px"}, fontFamily: {"label-sm": ["Inter"], "headline-lg-mobile": ["Inter"], "label-md": ["Inter"], "headline-lg": ["Inter"], "headline-xl": ["Inter"], "body-lg": ["Inter"], "headline-xl-mobile": ["Inter"], "body-md": ["Inter"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"]}, fontSize: {"label-sm": ["12px", {lineHeight: "16px", fontWeight: "600"}], "headline-lg-mobile": ["24px", {lineHeight: "32px", fontWeight: "600"}], "label-md": ["14px", {lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "500"}], "headline-lg": ["32px", {lineHeight: "40px", fontWeight: "600"}], "headline-xl": ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}], "body-lg": ["18px", {lineHeight: "28px", fontWeight: "400"}], "headline-xl-mobile": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "700"}], "body-md": ["16px", {lineHeight: "24px", fontWeight: "400"}]}}}};</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-surface border-b border-outline-variant">
+<div class="flex justify-between items-center h-16 px-space-lg max-w-[1280px] mx-auto">
+<div class="font-headline-lg text-headline-lg font-bold text-primary">Scholarly Prep</div>
+<nav class="hidden md:flex items-center gap-space-lg">
+<a class="font-label-md text-label-md text-secondary hover:text-primary transition-colors" href="#">Khóa học</a>
+<a class="font-label-md text-label-md text-secondary hover:text-primary transition-colors" href="#">Luyện tập</a>
+<a class="font-label-md text-label-md text-secondary hover:text-primary transition-colors" href="#">Thi thử</a>
+<a class="font-label-md text-label-md text-secondary hover:text-primary transition-colors" href="#">Bảng điểm</a>
+</nav>
+<div class="flex items-center gap-space-md">
+<div class="hidden lg:flex items-center bg-surface-container rounded-lg px-space-sm py-1.5 border border-outline-variant">
+<span class="material-symbols-outlined text-secondary mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-label-md w-48" placeholder="Tìm tài liệu..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-secondary hover:bg-surface-container-highest p-2 rounded-full transition-all">notifications</button>
+<button class="material-symbols-outlined text-secondary hover:bg-surface-container-highest p-2 rounded-full transition-all">help</button>
+<button class="bg-primary text-on-primary px-space-lg py-2 rounded-lg font-label-md text-label-md hover:bg-primary-container transition-all active:opacity-80">Đăng nhập</button>
+</div>
+</div>
+</header>
+<main class="mt-16 flex-grow max-w-[1280px] mx-auto w-full px-space-lg py-space-xl">
+<!-- Header Section -->
+<section class="mb-space-3xl">
+<div class="max-w-3xl">
+<h1 class="font-headline-xl text-headline-xl text-primary mb-space-sm">Trung tâm Tài nguyên</h1>
+<p class="font-body-lg text-body-lg text-secondary">
+                    Kho lưu trữ học thuật chuyên sâu dành cho IELTS, TOEIC và Cambridge. Tìm kiếm tài liệu miễn phí, hướng dẫn lộ trình và các mẹo làm bài từ các chuyên gia hàng đầu.
+                </p>
+</div>
+</section>
+<!-- Categories Bento -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-space-3xl">
+<div class="md:col-span-2 relative group overflow-hidden rounded-xl h-64 bg-primary flex flex-col justify-end p-space-xl border border-outline-variant cursor-pointer transition-transform duration-300 hover:scale-[1.01]">
+<img class="absolute inset-0 w-full h-full object-cover opacity-40 transition-transform duration-500 group-hover:scale-110" data-alt="A professional academic library background with tall dark wooden bookshelves filled with classical leather-bound books. The lighting is moody and warm with soft golden highlights on the book spines. The atmosphere evokes a sense of deep study, focus, and scholarly excellence, consistent with a high-end corporate education brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDM4doPLWLZVbtrCZWlLYVMLVkzIcVINFlC2fHoGsOOSqDlM5w9Q9Xou7e_YP8r-1yAHgEQjA1XLLsJB743zPVP8oU9I3yBbsNB41KF5pZPHG4hjKaEtOglJU3P2Dt2KR7RhSxGddDtHsks9JzX6AenCJ8AvEbP211HyBHNaBgksEYOgc8HYcfCnyp2Yn95ot6d4UaHKvxtxwUozmvlGVa9o4bpFYNWf9w_VQTdmY3zuLm9IaQqXGfYQgnxe6ZKjUCf-RL56pgY4HR4"/>
+<div class="relative z-10">
+<span class="material-symbols-outlined text-on-primary text-4xl mb-2">menu_book</span>
+<h3 class="font-headline-lg text-headline-lg text-on-primary">Ebooks</h3>
+<p class="text-on-primary/80 font-label-md text-label-md">Comprehensive guides for all levels</p>
+</div>
+</div>
+<div class="relative group overflow-hidden rounded-xl h-64 bg-surface-container-high flex flex-col justify-end p-space-xl border border-outline-variant cursor-pointer transition-transform duration-300 hover:scale-[1.01]">
+<img class="absolute inset-0 w-full h-full object-cover opacity-20 transition-transform duration-500 group-hover:scale-110" data-alt="A top-down view of an organized minimalist study workspace. A graphite pencil, a sleek notebook with clean lined paper, and a pair of modern eyeglasses lie on a neutral grey desk. The lighting is bright and even, reflecting a professional and productive atmosphere for academic study guides." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQBwnAz6qdOdnPkZY-pxQqNi7zEIJL3pjBgQGQ8-ZfqTGmeBuPsMaB3JBLDgbr_03tEk0Yr7TDzzwTW5SYBVhp-HhbfZk_4S8V3zVXNnr_4czYFFgsCdN8CkmYE4VF13uq2SpMVE1rIvOoKaCvSNklBKda9qaajAwgp-tcf-ZKgVy7grv7P6BjUUiA507hIgC6cXoUvRZiFAU2I7fe7xzEHc0aFwNie87YUPssTJ5AtUYiIZIFpmIBLFYoUxu5APsA8TlSOGN4GjAC"/>
+<div class="relative z-10">
+<span class="material-symbols-outlined text-primary text-4xl mb-2">fact_check</span>
+<h3 class="font-headline-lg text-headline-lg text-primary">Guides</h3>
+<p class="text-secondary font-label-md text-label-md">Step-by-step study plans</p>
+</div>
+</div>
+<div class="relative group overflow-hidden rounded-xl h-64 bg-surface-container-high flex flex-col justify-end p-space-xl border border-outline-variant cursor-pointer transition-transform duration-300 hover:scale-[1.01]">
+<img class="absolute inset-0 w-full h-full object-cover opacity-20 transition-transform duration-500 group-hover:scale-110" data-alt="A blurred high-resolution image of a video editing suite in a modern office. Out of focus screens show waveform patterns and video timelines. The palette is dominated by professional blues and greys, representing high-quality video educational content for scholarly preparation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwp7mS6oFl5b6bF_d1Ry36gvsSpkyNMBmQE3EVxeDUn4MZRnP6MXOkbL1d1TR3eWMmDd9ixys5mI-hMNdvtluDYWfD8rJPWIrlDT5jT44DZcKF2-vHqwKpq6BH8k9adZz2cL8t60JaF1jlLu_SbVjnrRza5p7XTzPepMtDk5mDWW8W8ADllPHlC1Cq_8ziWCvmqwXdh0KH8uaivS1avvVi3lFImOAR1SUfWbsj0Ym_t48Y4kV3u5j70rRQN4aK5o58koKriyYara3h"/>
+<div class="relative z-10">
+<span class="material-symbols-outlined text-primary text-4xl mb-2">play_circle</span>
+<h3 class="font-headline-lg text-headline-lg text-primary">Videos</h3>
+<p class="text-secondary font-label-md text-label-md">Expert lecture series</p>
+</div>
+</div>
+</section>
+<!-- Search & Filter Bar -->
+<section class="flex flex-col md:flex-row justify-between items-center gap-space-lg mb-space-2xl bg-surface-container-lowest p-space-lg rounded-xl border border-outline-variant">
+<div class="flex items-center gap-space-md w-full md:w-auto overflow-x-auto no-scrollbar">
+<button class="px-space-lg py-2 rounded-full font-label-md text-label-md bg-primary text-on-primary">Tất cả</button>
+<button class="px-space-lg py-2 rounded-full font-label-md text-label-md bg-surface-container hover:bg-surface-container-highest text-on-surface-variant transition-colors">IELTS</button>
+<button class="px-space-lg py-2 rounded-full font-label-md text-label-md bg-surface-container hover:bg-surface-container-highest text-on-surface-variant transition-colors">TOEIC</button>
+<button class="px-space-lg py-2 rounded-full font-label-md text-label-md bg-surface-container hover:bg-surface-container-highest text-on-surface-variant transition-colors">Cambridge</button>
+</div>
+<div class="relative w-full md:w-96">
+<span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-secondary">tune</span>
+<select class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-12 py-2.5 font-label-md text-label-md appearance-none focus:ring-primary focus:border-primary">
+<option>Sắp xếp: Mới nhất</option>
+<option>Sắp xếp: Phổ biến nhất</option>
+<option>Sắp xếp: Tên A-Z</option>
+</select>
+<span class="material-symbols-outlined absolute right-space-md top-1/2 -translate-y-1/2 text-secondary pointer-events-none">expand_more</span>
+</div>
+</section>
+<!-- Featured Section -->
+<section class="mb-space-3xl">
+<div class="flex items-center justify-between mb-space-lg">
+<h2 class="font-headline-lg text-headline-lg text-on-background flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">star</span>
+                    Tài liệu Nổi bật
+                </h2>
+<a class="text-primary font-label-md text-label-md hover:underline" href="#">Xem tất cả</a>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+<div class="flex flex-col md:flex-row bg-white border border-outline-variant rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+<div class="w-full md:w-1/3 h-48 md:h-auto">
+<img class="w-full h-full object-cover" data-alt="A high-contrast macro photograph of a scholarly open book on a clean white surface. The pages are crisp and the typography is sharp. Natural morning light streams in from a window, creating soft shadows and a professional, academic atmosphere for an IELTS preparation guide." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALSQd50xgc1KOqtwwM4xE3--IaTrOupHxB31p3GTgCMDGud6vRbgy361d_9czeZyOT_GA-7N369Ae9AV5NljqtuiUZkOM_EzVxSypM_URhaOmglzuAn8YRHLJl75heGMaCxRbCbtKe2PuM0yeXRvw40Mb6h-p9RT3H7ACl6AnmP3vaylndZ76lyIOb_sCgQq42AMeHI5TmTWeP1voW26W6UsrA8oXPdJleOmaVoo0jx8Bq-GffsKoUWYfUju7ydLIrVpi2SlH1gpFo"/>
+</div>
+<div class="p-space-lg flex flex-col justify-between flex-1">
+<div>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm px-2 py-0.5 rounded mb-2 inline-block">HOT NEW</span>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-2">Mastering IELTS Speaking 2024</h3>
+<p class="text-secondary font-body-md text-body-md line-clamp-2">Complete guide with recent exam topics, model answers, and expert pronunciation tips.</p>
+</div>
+<div class="mt-space-lg flex items-center justify-between">
+<span class="text-outline font-label-sm text-label-sm">PDF • 12.4 MB</span>
+<div class="flex gap-2">
+<button class="p-2 border border-outline-variant rounded-lg text-primary hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+<button class="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-primary-container">
+<span class="material-symbols-outlined text-[20px]">download</span> Tải xuống
+                                </button>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col md:flex-row bg-white border border-outline-variant rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+<div class="w-full md:w-1/3 h-48 md:h-auto">
+<img class="w-full h-full object-cover" data-alt="A diverse group of university students collaborating in a modern glass-walled library. They are focused on digital tablets and laptops. The lighting is bright and architectural, featuring corporate Navy blue accents in the furniture. This represents a modern, collaborative Cambridge exam preparation environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfh0fWwAf7R6zVTE3htfjyhuhSXsIJ7-Ky7CPTH2pFK5RkZowdVhCCuRZgv1cx-veM9PP3IeyloZQxdqpoujZXsBW5w0KiMtIvQyy0r3g376-s6WPumH2BOG0l8K75cpn3Pvc5iB_78XprnCB5TD3Zg811rffaM2XrbszlWy487z5-lX5699HvmiTN7YwWRiCBV2Ms_qnOVBCCqZC5h-fZGI41DJi4_oMV4rSztfQbD9A6outiwqvxv-WrP2PMgDKOqmPLavYOJNBd"/>
+</div>
+<div class="p-space-lg flex flex-col justify-between flex-1">
+<div>
+<span class="bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm px-2 py-0.5 rounded mb-2 inline-block">CAMBRIDGE</span>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-2">C1 Advanced Grammar Vault</h3>
+<p class="text-secondary font-body-md text-body-md line-clamp-2">Deep dive into complex structures required for a Grade A in Cambridge C1 Advanced.</p>
+</div>
+<div class="mt-space-lg flex items-center justify-between">
+<span class="text-outline font-label-sm text-label-sm">ZIP • 45.1 MB</span>
+<div class="flex gap-2">
+<button class="p-2 border border-outline-variant rounded-lg text-primary hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+<button class="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-primary-container">
+<span class="material-symbols-outlined text-[20px]">download</span> Tải xuống
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Resource Grid -->
+<section>
+<h2 class="font-headline-lg text-headline-lg text-on-background mb-space-lg">Tất cả tài liệu</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Card 1 -->
+<div class="bg-white border border-outline-variant rounded-lg p-space-md flex flex-col hover:border-primary transition-colors cursor-pointer group">
+<div class="aspect-[3/4] bg-surface-container rounded mb-space-md overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A minimalist white book cover layout on a light grey textured background. The cover features clean sans-serif typography. The image is bright and airy, communicating simplicity and clarity for a TOEIC vocabulary list resource." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcIBsJBZUVtpLWIsBvctZ7iNLOT7KkxILm8BLV1_oKJSQUaEfekvwc7kfKd85b26R6fj4s5-fWEBQeW8sADLq2Hafqrr0vMpZ_AzLJzT7dpVTc3mkw9PWsoZrpI26sk6hJhhRNs1iyuBAp4RtQ_VRPqnWl-S0OTEDNjOzw7Y7xrPt6A2fL-mz7FKLOyNCWTWDQoJ6prNPhJDB8XTeLEKAfThXTv6s0cjBIivOWZGJUXSoPK-OygcYv9sZLPseI4rgklV3jHoD375w1"/>
+<div class="absolute top-2 right-2 bg-white/90 backdrop-blur rounded px-2 py-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+<span class="font-label-sm text-label-sm">Video</span>
+</div>
+</div>
+<h4 class="font-label-md text-label-md text-primary font-bold mb-1">TOEIC 900+ Essential Vocabulary</h4>
+<p class="text-secondary font-label-sm text-label-sm mb-4 line-clamp-2">The ultimate list of 1000+ words frequently found in the new TOEIC format.</p>
+<div class="mt-auto pt-4 border-t border-outline-variant flex items-center justify-between">
+<span class="text-outline font-label-sm text-label-sm">15 mins</span>
+<button class="text-primary font-label-md text-label-md font-semibold hover:text-primary-container flex items-center gap-1">
+                            Xem ngay <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-white border border-outline-variant rounded-lg p-space-md flex flex-col hover:border-primary transition-colors cursor-pointer group">
+<div class="aspect-[3/4] bg-surface-container rounded mb-space-md overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A focused close-up of a high-quality pen resting on a handwritten exam paper. The handwriting is neat and scholarly. The background is a clean, organized desk in a modern corporate office setting. The lighting is professional and soft, symbolizing exam tips and strategy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1rQmOimOGPlqIAS5dMvgJMtpgP4C8dEvIOO4u9B38eltuyVTJP2hMjuNMHjDShBsHMX1Q9j-aGkgyxbFdj7pVERCbzhd8gKdsMYm0EREwHkXArVt_-YnpgktKKgLQkvaugPW5oQDK9i5-LUoLtwwrY802cFlptUun2bAHb_NKQnCHMjPplqAI7lVmnc5aSOi5M8G-G9B3Cj1hJWy-M-NWMsiXbUhD13bddF2sIYvhrff4hUkDpDkRPT-vaA1Hk52DUhOVUmfmtuAv"/>
+<div class="absolute top-2 right-2 bg-white/90 backdrop-blur rounded px-2 py-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">description</span>
+<span class="font-label-sm text-label-sm">PDF</span>
+</div>
+</div>
+<h4 class="font-label-md text-label-md text-primary font-bold mb-1">IELTS Writing Task 2 Templates</h4>
+<p class="text-secondary font-label-sm text-label-sm mb-4 line-clamp-2">Proven structures for Agree/Disagree, Discussion, and Problem/Solution essays.</p>
+<div class="mt-auto pt-4 border-t border-outline-variant flex items-center justify-between">
+<span class="text-outline font-label-sm text-label-sm">2.1 MB</span>
+<button class="text-primary font-label-md text-label-md font-semibold hover:text-primary-container flex items-center gap-1">
+                            Tải xuống <span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-white border border-outline-variant rounded-lg p-space-md flex flex-col hover:border-primary transition-colors cursor-pointer group">
+<div class="aspect-[3/4] bg-surface-container rounded mb-space-md overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A digital workspace showing a clean data dashboard with progress bars and educational metrics. The UI on the screen is minimalist with a Navy blue and white theme. The surrounding environment is a professional, high-end office with soft ambient lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKLGYrBDfP9fjivXYZazSTHTYx7zdM-eD7DUjrDp3929MoEjXPUddmv9rBljYeCuC6yKRhGE-6qGoogg2lDjGF1j2QA0Qurz1cBIW104tvdgWxIvxJJnrHEOp8DHeJvQowZGfmfD1Knp1KXfg3q8aSAJ7X0qhGNNZc1BzNKNpSN4WBohATsmf5GLCSxEgVduFblq7eCNMHVZqnq1nERAI27lTtHJcPlSgbIW0d7VafqoR-U8dz7XSxGKjxY2KwwXh_vdSDw4rSfous"/>
+<div class="absolute top-2 right-2 bg-white/90 backdrop-blur rounded px-2 py-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+<span class="font-label-sm text-label-sm">Video</span>
+</div>
+</div>
+<h4 class="font-label-md text-label-md text-primary font-bold mb-1">Time Management for Reading</h4>
+<p class="text-secondary font-label-sm text-label-sm mb-4 line-clamp-2">Strategies to finish the IELTS Reading module with 10 minutes to spare.</p>
+<div class="mt-auto pt-4 border-t border-outline-variant flex items-center justify-between">
+<span class="text-outline font-label-sm text-label-sm">12 mins</span>
+<button class="text-primary font-label-md text-label-md font-semibold hover:text-primary-container flex items-center gap-1">
+                            Xem ngay <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-white border border-outline-variant rounded-lg p-space-md flex flex-col hover:border-primary transition-colors cursor-pointer group">
+<div class="aspect-[3/4] bg-surface-container rounded mb-space-md overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A close-up of a professional desk with a high-end laptop and a leather-bound planner. The laptop screen shows an English grammar exercise. The lighting is clean and professional, focusing on the quality of study materials in a corporate academic setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiK_VZy-j3uQJI4l4lM-XfBHBUj2-VXhX5E_1iENZnc4mXqs8PKSn-SZabpeJyJd9RbMSWof1OvK-iQnkT6weytpw_IGs0172Lwlbu0u8sQSf_IyhsPp_-oVuVC7be9smTTcbizkZ-8R9Ac0o6-SVBGvOAzAHbrjfh3wcp6M2-PkuSOZj18EDpQTlbH4YBp5XTua0lku-N40gEZKi4rdQeaFzv8_Q4z5j4RgMMxJsuToCsq6hFclUVXOE7k_cHgmoclu85u2Erj_KD"/>
+<div class="absolute top-2 right-2 bg-white/90 backdrop-blur rounded px-2 py-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">description</span>
+<span class="font-label-sm text-label-sm">PDF</span>
+</div>
+</div>
+<h4 class="font-label-md text-label-md text-primary font-bold mb-1">Grammar for TOEIC Listening</h4>
+<p class="text-secondary font-label-sm text-label-sm mb-4 line-clamp-2">Mastering the tenses and structures most common in TOEIC Parts 1-4.</p>
+<div class="mt-auto pt-4 border-t border-outline-variant flex items-center justify-between">
+<span class="text-outline font-label-sm text-label-sm">1.8 MB</span>
+<button class="text-primary font-label-md text-label-md font-semibold hover:text-primary-container flex items-center gap-1">
+                            Tải xuống <span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+</div>
+<div class="mt-space-2xl flex justify-center">
+<button class="px-space-2xl py-3 border border-primary text-primary font-label-md text-label-md rounded-lg hover:bg-surface-container transition-all">
+                    Xem thêm tài liệu
+                </button>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full mt-auto bg-surface-container-lowest border-t border-outline-variant">
+<div class="py-space-xl px-space-lg flex flex-col md:flex-row justify-between items-center max-w-[1280px] mx-auto">
+<div class="mb-space-lg md:mb-0 text-center md:text-left">
+<div class="font-headline-md text-headline-md font-bold text-primary mb-1">Scholarly Prep</div>
+<p class="font-label-sm text-label-sm text-secondary">© 2024 Scholarly Prep. Nền tảng luyện thi tiếng Anh học thuật chuyên nghiệp.</p>
+</div>
+<div class="flex gap-space-lg">
+<a class="font-label-sm text-label-sm text-secondary hover:text-primary hover:underline transition-all duration-200" href="#">Điều khoản</a>
+<a class="font-label-sm text-label-sm text-secondary hover:text-primary hover:underline transition-all duration-200" href="#">Bảo mật</a>
+<a class="font-label-sm text-label-sm text-secondary hover:text-primary hover:underline transition-all duration-200" href="#">Liên hệ</a>
+<a class="font-label-sm text-label-sm text-secondary hover:text-primary hover:underline transition-all duration-200" href="#">Hướng dẫn</a>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction for category cards
+        document.querySelectorAll('.group').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-4px)';
+                card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Simple filter toggle effect
+        const filterButtons = document.querySelectorAll('.flex.items-center.gap-space-md button');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => {
+                    b.classList.remove('bg-primary', 'text-on-primary');
+                    b.classList.add('bg-surface-container', 'text-on-surface-variant');
+                });
+                btn.classList.add('bg-primary', 'text-on-primary');
+                btn.classList.remove('bg-surface-container', 'text-on-surface-variant');
+            });
+        });
+    </script>
+
+<!-- Supabase SDK & Configuration & Session Control -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth_check.js"></script>
+</body>
+</html>
+

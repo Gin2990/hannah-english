@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hannah English & EduMetrics Portal</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+    <!-- Tailwind CSS with custom styling plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary-fixed-dim": "#c6c6c6",
+              "secondary-container": "#e0dfdf",
+              "surface-container-lowest": "#ffffff",
+              "primary": "#001e40",
+              "on-primary-container": "#799dd6",
+              "primary-fixed-dim": "#a7c8ff",
+              "on-surface-variant": "#43474f",
+              "on-secondary": "#ffffff",
+              "on-background": "#191c1d",
+              "secondary-fixed": "#e3e2e2",
+              "surface-container-low": "#f3f4f5",
+              "secondary": "#5d5e5f",
+              "on-secondary-container": "#626363",
+              "on-secondary-fixed-variant": "#464747",
+              "surface-dim": "#d9dadb",
+              "background": "#f8f9fa",
+              "tertiary-fixed-dim": "#ffb3b3",
+              "outline": "#737780",
+              "on-error": "#ffffff",
+              "error": "#ba1a1a",
+              "surface-variant": "#e1e3e4",
+              "surface-container-highest": "#e1e3e4",
+              "surface": "#f8f9fa",
+              "on-tertiary-fixed-variant": "#900723",
+              "inverse-on-surface": "#f0f1f2",
+              "primary-fixed": "#d5e3ff",
+              "tertiary": "#45000b",
+              "tertiary-container": "#6d0017",
+              "on-secondary-fixed": "#1a1c1c",
+              "on-primary-fixed": "#001b3c",
+              "inverse-surface": "#2e3132",
+              "primary-container": "#003366",
+              "on-surface": "#191c1d",
+              "on-error-container": "#93000a",
+              "surface-tint": "#3a5f94",
+              "on-tertiary": "#ffffff",
+              "on-tertiary-fixed": "#40000a",
+              "on-primary": "#ffffff",
+              "on-tertiary-container": "#ff6a73",
+              "on-primary-fixed-variant": "#1f477b",
+              "surface-container-high": "#e7e8e9",
+              "error-container": "#ffdad6",
+              "surface-bright": "#f8f9fa",
+              "outline-variant": "#c3c6d1",
+              "tertiary-fixed": "#ffdad9",
+              "inverse-primary": "#a7c8ff",
+              "surface-container": "#edeeef",
+              brand: {
+                50: '#f5f7fa',
+                100: '#e4ebf3',
+                200: '#c2d4e7',
+                300: '#90b2d6',
+                400: '#588bc0',
+                500: '#356ea6',
+                600: '#27578a',
+                700: '#214670',
+                800: '#1e3c5d',
+                900: '#1d344f',
+                950: '#0b1623',
+              }
+            },
+            fontFamily: {
+              sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+              display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+            }
+          }
+        }
+      };
+    </script>
+    
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        display: inline-block;
+        line-height: 1;
+        vertical-align: middle;
+      }
+      body {
+        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+        background-color: #f8f9fa;
+      }
+    </style>
+  </head>
+  <body class="bg-background text-slate-800 min-h-screen">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

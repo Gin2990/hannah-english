@@ -1,0 +1,269 @@
+<!-- Trung tâm Từ vựng (Vocabulary Hub) -->
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Trung tâm Từ vựng | Scholarly Prep</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"outline-variant": "#c3c6d1", "on-background": "#191c1d", error: "#ba1a1a", primary: "#001e40", "surface-tint": "#3a5f94", "on-tertiary-fixed-variant": "#900723", "inverse-on-surface": "#f0f1f2", "primary-container": "#003366", "on-primary-container": "#799dd6", "tertiary-fixed-dim": "#ffb3b3", "surface-container-lowest": "#ffffff", "surface-container": "#edeeef", "surface-bright": "#f8f9fa", "inverse-primary": "#a7c8ff", "surface-variant": "#e1e3e4", "surface-container-high": "#e7e8e9", secondary: "#5d5e5f", "on-secondary": "#ffffff", "secondary-fixed-dim": "#c6c6c6", "on-secondary-fixed-variant": "#464747", "primary-fixed-dim": "#a7c8ff", "on-primary": "#ffffff", "inverse-surface": "#2e3132", "on-tertiary": "#ffffff", "surface-dim": "#d9dadb", "on-primary-fixed-variant": "#1f477b", tertiary: "#45000b", "on-secondary-fixed": "#1a1c1c", outline: "#737780", "on-surface": "#191c1d", "surface-container-highest": "#e1e3e4", "primary-fixed": "#d5e3ff", "on-tertiary-fixed": "#40000a", "on-primary-fixed": "#001b3c", "on-error": "#ffffff", "on-error-container": "#93000a", "on-secondary-container": "#626363", "tertiary-container": "#6d0017", background: "#f8f9fa", "secondary-container": "#e0dfdf", "secondary-fixed": "#e3e2e2", surface: "#f8f9fa", "tertiary-fixed": "#ffdad9", "surface-container-low": "#f3f4f5", "on-surface-variant": "#43474f", "error-container": "#ffdad6", "on-tertiary-container": "#ff6a73"}, borderRadius: {DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem"}, spacing: {"space-3xl": "64px", "margin-mobile": "16px", base: "4px", "space-md": "16px", gutter: "24px", "space-xs": "4px", "space-sm": "8px", "space-2xl": "48px", "container-max-width": "1280px", "space-lg": "24px", "space-xl": "32px"}, fontFamily: {"label-sm": ["Inter"], "headline-lg-mobile": ["Inter"], "label-md": ["Inter"], "headline-lg": ["Inter"], "headline-xl": ["Inter"], "body-lg": ["Inter"], "headline-xl-mobile": ["Inter"], "body-md": ["Inter"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"]}, fontSize: {"label-sm": ["12px", {lineHeight: "16px", fontWeight: "600"}], "headline-lg-mobile": ["24px", {lineHeight: "32px", fontWeight: "600"}], "label-md": ["14px", {lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "500"}], "headline-lg": ["32px", {lineHeight: "40px", fontWeight: "600"}], "headline-xl": ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}], "body-lg": ["18px", {lineHeight: "28px", fontWeight: "400"}], "headline-xl-mobile": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "700"}], "body-md": ["16px", {lineHeight: "24px", fontWeight: "400"}]}}}};</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .flashcard-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flashcard-flip:hover .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        .flashcard-back {
+            backface-visibility: hidden;
+            transform: rotateY(180deg);
+        }
+        .flashcard-front {
+            backface-visibility: hidden;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md text-body-md">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full bg-surface z-50 border-b border-outline-variant">
+<div class="flex justify-between items-center h-16 px-space-lg max-w-[1280px] mx-auto">
+<div class="font-headline-lg text-headline-lg font-bold text-primary">Scholarly Prep</div>
+<nav class="hidden md:flex items-center gap-space-lg h-full">
+<a class="font-label-md text-label-md text-secondary hover:text-primary transition-colors" href="#">Khóa học</a>
+<a class="font-label-md text-label-md text-primary border-b-2 border-primary pb-1" href="#">Luyện tập</a>
+<a class="font-label-md text-label-md text-secondary hover:text-primary transition-colors" href="#">Thi thử</a>
+<a class="font-label-md text-label-md text-secondary hover:text-primary transition-colors" href="#">Bảng điểm</a>
+</nav>
+<div class="flex items-center gap-space-md">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container border border-outline-variant rounded-lg focus:outline-none focus:border-primary text-label-md font-label-md w-64" placeholder="Tìm kiếm từ vựng..." type="text"/>
+</div>
+<span class="material-symbols-outlined text-secondary cursor-pointer hover:bg-surface-container p-2 rounded-full transition-all">notifications</span>
+<span class="material-symbols-outlined text-secondary cursor-pointer hover:bg-surface-container p-2 rounded-full transition-all">help</span>
+<button class="bg-primary text-on-primary px-space-md py-2 rounded-lg font-label-md text-label-md hover:bg-primary-container transition-all">Đăng nhập</button>
+</div>
+</div>
+</header>
+<main class="flex-grow pt-24 pb-space-3xl max-w-[1280px] mx-auto w-full px-space-lg">
+<!-- Hero Header -->
+<section class="mb-space-2xl">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-lg">
+<div class="max-w-2xl">
+<h1 class="font-headline-xl text-headline-xl text-primary mb-space-xs">Trung tâm Từ vựng</h1>
+<p class="text-body-lg font-body-lg text-secondary">Nâng tầm vốn từ vựng học thuật của bạn với hệ thống Flashcard thông minh và lộ trình cá nhân hóa dựa trên AI.</p>
+</div>
+<div class="flex gap-space-sm">
+<div class="bg-surface-container-high p-space-md rounded-xl border border-outline-variant text-center min-w-[120px]">
+<div class="text-primary font-bold text-headline-lg">1,240</div>
+<div class="text-label-sm font-label-sm text-secondary uppercase tracking-wider">Từ đã học</div>
+</div>
+<div class="bg-surface-container-high p-space-md rounded-xl border border-outline-variant text-center min-w-[120px]">
+<div class="text-primary font-bold text-headline-lg">15</div>
+<div class="text-label-sm font-label-sm text-secondary uppercase tracking-wider">Ngày Streak</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Content Layout: Bento Grid Style -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Left Column: Word of the Day & Progress -->
+<div class="lg:col-span-1 flex flex-col gap-gutter">
+<!-- Word of the Day -->
+<div class="bg-primary-container p-space-xl rounded-xl text-on-primary-container relative overflow-hidden group">
+<div class="absolute -right-8 -top-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
+<span class="material-symbols-outlined text-[120px]">menu_book</span>
+</div>
+<div class="flex justify-between items-start mb-space-md">
+<span class="bg-on-primary-container text-primary-container px-3 py-1 rounded-full text-label-sm font-label-sm">Word of the Day</span>
+<span class="material-symbols-outlined cursor-pointer hover:scale-110 transition-transform">volume_up</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-white mb-2">Pernicious</h2>
+<p class="font-label-md text-label-md italic text-on-primary-container/80 mb-space-md">/pərˈnɪʃ.əs/ • Adjective</p>
+<p class="font-body-md text-body-md text-white mb-space-lg">Having a harmful effect, especially in a gradual or subtle way.</p>
+<div class="border-t border-on-primary-container/20 pt-space-md">
+<p class="font-label-sm text-label-sm text-on-primary-container/60 mb-1 uppercase tracking-widest">Example</p>
+<p class="font-body-md text-body-md text-white">"The pernicious effects of jealousy can ruin any relationship over time."</p>
+</div>
+</div>
+<!-- Learning Progress -->
+<div class="bg-white p-space-lg rounded-xl border border-outline-variant">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-space-md">Tiến trình học tập</h3>
+<div class="space-y-space-lg">
+<div>
+<div class="flex justify-between text-label-md font-label-md mb-2">
+<span class="text-on-surface">Academic (C1)</span>
+<span class="text-primary font-bold">75%</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 75%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-label-md font-label-md mb-2">
+<span class="text-on-surface">Business English</span>
+<span class="text-primary font-bold">42%</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 42%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-label-md font-label-md mb-2">
+<span class="text-on-surface">General English</span>
+<span class="text-primary font-bold">90%</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 90%"></div>
+</div>
+</div>
+</div>
+<button class="w-full mt-space-xl border border-primary text-primary py-3 rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-all">Xem chi tiết bảng điểm</button>
+</div>
+</div>
+<!-- Right Column: Flashcard Collections -->
+<div class="lg:col-span-2">
+<div class="flex items-center justify-between mb-space-lg">
+<h3 class="font-headline-lg text-headline-lg text-primary">Bộ thẻ Flashcard</h3>
+<div class="flex gap-space-sm">
+<button class="px-4 py-2 bg-primary text-on-primary rounded-lg text-label-md font-label-md">Tất cả</button>
+<button class="px-4 py-2 text-secondary hover:bg-surface-container rounded-lg text-label-md font-label-md transition-all">Yêu thích</button>
+<button class="px-4 py-2 text-secondary hover:bg-surface-container rounded-lg text-label-md font-label-md transition-all">Đã hoàn thành</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
+<!-- Flashcard Card 1 -->
+<div class="bg-white border border-outline-variant rounded-xl overflow-hidden group hover:border-primary transition-all flex flex-col h-full cursor-pointer">
+<div class="h-40 bg-surface-container relative overflow-hidden">
+<img class="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500" data-alt="A focused student studying in a modern, brightly lit university library with clean lines and a minimalist aesthetic. The image captures a high-key lighting environment with soft shadows and a professional, academic atmosphere. In the background, rows of books are blurred to emphasize the focus on learning and scholarly excellence, using a palette of whites, light greys, and deep navy blue accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAOQETtjhQgBuLGheZdODEPUTNOEGVxWPu0D8kOfAdiWSupVjivy1cK6aSfcvdIxZNJlCPmPu7VF4jzXG-sGu2jHrekbtrIlvuQH4banwS7cERwJZC_tn4xWkTgkVE3POSdlaxJVGzK2OoFsVew7QyKh9bPbZ8RW9nOqxAyrSPtc2I74FyNOKp3M1ZVND4eOjl03tUvdTJzHvecWUgcMmytDjl4Pwq8Xxy45f0dSpz5yySHlDwT8axOki4SoHZU12QRscNvjvUkm5H"/>
+<div class="absolute top-3 left-3 flex gap-1">
+<span class="bg-primary/90 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">C1 ADVANCED</span>
+</div>
+</div>
+<div class="p-space-lg flex flex-col flex-grow">
+<h4 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-1">Academic Masterclass</h4>
+<p class="text-label-md font-label-md text-secondary mb-space-lg flex-grow">500 từ vựng học thuật quan trọng nhất dành cho kỳ thi IELTS/TOEFL.</p>
+<div class="flex items-center justify-between pt-space-md border-t border-outline-variant">
+<div class="flex items-center gap-1 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">style</span> 500 Cards
+                                </div>
+<div class="text-primary font-bold text-label-sm flex items-center gap-1">
+                                    Học ngay <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Flashcard Card 2 -->
+<div class="bg-white border border-outline-variant rounded-xl overflow-hidden group hover:border-primary transition-all flex flex-col h-full cursor-pointer">
+<div class="h-40 bg-surface-container relative overflow-hidden">
+<img class="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500" data-alt="A sleek, modern corporate office skyscraper with floor-to-ceiling glass windows reflecting a clear blue sky. The visual style is crisp and professional, emphasizing a corporate environment with a high-end, contemporary feel. The lighting is bright and natural, creating a sense of transparency and success. The color palette focuses on cold glass blues, structural greys, and deep professional navy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfwktoatbQdXpK2pl5nTo_5NMyl8ZauafBxRk52kCa_P_e_OV4NgBE4VeffbnKmK3GIFAWGyb-SzDD37cWfGeNvaNQuVcWd0Q_zwkLQfEtArCPUIoKl6WeBS9MSOVBrxRNtTQlNIDsnsPc99JF-mLZr9JR0sqaCvzP4bqGgV74reoCPjTwpHdlINrcDV3l_kZ4EgTQWjrxJ4Yg_mu4fmj64em5OSQWZuJtsoUjR1uMpeFJAIp6m_q0qlsHkYD8khGnhyaLYUj_cLg7"/>
+<div class="absolute top-3 left-3 flex gap-1">
+<span class="bg-secondary/90 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">B2 INTERMEDIATE</span>
+</div>
+</div>
+<div class="p-space-lg flex flex-col flex-grow">
+<h4 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-1">Business Professional</h4>
+<p class="text-label-md font-label-md text-secondary mb-space-lg flex-grow">Từ vựng chuyên ngành tài chính, quản trị và giao tiếp công sở hiện đại.</p>
+<div class="flex items-center justify-between pt-space-md border-t border-outline-variant">
+<div class="flex items-center gap-1 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">style</span> 320 Cards
+                                </div>
+<div class="text-primary font-bold text-label-sm flex items-center gap-1">
+                                    Học ngay <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Flashcard Card 3 -->
+<div class="bg-white border border-outline-variant rounded-xl overflow-hidden group hover:border-primary transition-all flex flex-col h-full cursor-pointer">
+<div class="h-40 bg-surface-container relative overflow-hidden">
+<img class="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500" data-alt="A diverse group of university students collaborating around a wooden table in a well-lit, modern campus common area. The scene is full of energy and academic engagement, featuring laptops, notebooks, and coffee cups. The lighting is soft and ambient, creating a warm yet professional atmosphere. The visual aesthetic is modern and inclusive, with a focus on collaborative learning and communal knowledge sharing." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7u3zSJ0t3xV9_aSyIvE28hmOAX6QQzyVoOw_mcuRVvQ9QaEhJMWhQpMsPXIV2QKkmVpYxgzEUVE-2Px31F1ibEYZ83MgJQLIb3hvrreP6guzKnugh8CUyT6c1Qdoc7f903BMc8Zs5ZakOeZimuzW5WuekkLupkrqK4lTgzPOmSmfN8gTfKH0gIHQnsTWooe9jHpweWHYwFp7U_fbPZW9D32fBFOSm8UUIopFWeN-H3pTOhmI8_L1mck5BtkIdmRp1r4_atloaYsqH"/>
+<div class="absolute top-3 left-3 flex gap-1">
+<span class="bg-on-tertiary-fixed-variant text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">A2-B1 GENERAL</span>
+</div>
+</div>
+<div class="p-space-lg flex flex-col flex-grow">
+<h4 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-1">Daily Conversations</h4>
+<p class="text-label-md font-label-md text-secondary mb-space-lg flex-grow">Nền tảng từ vựng thông dụng cho đời sống và du lịch quốc tế.</p>
+<div class="flex items-center justify-between pt-space-md border-t border-outline-variant">
+<div class="flex items-center gap-1 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">style</span> 850 Cards
+                                </div>
+<div class="text-primary font-bold text-label-sm flex items-center gap-1">
+                                    Học ngay <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Add New Custom Set -->
+<div class="bg-surface-container-low border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center p-space-xl group hover:border-primary hover:bg-surface-container transition-all cursor-pointer text-center">
+<div class="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-space-md group-hover:scale-110 transition-transform shadow-sm">
+<span class="material-symbols-outlined text-primary text-[32px]">add</span>
+</div>
+<h4 class="font-label-md text-label-md font-bold text-primary">Tạo bộ thẻ riêng</h4>
+<p class="text-label-sm font-label-sm text-secondary mt-1">Lưu trữ từ vựng cá nhân từ bài đọc</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full mt-auto bg-surface-container-lowest border-t border-outline-variant">
+<div class="py-space-xl px-space-lg flex flex-col md:flex-row justify-between items-center max-w-[1280px] mx-auto gap-space-lg">
+<div class="flex flex-col items-center md:items-start gap-space-sm">
+<div class="font-headline-md text-headline-md font-bold text-primary">Scholarly Prep</div>
+<p class="font-label-sm text-label-sm text-secondary max-w-xs text-center md:text-left">© 2024 Scholarly Prep. Nền tảng luyện thi tiếng Anh học thuật chuyên nghiệp.</p>
+</div>
+<div class="flex gap-space-xl">
+<div class="flex flex-col gap-2">
+<h5 class="font-label-md text-label-md text-primary font-bold">Sản phẩm</h5>
+<a class="font-label-sm text-label-sm text-secondary hover:underline" href="#">Khóa học IELTS</a>
+<a class="font-label-sm text-label-sm text-secondary hover:underline" href="#">Luyện TOEIC</a>
+</div>
+<div class="flex flex-col gap-2">
+<h5 class="font-label-md text-label-md text-primary font-bold">Hỗ trợ</h5>
+<a class="font-label-sm text-label-sm text-secondary hover:underline" href="#">Liên hệ</a>
+<a class="font-label-sm text-label-sm text-secondary hover:underline" href="#">Hướng dẫn</a>
+</div>
+<div class="flex flex-col gap-2">
+<h5 class="font-label-md text-label-md text-primary font-bold">Pháp lý</h5>
+<a class="font-label-sm text-label-sm text-secondary hover:underline" href="#">Điều khoản</a>
+<a class="font-label-sm text-label-sm text-secondary hover:underline" href="#">Bảo mật</a>
+</div>
+</div>
+</div>
+</footer>
+<!-- Simple JavaScript for Interactive Search & Micro-interactions -->
+<script>
+        document.querySelectorAll('.cursor-pointer').forEach(el => {
+            el.addEventListener('mousedown', () => el.style.opacity = '0.8');
+            el.addEventListener('mouseup', () => el.style.opacity = '1');
+            el.addEventListener('mouseleave', () => el.style.opacity = '1');
+        });
+
+        const searchInput = document.querySelector('input[type="text"]');
+        if(searchInput) {
+            searchInput.addEventListener('focus', function() {
+                this.parentElement.classList.add('scale-105');
+                this.parentElement.classList.add('transition-all');
+            });
+            searchInput.addEventListener('blur', function() {
+                this.parentElement.classList.remove('scale-105');
+            });
+        }
+    </script>
+
+<!-- Supabase SDK & Configuration & Session Control -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth_check.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,231 @@
+<!-- Giao diện Học viên - Khóa học của tôi -->
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EduMetrics | Student Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"surface-bright": "#f8f9fa", "on-tertiary-container": "#ff6a73", "on-primary-fixed-variant": "#1f477b", "outline-variant": "#c3c6d1", "primary-container": "#003366", surface: "#f8f9fa", "on-tertiary-fixed-variant": "#900723", "tertiary-fixed-dim": "#ffb3b3", "tertiary-fixed": "#ffdad9", error: "#ba1a1a", "secondary-fixed": "#e3e2e2", "surface-container": "#edeeef", "surface-dim": "#d9dadb", "surface-variant": "#e1e3e4", "error-container": "#ffdad6", "inverse-surface": "#2e3132", secondary: "#5d5e5f", primary: "#001e40", "on-secondary-fixed": "#1a1c1c", "on-secondary-fixed-variant": "#464747", outline: "#737780", "secondary-container": "#e0dfdf", "on-primary": "#ffffff", "on-surface": "#191c1d", "on-background": "#191c1d", tertiary: "#45000b", "primary-fixed-dim": "#a7c8ff", "on-secondary": "#ffffff", background: "#f8f9fa", "on-surface-variant": "#43474f", "surface-tint": "#3a5f94", "on-tertiary-fixed": "#40000a", "surface-container-lowest": "#ffffff", "surface-container-highest": "#e1e3e4", "primary-fixed": "#d5e3ff", "on-primary-container": "#799dd6", "secondary-fixed-dim": "#c6c6c6", "on-tertiary": "#ffffff", "on-primary-fixed": "#001b3c", "on-error-container": "#93000a", "tertiary-container": "#6d0017", "on-error": "#ffffff", "inverse-primary": "#a7c8ff", "inverse-on-surface": "#f0f1f2", "on-secondary-container": "#626363", "surface-container-high": "#e7e8e9", "surface-container-low": "#f3f4f5"}, borderRadius: {DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem"}, spacing: {"space-lg": "24px", "space-sm": "8px", "space-3xl": "64px", "space-md": "16px", "space-2xl": "48px", "space-xs": "4px", gutter: "24px", "margin-mobile": "16px", "space-xl": "32px", "container-max-width": "1280px", base: "4px"}, fontFamily: {"headline-lg": ["Inter"], "headline-xl": ["Inter"], "headline-lg-mobile": ["Inter"], "body-lg": ["Inter"], "label-sm": ["Inter"], "label-md": ["Inter"], "headline-xl-mobile": ["Inter"], "body-md": ["Inter"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"]}, fontSize: {"headline-lg": ["32px", {lineHeight: "40px", fontWeight: "600"}], "headline-xl": ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}], "headline-lg-mobile": ["24px", {lineHeight: "32px", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "28px", fontWeight: "400"}], "label-sm": ["12px", {lineHeight: "16px", fontWeight: "600"}], "label-md": ["14px", {lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "500"}], "headline-xl-mobile": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "700"}], "body-md": ["16px", {lineHeight: "24px", fontWeight: "400"}]}}}};</script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+        .course-card-bg {
+            background: linear-gradient(135deg, rgba(0, 30, 64, 0.03) 0%, rgba(255, 255, 255, 1) 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-surface docked full-width top-0 border-b border-outline-variant z-50 sticky">
+<div class="flex justify-between items-center w-full px-gutter max-w-container-max-width mx-auto h-16">
+<div class="font-headline-lg text-headline-lg font-bold text-primary">EduMetrics</div>
+<nav class="hidden md:flex items-center gap-space-lg">
+<a class="text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md" href="student_dashboard.html">Trang chủ</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 font-label-md text-label-md" href="student_dashboard.html">Khóa học</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 font-label-md text-label-md" href="#">Bảng xếp hạng</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 font-label-md text-label-md" href="profile.html">Hồ sơ</a>
+</nav>
+<div class="flex items-center gap-space-md">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-all duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-all duration-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-primary-fixed overflow-hidden border border-outline-variant">
+<img alt="Ảnh đại diện người dùng" class="w-full h-full object-cover" data-alt="A professional studio portrait of a young male university student with a warm, encouraging smile. He is wearing a clean white shirt against a soft, out-of-focus academic library background. The lighting is bright and airy, reflecting a modern light-mode UI aesthetic with soft shadows and high-key tones. The overall mood is academic, focused, and optimistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBt3EYssmj7HZzpoDbJbr0-_BCvE7DVX2u0NlZRohWJKrgnIf-lRP14CBhs8pC17nKUlcknj7CHvgqCExLn9RoQoZXYPHFs4Rq1tH1LVm1fsVLOE3nivIiIHnq0wmRYmf_c16VbfvdQENkjDhOEpote53W4qNqsy4GlQOKBb5X98O3ivdxKdCmw6x6DiXaG5RSnVIJBqOMG56axVLzdHU2zeFVdgHiz4KvyIRszbOjURQ_UN_pcxUWhiiE6RU2pscvYo9NOoCL0YkoR"/>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-grow w-full max-w-container-max-width mx-auto px-gutter py-space-xl">
+<!-- Welcome Section -->
+<section class="mb-space-xl">
+<h1 class="font-headline-lg text-headline-lg text-primary mb-space-xs">Chào buổi sáng, Minh!</h1>
+<p class="font-body-md text-body-md text-secondary">Bạn đã hoàn thành 75% mục tiêu học tập tuần này. Hãy tiếp tục nhé!</p>
+</section>
+<div class="bento-grid">
+<!-- Left Column: Courses & Activity -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-space-lg">
+<!-- Recent Activity Shortcut -->
+<div class="bg-primary-container p-space-lg rounded-xl border border-outline-variant flex flex-col md:flex-row justify-between items-center gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-12 bg-on-primary-container/20 rounded-lg flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-3xl">play_circle</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-primary-container uppercase tracking-wider">Hoạt động gần đây</h3>
+<p class="font-headline-lg-mobile text-headline-lg-mobile text-white">IELTS Reading: Matching Headings</p>
+</div>
+</div>
+<button class="bg-white text-primary font-bold px-space-xl py-space-sm rounded-lg hover:bg-surface-container transition-all duration-200">
+                        Tiếp tục ngay
+                    </button>
+</div>
+<!-- My Courses Section -->
+<div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-space-md">Khóa học của tôi</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
+<!-- IELTS Card -->
+<div class="course-card-bg p-space-lg border border-outline-variant rounded-xl hover:border-primary transition-all duration-300">
+<div class="flex justify-between items-start mb-space-md">
+<div class="w-14 h-14 bg-surface-container-high rounded-xl flex items-center justify-center text-primary border border-outline-variant">
+<span class="material-symbols-outlined text-4xl">menu_book</span>
+</div>
+<span class="bg-primary-fixed text-on-primary-fixed text-[10px] font-bold px-2 py-1 rounded uppercase">Academic</span>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-1">IELTS Masterclass</h3>
+<p class="font-body-md text-body-md text-secondary mb-space-lg">Hệ thống luyện thi 4 kỹ năng chuyên sâu.</p>
+<div class="space-y-2">
+<div class="flex justify-between text-label-sm font-label-sm text-secondary">
+<span>Tiến độ</span>
+<span>65%</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-1000" style="width: 65%"></div>
+</div>
+</div>
+</div>
+<!-- TOEIC Card -->
+<div class="course-card-bg p-space-lg border border-outline-variant rounded-xl hover:border-primary transition-all duration-300">
+<div class="flex justify-between items-start mb-space-md">
+<div class="w-14 h-14 bg-surface-container-high rounded-xl flex items-center justify-center text-primary border border-outline-variant">
+<span class="material-symbols-outlined text-4xl">business_center</span>
+</div>
+<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-1 rounded uppercase">Professional</span>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-1">TOEIC 800+ Target</h3>
+<p class="font-body-md text-body-md text-secondary mb-space-lg">Chiến thuật giải đề và từ vựng kinh doanh.</p>
+<div class="space-y-2">
+<div class="flex justify-between text-label-sm font-label-sm text-secondary">
+<span>Tiến độ</span>
+<span>42%</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-1000" style="width: 42%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: History & Calendar -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-space-lg">
+<!-- Grade History -->
+<div class="bg-white p-space-lg border border-outline-variant rounded-xl">
+<div class="flex justify-between items-center mb-space-lg">
+<h2 class="font-label-md text-label-md text-primary font-bold uppercase tracking-widest">Lịch sử điểm số</h2>
+<button class="text-primary font-label-sm text-label-sm hover:underline">Tất cả</button>
+</div>
+<div class="space-y-space-md">
+<!-- Score Item -->
+<div class="flex items-center gap-space-md border-b border-surface-container pb-space-md last:border-0 last:pb-0">
+<div class="w-10 h-10 bg-primary-fixed text-primary rounded flex items-center justify-center font-bold">7.5</div>
+<div class="flex-grow">
+<h4 class="font-label-md text-label-md text-on-surface">IELTS Mock Test #4</h4>
+<p class="font-label-sm text-label-sm text-secondary">15/10/2024</p>
+</div>
+<span class="material-symbols-outlined text-secondary text-sm">chevron_right</span>
+</div>
+<!-- Score Item -->
+<div class="flex items-center gap-space-md border-b border-surface-container pb-space-md last:border-0 last:pb-0">
+<div class="w-10 h-10 bg-primary-fixed text-primary rounded flex items-center justify-center font-bold">850</div>
+<div class="flex-grow">
+<h4 class="font-label-md text-label-md text-on-surface">TOEIC Practice Test</h4>
+<p class="font-label-sm text-label-sm text-secondary">10/10/2024</p>
+</div>
+<span class="material-symbols-outlined text-secondary text-sm">chevron_right</span>
+</div>
+<!-- Score Item -->
+<div class="flex items-center gap-space-md border-b border-surface-container pb-space-md last:border-0 last:pb-0">
+<div class="w-10 h-10 bg-primary-fixed text-primary rounded flex items-center justify-center font-bold">7.0</div>
+<div class="flex-grow">
+<h4 class="font-label-md text-label-md text-on-surface">Writing Task 2</h4>
+<p class="font-label-sm text-label-sm text-secondary">05/10/2024</p>
+</div>
+<span class="material-symbols-outlined text-secondary text-sm">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Calendar Section -->
+<div class="bg-white p-space-lg border border-outline-variant rounded-xl">
+<div class="flex justify-between items-center mb-space-lg">
+<h2 class="font-label-md text-label-md text-primary font-bold uppercase tracking-widest">Sắp tới</h2>
+</div>
+<div class="space-y-space-md">
+<div class="flex gap-space-md">
+<div class="flex flex-col items-center bg-surface-container-low px-3 py-2 rounded border border-outline-variant h-fit">
+<span class="font-label-sm text-label-sm text-on-surface-variant">OCT</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary">24</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">IELTS Mock Speaking</h4>
+<p class="font-label-sm text-label-sm text-secondary">14:00 • Zoom Room 3</p>
+</div>
+</div>
+<div class="flex gap-space-md">
+<div class="flex flex-col items-center bg-surface-container-low px-3 py-2 rounded border border-outline-variant h-fit">
+<span class="font-label-sm text-label-sm text-on-surface-variant">OCT</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary">28</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">TOEIC Mid-term Exam</h4>
+<p class="font-label-sm text-label-sm text-secondary">08:30 • Hall A</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-space-lg py-space-sm border border-primary text-primary font-bold rounded-lg hover:bg-primary-fixed transition-all duration-200">
+                        Thêm nhắc nhở
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low border-t border-outline-variant full-width bottom-0 mt-space-3xl">
+<div class="w-full py-space-xl px-gutter max-w-container-max-width mx-auto flex flex-col md:flex-row justify-between items-center gap-space-md">
+<div class="flex flex-col items-center md:items-start">
+<div class="font-headline-lg text-headline-lg font-bold text-primary mb-2">EduMetrics</div>
+<p class="font-label-sm text-label-sm text-secondary">© 2024 Hệ thống Quản lý Học thuật. Bảo lưu mọi quyền.</p>
+</div>
+<div class="flex gap-space-lg">
+<a class="text-secondary font-label-sm text-label-sm hover:underline hover:text-primary transition-all duration-200" href="#">Điều khoản</a>
+<a class="text-secondary font-label-sm text-label-sm hover:underline hover:text-primary transition-all duration-200" href="#">Bảo mật</a>
+<a class="text-secondary font-label-sm text-label-sm hover:underline hover:text-primary transition-all duration-200" href="#">Hỗ trợ</a>
+<a class="text-secondary font-label-sm text-label-sm hover:underline hover:text-primary transition-all duration-200" href="#">Liên hệ</a>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction for course card progress bars on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const progressBars = document.querySelectorAll('.h-full.bg-primary');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 300);
+            });
+        });
+    </script>
+
+<!-- Supabase SDK & Configuration & Session Control -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth_check.js"></script>
+<script src="js/student_dashboard.js"></script>
+</body>
+</html>
+

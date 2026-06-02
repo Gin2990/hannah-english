@@ -1,0 +1,317 @@
+<!-- Danh sách đề thi TOEIC Full Test -->
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Scholarly Prep - Danh sách đề thi TOEIC Full Test</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-secondary-fixed-variant": "#464747", "on-primary-container": "#799dd6", "surface-container-highest": "#e1e3e4", "on-background": "#191c1d", "secondary-container": "#e0dfdf", "on-primary-fixed-variant": "#1f477b", "tertiary-fixed-dim": "#ffb3b3", "on-surface": "#191c1d", "inverse-surface": "#2e3132", "primary-container": "#003366", "surface-container-lowest": "#ffffff", "on-tertiary-fixed-variant": "#900723", "on-primary-fixed": "#001b3c", "inverse-on-surface": "#f0f1f2", "on-surface-variant": "#43474f", "on-secondary-container": "#626363", "surface-bright": "#f8f9fa", "primary-fixed": "#d5e3ff", "secondary-fixed": "#e3e2e2", "surface-container-high": "#e7e8e9", "secondary-fixed-dim": "#c6c6c6", "on-secondary-fixed": "#1a1c1c", "tertiary-container": "#6d0017", "on-tertiary-fixed": "#40000a", "on-tertiary": "#ffffff", "surface-tint": "#3a5f94", "on-primary": "#ffffff", "tertiary-fixed": "#ffdad9", "surface-container-low": "#f3f4f5", surface: "#f8f9fa", "on-secondary": "#ffffff", primary: "#001e40", "surface-variant": "#e1e3e4", "on-error": "#ffffff", tertiary: "#45000b", "on-error-container": "#93000a", "on-tertiary-container": "#ff6a73", "surface-dim": "#d9dadb", outline: "#737780", "surface-container": "#edeeef", "primary-fixed-dim": "#a7c8ff", "outline-variant": "#c3c6d1", secondary: "#5d5e5f", error: "#ba1a1a", background: "#f8f9fa", "error-container": "#ffdad6", "inverse-primary": "#a7c8ff"}, borderRadius: {DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem"}, spacing: {"space-lg": "24px", gutter: "24px", "space-xl": "32px", "space-2xl": "48px", "space-sm": "8px", "space-3xl": "64px", "margin-mobile": "16px", base: "4px", "space-md": "16px", "container-max-width": "1280px", "space-xs": "4px"}, fontFamily: {"label-md": ["Inter"], "label-sm": ["Inter"], "headline-xl": ["Inter"], "headline-lg-mobile": ["Inter"], "headline-lg": ["Inter"], "body-lg": ["Inter"], "headline-xl-mobile": ["Inter"], "body-md": ["Inter"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"]}, fontSize: {"label-md": ["14px", {lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "500"}], "label-sm": ["12px", {lineHeight: "16px", fontWeight: "600"}], "headline-xl": ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}], "headline-lg-mobile": ["24px", {lineHeight: "32px", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "40px", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "28px", fontWeight: "400"}], "headline-xl-mobile": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "700"}], "body-md": ["16px", {lineHeight: "24px", fontWeight: "400"}]}}}};</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #f8f9fa;
+            color: #191c1d;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md">
+<!-- TopNavBar -->
+<header class="bg-surface border-b border-outline-variant sticky top-0 z-50">
+<div class="flex justify-between items-center w-full px-gutter max-w-container-max-width mx-auto h-16">
+<div class="text-headline-lg font-headline-lg font-bold text-primary cursor-pointer" onclick="window.location.href='student_dashboard.html'">EduMetrics / Hannah English</div>
+<nav class="hidden md:flex gap-space-lg items-center">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="ielts_exams.html">IELTS</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-label-md text-label-md" href="toeic_exams.html">TOEIC</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="cambridge_hub.html">Cambridge</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="vocabulary_hub.html">Từ vựng</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="resources_center.html">Tài nguyên</a>
+</nav>
+<div class="flex items-center gap-space-md">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container border border-outline-variant rounded-lg focus:outline-none focus:border-primary text-label-md w-64" placeholder="Tìm kiếm đề thi..." type="text"/>
+</div>
+<button class="bg-primary-container text-on-primary-container px-space-lg py-2 rounded-lg font-label-md text-label-md hover:opacity-80 transition-opacity">Đăng nhập</button>
+</div>
+</div>
+</header>
+<main class="max-w-container-max-width mx-auto px-gutter py-space-xl">
+<!-- Hero Section -->
+<section class="mb-space-2xl">
+<div class="flex flex-col md:flex-row items-center gap-space-xl">
+<div class="flex-1">
+<span class="inline-block px-3 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-label-sm font-label-sm mb-space-sm uppercase tracking-wider">Luyện thi chuyên sâu</span>
+<h1 class="font-headline-xl text-headline-xl mb-space-md text-primary">Thư viện TOEIC Full Test</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-2xl">Tổng hợp các bộ đề thi TOEIC mới nhất từ ETS, Economy và Collins. Trải nghiệm môi trường thi thực tế 120 phút với chấm điểm tự động chính xác.</p>
+</div>
+<div class="hidden md:block w-1/3">
+<div class="aspect-square bg-surface-container rounded-xl overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A high-quality 3D render of professional academic study tools including an open textbook, a modern tablet showing a data graph, and a minimalist desk clock. The lighting is soft and corporate, utilizing a color palette of deep navy blues and clean whites to evoke a sense of academic focus and professional excellence. The style is clean, modern, and high-end, representing a focused learning environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJbFWIciuCoOf67p3t5ijDk14N5d2BjBukdi1_Tq_a2nnnBtZLK2dEJmJQHBY7JwzY4Okhp7paAYKcj86UeQ51en1WLT0xAU2PVhaU9nBNWfnW6mnLuL66xMSfSevVGYQTpn0lWFn5_IwXzn5qO7zzjrzR4A406a32DeEDCDUQpEvg8kSVeBzFMg_Aiw7GPIyWVE2mS6cE_FiJZNWMbq8mjatFLpEQfmShaoooAilTY7XEgQC0Z83uX_rDG5jTgEo5CKfHWNFFw2MU"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Filter & Search Controls -->
+<section class="bg-surface-container-lowest p-space-lg rounded-xl border border-outline-variant mb-space-xl sticky top-20 z-40 shadow-sm">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-space-md">
+<div class="flex flex-wrap gap-space-md items-center">
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md text-on-surface">Bộ lọc năm:</span>
+<select class="border border-outline-variant rounded px-3 py-1.5 text-label-md focus:ring-1 focus:ring-primary">
+<option>Tất cả năm</option>
+<option>2024</option>
+<option>2023</option>
+<option>2022</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md text-on-surface">Sắp xếp:</span>
+<select class="border border-outline-variant rounded px-3 py-1.5 text-label-md focus:ring-1 focus:ring-primary">
+<option>Phổ biến nhất</option>
+<option>Mới nhất</option>
+<option>Dễ nhất</option>
+<option>Khó nhất</option>
+</select>
+</div>
+</div>
+<div class="text-on-surface-variant font-label-sm text-label-sm">
+                    Hiển thị <span class="font-bold text-primary">12</span> trong số 128 đề thi
+                </div>
+</div>
+</section>
+<!-- Exam Grid (Bento Grid Style for Featured, Standard for rest) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg">
+<!-- Featured Card 1 -->
+<div class="group relative bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all duration-300">
+<div class="aspect-video relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="A sleek book cover design for ETS TOEIC 2024 test prep. The cover features minimalist typography, professional blue and white branding, and a subtle pattern of geometric academic symbols. The scene is lit with bright, neutral studio lighting, emphasizing the premium quality and authority of the educational material. The composition is modern and corporate, reflecting a high-end educational brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmodHSz_w_52YGQcxb3q5MnQ2ORecf76QwMqQfXQ-06nDArfeyjtM80SCJqm1YopjfPAya6jot9OqXZFMlLowltmjk-7L1vtA-lJ6daggQ62QXPZpA1q_z1Qf0N1yexU74i-20BzrEWgRuzJJOqSHQT0YnsS8O1pIC5ijeQpRbO182Kj3q-icFpbTlUdpwD8-3Co1FSzHG3NAN-S5phl6hYeEWOTfUJ4pVBb2hbzeBotg2hhgDhucWxoY_ZEoZpxXCnR6xjvaRHJ1t"/>
+<div class="absolute top-3 left-3 bg-tertiary-container text-on-tertiary-container px-2 py-1 rounded text-label-sm font-label-sm uppercase">Mới nhất</div>
+</div>
+<div class="p-space-lg">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-space-sm">ETS TOEIC 2024 - Test 01</h3>
+<div class="flex flex-wrap gap-space-sm mb-space-md">
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">schedule</span> 120 phút
+                        </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">signal_cellular_alt</span> Trung bình
+                        </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">group</span> 12.4k học viên
+                        </div>
+</div>
+<div class="w-full bg-surface-container h-1 rounded-full mb-space-md overflow-hidden">
+<div class="bg-primary h-full w-3/4"></div>
+</div>
+<button class="w-full py-3 border border-primary text-primary font-bold rounded-lg hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2">
+                        Luyện tập ngay <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Featured Card 2 -->
+<div class="group relative bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all duration-300">
+<div class="aspect-video relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="A corporate style cover for Economy TOEIC simulation exams. The visual uses a sophisticated palette of deep navy and light grey, featuring clear academic icons and bold white text. The image is captured in a high-key, bright minimalist style, conveying transparency and academic discipline. The lighting creates soft shadows, giving the presentation a premium, three-dimensional feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSbVvpRum7q38yWWzIvRzdrPQysTYEIqhsJPkSJ-YQ_aBV2wn2LzR91x57071ZiNsWWyrwDNGpjuLt4aRqgZ_zfR4ONKDGP1psuS6dQ--ejLHDPedpnlqp9j6_ulWJG6qb6giNOmsyaWscOGQjRzFaJ1p4uXfKzKIAiSL_3Uw9ResXbf5c4wXjWZNO678sU5SgXzQlAnatF5fznKdg1EAJfm_XSsvjVgb88Jz_9_oB5jdW6jvCXx4WjQZJZEvZ_0o72c7B2yNYa-41"/>
+<div class="absolute top-3 left-3 bg-secondary-container text-on-secondary-container px-2 py-1 rounded text-label-sm font-label-sm uppercase">Phổ biến</div>
+</div>
+<div class="p-space-lg">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-space-sm">Economy TOEIC Vol 5 - Test 10</h3>
+<div class="flex flex-wrap gap-space-sm mb-space-md">
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">schedule</span> 120 phút
+                        </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">signal_cellular_alt</span> Khó
+                        </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">group</span> 25.8k học viên
+                        </div>
+</div>
+<div class="w-full bg-surface-container h-1 rounded-full mb-space-md overflow-hidden">
+<div class="bg-primary h-full w-full"></div>
+</div>
+<button class="w-full py-3 border border-primary text-primary font-bold rounded-lg hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2">
+                        Luyện tập ngay <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group relative bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all duration-300">
+<div class="aspect-video relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Educational book cover for Collins English for TOEIC. High-end graphic design with clean lines and academic typography. The setting is bright and professional, using a minimalist color scheme with vibrant blue accents. The visual style is contemporary corporate, aiming to inspire trust and academic focus in professional adult learners." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmQBFL6siBlWyiHlCsNoi44FJiu2PXkPI8pZ10X37P-a6HZDWlkJ-ndyt8jOO2lEMBJhK71EHMgbqN7qXdOy2oTIWW8sCHWW07tdRtBG6FKrPIW8oj7yUt-fvqkvOVP8eJnF_LcnfB28RWcd-TzxRKIeRgNpLPQvt5kUIW0Oe_Rhwsa4dpyHv2g1SyVWjC42leoj6R01NN-02o7grsR9hPM2LDny0lcQrlHRQItaLITy1fZKjDlXwSsM3k7IK3rNnXuMvDNIfq_Uqp"/>
+</div>
+<div class="p-space-lg">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-space-sm">Collins TOEIC Practice - Test 03</h3>
+<div class="flex flex-wrap gap-space-sm mb-space-md">
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">schedule</span> 120 phút
+                        </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">signal_cellular_alt</span> Dễ
+                        </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">group</span> 8.2k học viên
+                        </div>
+</div>
+<div class="w-full bg-surface-container h-1 rounded-full mb-space-md overflow-hidden">
+<div class="bg-primary h-full w-1/4"></div>
+</div>
+<button class="w-full py-3 border border-primary text-primary font-bold rounded-lg hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2">
+                        Luyện tập ngay <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 4 (New Year Focus) -->
+<div class="group relative bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all duration-300">
+<div class="aspect-video relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="A sleek marketing graphic for New TOEIC 2024 Exam series. Featuring 3D abstract geometric shapes that symbolize progress and data analysis, with professional typography and branding. The environment is a clean, bright digital space with a soft atmosphere and sophisticated lighting. The aesthetic is modern corporate, focusing on precision and high-level education." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrvlYHOY3T6bUUcQ2yiqHCAF69r3rVxCQVf1jwJvpIK_TvUbHT2nAjxgDTpnyDn9tTM9Eof6dqwmI91xuthDukcoy4ZqzTsWLUbVVGljuMArgzMD4dPEqloFB29IyuZkNoR5SXM74Wa-pCy8qb356PCZGDkssltz3LXAHUEVS3MkGhPfqB02YEzCaALhjv47TDa8jZpIFuzuWppjxcPxQZ-9zPn_LtAPPt01q9CKY2xQiTv3NKf4_BvQ2CtoyB7JvsBMeVCdq7f27x"/>
+<div class="absolute top-3 left-3 bg-primary text-white px-2 py-1 rounded text-label-sm font-label-sm uppercase">2024 Exam</div>
+</div>
+<div class="p-space-lg">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-space-sm">ETS TOEIC 2024 - Test 02</h3>
+<div class="flex flex-wrap gap-space-sm mb-space-md">
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">schedule</span> 120 phút
+                        </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">signal_cellular_alt</span> Trung bình
+                        </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">group</span> 5.1k học viên
+                        </div>
+</div>
+<div class="w-full bg-surface-container h-1 rounded-full mb-space-md overflow-hidden">
+<div class="bg-primary h-full w-1/2"></div>
+</div>
+<button class="w-full py-3 border border-primary text-primary font-bold rounded-lg hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2">
+                        Luyện tập ngay <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="group relative bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all duration-300">
+<div class="aspect-video relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="A professional textbook layout for Hacker TOEIC Practice Tests. The design emphasizes clarity with high-contrast text and authoritative branding in deep navy and white. The lighting is clean and even, suggesting a bright and focused workspace. The overall visual style is corporate and academic, conveying a sense of rigorous preparation and high achievement." src="https://lh3.googleusercontent.com/aida-public/AB6AXuChL9VvXN3UjeRqTcQ_ztE0jUK3klfVt-ciX4-w8mSUQzuyUT7pD-KKxyjx0C5ibHk1ybdimFejgKOZM5JKsFkiU2rjE7rQ-7Su_VwOKY_w502C3TDhp3nO1JNpkusQbRkwN1Z3tvi8Yhq6c_jn-oDXr8v3KuEwLUfWhna6VCMXqVZKYe9kvXNi1Bye4esUyAUeP68UqggHccXzOjLfDf174bJJ6wbWYRwDviNbYXA1-hpmIipw3a4TBXN5l261-KZj-xIIPCiK4qLJ"/>
+</div>
+<div class="p-space-lg">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-space-sm">Hacker TOEIC Practice - Test 01</h3>
+<div class="flex flex-wrap gap-space-sm mb-space-md">
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">schedule</span> 120 phút
+                        </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">signal_cellular_alt</span> Khó
+                        </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">group</span> 18.2k học viên
+                        </div>
+</div>
+<div class="w-full bg-surface-container h-1 rounded-full mb-space-md overflow-hidden">
+<div class="bg-primary h-full w-4/5"></div>
+</div>
+<button class="w-full py-3 border border-primary text-primary font-bold rounded-lg hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2">
+                        Luyện tập ngay <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="group relative bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all duration-300">
+<div class="aspect-video relative overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="A clean, modern academic graphic for Big Step TOEIC series. Simple yet effective design with professional color palettes and scholarly icons. The lighting is bright and modern, creating a positive and encouraging mood for learners. The corporate aesthetic is maintained through precise layout and premium digital rendering." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNX4QHZiDzU86_46JTQa2ef3YU7h_BKxsjzX2ekkhjm2wqySp5wvNIgVcaY-BFrvcgTjfwldaIdwZ3UVS4pZxw18ZWLExpQF3OyqoXvpCS2xNEXLNZK9tysz4UVQ6r6EtIgThP8e7-r2fF3TbZFUE9557IyirhmViJGOVJnpMvJxHB9eisDVFb-Gc6HC2o7-zEvEeIO40GV9txn1xcG7VSnxy4SzH-S6qFCuAJ79HOduwiNDiKb6nyJF8aYOWFvmXWvUDP5fdtud4S"/>
+</div>
+<div class="p-space-lg">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-space-sm">Big Step TOEIC 3 - Full Test 05</h3>
+<div class="flex flex-wrap gap-space-sm mb-space-md">
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">schedule</span> 120 phút
+                        </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">signal_cellular_alt</span> Trung bình
+                        </div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[18px]">group</span> 3.4k học viên
+                        </div>
+</div>
+<div class="w-full bg-surface-container h-1 rounded-full mb-space-md overflow-hidden">
+<div class="bg-primary h-full w-1/3"></div>
+</div>
+<button class="w-full py-3 border border-primary text-primary font-bold rounded-lg hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2">
+                        Luyện tập ngay <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="flex justify-center mt-space-2xl gap-space-sm">
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant rounded hover:bg-primary-fixed transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center bg-primary text-white rounded">1</button>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant rounded hover:bg-primary-fixed transition-colors">2</button>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant rounded hover:bg-primary-fixed transition-colors">3</button>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant rounded hover:bg-primary-fixed transition-colors">...</button>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant rounded hover:bg-primary-fixed transition-colors">12</button>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant rounded hover:bg-primary-fixed transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low border-t border-outline-variant">
+<div class="flex flex-col md:flex-row justify-between items-center w-full py-space-xl px-gutter max-w-container-max-width mx-auto gap-space-md">
+<div class="flex flex-col gap-2">
+<div class="font-headline-lg text-headline-lg text-primary">Scholarly Prep</div>
+<p class="text-on-surface-variant font-body-md text-body-md">Nền tảng luyện thi chất lượng cao cho sinh viên Việt Nam.</p>
+</div>
+<div class="flex flex-wrap gap-space-lg justify-center">
+<a class="text-on-surface-variant hover:underline transition-all font-label-sm text-label-sm" href="#">Về chúng tôi</a>
+<a class="text-on-surface-variant hover:underline transition-all font-label-sm text-label-sm" href="#">Điều khoản sử dụng</a>
+<a class="text-on-surface-variant hover:underline transition-all font-label-sm text-label-sm" href="#">Chính sách bảo mật</a>
+<a class="text-on-surface-variant hover:underline transition-all font-label-sm text-label-sm" href="#">Liên hệ</a>
+</div>
+<div class="text-on-surface-variant font-label-sm text-label-sm">
+                © 2024 Scholarly Prep. Bản quyền được bảo lưu.
+            </div>
+</div>
+</footer>
+<!-- FAB for Quick Support (Contextual for Learning Platform) -->
+<button class="fixed bottom-8 right-8 bg-primary text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-all group z-50" id="fab-support">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="absolute right-16 bg-primary text-white px-3 py-1 rounded text-label-sm font-label-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Hỗ trợ học tập</span>
+</button>
+<script>
+        // Micro-interactions for Filter Dropdowns
+        document.querySelectorAll('select').forEach(select => {
+            select.addEventListener('change', (e) => {
+                console.log('Filter changed to:', e.target.value);
+                // In a real app, this would trigger a fetch or list filter
+            });
+        });
+
+        // Simple Hover interaction for exam cards
+        const cards = document.querySelectorAll('.group');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.classList.add('shadow-md');
+            });
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('shadow-md');
+            });
+        });
+    </script>
+
+<!-- Supabase SDK & Configuration & Session Control -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth_check.js"></script>
+<script src="js/toeic_exams.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,381 @@
+<!-- Giao diện Giáo viên - Quản lý nội dung & Điểm số -->
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EduMetrics - Cổng Thông Tin Giảng Viên</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"surface-bright": "#f8f9fa", "on-tertiary-container": "#ff6a73", "on-primary-fixed-variant": "#1f477b", "outline-variant": "#c3c6d1", "primary-container": "#003366", surface: "#f8f9fa", "on-tertiary-fixed-variant": "#900723", "tertiary-fixed-dim": "#ffb3b3", "tertiary-fixed": "#ffdad9", error: "#ba1a1a", "secondary-fixed": "#e3e2e2", "surface-container": "#edeeef", "surface-dim": "#d9dadb", "surface-variant": "#e1e3e4", "error-container": "#ffdad6", "inverse-surface": "#2e3132", secondary: "#5d5e5f", primary: "#001e40", "on-secondary-fixed": "#1a1c1c", "on-secondary-fixed-variant": "#464747", outline: "#737780", "secondary-container": "#e0dfdf", "on-primary": "#ffffff", "on-surface": "#191c1d", "on-background": "#191c1d", tertiary: "#45000b", "primary-fixed-dim": "#a7c8ff", "on-secondary": "#ffffff", background: "#f8f9fa", "on-surface-variant": "#43474f", "surface-tint": "#3a5f94", "on-tertiary-fixed": "#40000a", "surface-container-lowest": "#ffffff", "surface-container-highest": "#e1e3e4", "primary-fixed": "#d5e3ff", "on-primary-container": "#799dd6", "secondary-fixed-dim": "#c6c6c6", "on-tertiary": "#ffffff", "on-primary-fixed": "#001b3c", "on-error-container": "#93000a", "tertiary-container": "#6d0017", "on-error": "#ffffff", "inverse-primary": "#a7c8ff", "inverse-on-surface": "#f0f1f2", "on-secondary-container": "#626363", "surface-container-high": "#e7e8e9", "surface-container-low": "#f3f4f5"}, borderRadius: {DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem"}, spacing: {"space-lg": "24px", "space-sm": "8px", "space-3xl": "64px", "space-md": "16px", "space-2xl": "48px", "space-xs": "4px", gutter: "24px", "margin-mobile": "16px", "space-xl": "32px", "container-max-width": "1280px", base: "4px"}, fontFamily: {"headline-lg": ["Inter"], "headline-xl": ["Inter"], "headline-lg-mobile": ["Inter"], "body-lg": ["Inter"], "label-sm": ["Inter"], "label-md": ["Inter"], "headline-xl-mobile": ["Inter"], "body-md": ["Inter"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"]}, fontSize: {"headline-lg": ["32px", {lineHeight: "40px", fontWeight: "600"}], "headline-xl": ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}], "headline-lg-mobile": ["24px", {lineHeight: "32px", fontWeight: "600"}], "body-lg": ["18px", {lineHeight: "28px", fontWeight: "400"}], "label-sm": ["12px", {lineHeight: "16px", fontWeight: "600"}], "label-md": ["14px", {lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "500"}], "headline-xl-mobile": ["32px", {lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "700"}], "body-md": ["16px", {lineHeight: "24px", fontWeight: "400"}]}}}};</script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .sidebar-active {
+            background-color: #d5e3ff;
+            color: #001e40;
+            border-right: 4px solid #001e40;
+        }
+        .drop-zone-active {
+            border-color: #001e40;
+            background-color: #f3f4f5;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex">
+<!-- Sidebar Navigation -->
+<aside class="w-64 bg-surface-container-low border-r border-outline-variant hidden md:flex flex-col sticky top-0 h-screen">
+<div class="p-space-lg flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-3xl">school</span>
+<span class="font-headline-lg text-primary font-bold tracking-tight">EduMetrics</span>
+</div>
+<nav class="flex-1 px-space-md py-space-sm space-y-1">
+<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg sidebar-active transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md">Bảng điều khiển</span>
+</a>
+<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-secondary hover:bg-surface-container hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-label-md">Khóa học của tôi</span>
+</a>
+<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-secondary hover:bg-surface-container hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-label-md">Quản lý sinh viên</span>
+</a>
+<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-secondary hover:bg-surface-container hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md">Báo cáo kết quả</span>
+</a>
+<div class="pt-space-xl pb-space-sm px-space-md">
+<span class="text-outline font-label-sm uppercase tracking-wider">Hệ thống</span>
+</div>
+<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-secondary hover:bg-surface-container hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md">Cài đặt</span>
+</a>
+</nav>
+<div class="p-space-lg border-t border-outline-variant">
+<div class="flex items-center gap-space-md">
+<img alt="Ảnh đại diện người dùng" class="w-10 h-10 rounded-full bg-secondary-container" data-alt="A professional headshot of a mature university professor in a bright, modern office setting. The lighting is soft and natural, emphasizing a trustworthy and academic atmosphere. The background is slightly blurred, showing books and a clean, minimalist interior design. The overall aesthetic is professional, scholarly, and calm." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH-W4sKBd99YJqAwcaqCeTY56vLAA6i16c1qMolEul321nGohraKXADHlDGUcHX2_kGCxrOCeOibo7hf1NwKs9oOQ4BHNGaJWSrLWskOK4Z2Ip_qVN6kRwByv0ZG3W3WG1UQoqK-EmeVadPZlEMXW35uOTeqwWqapKh2WZ7o280OiqA0RFWOuJ15xF766u49n_7Ml-25uXUvVsjItG-ChWh9fL6fwVad-_sEOGkjwbgDxW8Mr2i_B7ANjIRNmKuRR6Chh_SUFO5kKd"/>
+<div>
+<p class="font-label-md text-primary font-bold">GS. Nguyễn Văn A</p>
+<p class="font-label-sm text-secondary">Giảng viên IELTS</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-background overflow-x-hidden">
+<!-- Top Navigation Bar -->
+<header class="h-16 flex items-center justify-between px-gutter bg-surface border-b border-outline-variant z-10">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-primary">Cổng Thông Tin Giảng Viên</h1>
+<div class="flex items-center gap-space-md">
+<button class="p-2 text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-6 w-px bg-outline-variant"></div>
+<button class="p-2 text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+</header>
+<div class="p-gutter max-w-container-max-width mx-auto w-full space-y-space-xl">
+<!-- Hero Stats / Bento Header -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-space-lg flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="text-secondary font-label-md">Tổng số sinh viên</span>
+<span class="material-symbols-outlined text-primary-fixed-dim">group</span>
+</div>
+<div class="mt-space-md">
+<p class="text-4xl font-bold text-primary">1,248</p>
+<p class="text-green-600 text-xs font-bold mt-1">+12% so với tháng trước</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-space-lg flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="text-secondary font-label-md">Điểm trung bình hệ thống</span>
+<span class="material-symbols-outlined text-primary-fixed-dim">grade</span>
+</div>
+<div class="mt-space-md">
+<p class="text-4xl font-bold text-primary">7.2</p>
+<p class="text-secondary text-xs font-medium mt-1">Dựa trên 15 khóa học hiện tại</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-space-lg flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="text-secondary font-label-md">Bài tập chờ chấm</span>
+<span class="material-symbols-outlined text-primary-fixed-dim">pending_actions</span>
+</div>
+<div class="mt-space-md">
+<p class="text-4xl font-bold text-tertiary-container">24</p>
+<p class="text-error text-xs font-bold mt-1">Cần hoàn thành trong 48h</p>
+</div>
+</div>
+</div>
+<!-- Content Upload & Recent Uploads Section -->
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-space-lg">
+<!-- Upload Area -->
+<section class="lg:col-span-3 bg-white border border-outline-variant rounded-xl overflow-hidden">
+<div class="p-space-lg border-b border-outline-variant bg-surface-container-low">
+<h2 class="font-headline-lg-mobile text-primary">Tải lên Nội dung Mới</h2>
+<p class="text-secondary font-body-md mt-1">Định dạng hỗ trợ: PDF, DOCX, MP3 (IELTS/TOEIC)</p>
+</div>
+<form class="p-space-lg space-y-space-md">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<div class="space-y-space-xs">
+<label class="block font-label-md text-on-surface font-bold">Tiêu đề bài tập / đề thi</label>
+<input id="exam-title" class="w-full rounded border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary py-2 px-3 text-sm" placeholder="Vd: IELTS Mock Test 05" type="text" required/>
+</div>
+<div class="space-y-space-xs">
+<label class="block font-label-md text-on-surface font-bold">Loại bài tập (Khóa học target)</label>
+<select id="exam-course" class="w-full rounded border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary py-2 px-3 text-sm text-slate-700 bg-slate-50" required>
+    <option value="">-- Chọn Khóa Học Target --</option>
+</select>
+</div>
+</div>
+<div class="space-y-space-xs">
+<label class="block font-label-md text-on-surface font-bold">Thời gian làm bài (phút)</label>
+<input id="exam-duration" class="w-40 rounded border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary py-2 px-3 text-sm" placeholder="60" type="number" min="5" max="180" value="15" required/>
+</div>
+<div class="space-y-space-xs border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+    <div class="flex justify-between items-center mb-2">
+        <label class="block font-label-md text-primary font-bold uppercase tracking-wider text-xs">Danh sách câu hỏi soạn thảo</label>
+        <span class="text-[10px] text-slate-450 font-bold" id="questions-count-label">Chưa có câu hỏi</span>
+    </div>
+    <div id="questions-builder-list" class="space-y-4">
+        <!-- Question builder cards are appended here -->
+    </div>
+    <button type="button" onclick="addNewQuestionCard()" class="mt-3 flex items-center gap-1.5 px-3 py-2.5 border border-dashed border-indigo-300 text-indigo-700 hover:border-indigo-500 hover:bg-indigo-50/30 rounded-lg text-xs font-bold transition-all w-full justify-center active:scale-99">
+        <span class="material-symbols-outlined text-sm font-bold">add</span>
+        <span>Thêm câu hỏi mới</span>
+    </button>
+</div>
+<div class="flex justify-end pt-space-md">
+<button id="btn-publish-exam" class="bg-primary text-white font-label-md px-space-xl py-space-sm rounded-lg hover:bg-primary-container transition-all shadow-sm active:scale-95 flex items-center gap-1" type="button" onclick="publishExamFromBuilder(event)">
+    <span class="material-symbols-outlined text-sm">publish</span>
+    <span>Xuất bản bài tập</span>
+</button>
+</div>
+</form>
+</section>
+<!-- Recent Uploads -->
+<section class="lg:col-span-2 bg-white border border-outline-variant rounded-xl flex flex-col">
+<div class="p-space-lg border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+<h2 class="font-headline-lg-mobile text-primary">Tải lên Gần đây</h2>
+<button class="text-primary-container font-label-sm hover:underline">Xem tất cả</button>
+</div>
+<div class="flex-1 overflow-y-auto p-space-md space-y-space-md">
+<div class="flex items-center gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-all">
+<div class="w-10 h-10 rounded bg-primary-fixed-dim flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">description</span>
+</div>
+<div class="flex-1">
+<p class="font-label-md text-primary font-bold truncate">IELTS Mock Test #12</p>
+<p class="font-label-sm text-secondary">2 giờ trước • 60 phút</p>
+</div>
+<span class="material-symbols-outlined text-outline">more_vert</span>
+</div>
+<div class="flex items-center gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-all">
+<div class="w-10 h-10 rounded bg-tertiary-fixed flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">audio_file</span>
+</div>
+<div class="flex-1">
+<p class="font-label-md text-primary font-bold truncate">TOEIC Listening Part 3</p>
+<p class="font-label-sm text-secondary">Hôm qua • 45 phút</p>
+</div>
+<span class="material-symbols-outlined text-outline">more_vert</span>
+</div>
+<div class="flex items-center gap-space-md p-space-sm rounded-lg hover:bg-surface-container-low transition-all">
+<div class="w-10 h-10 rounded bg-secondary-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">description</span>
+</div>
+<div class="flex-1">
+<p class="font-label-md text-primary font-bold truncate">Vocab Quiz: Education</p>
+<p class="font-label-sm text-secondary">2 ngày trước • 15 phút</p>
+</div>
+<span class="material-symbols-outlined text-outline">more_vert</span>
+</div>
+</div>
+</section>
+</div>
+<!-- Student Performance Table Section -->
+<section class="bg-white border border-outline-variant rounded-xl overflow-hidden">
+<div class="p-space-lg border-b border-outline-variant bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div>
+<h2 class="font-headline-lg-mobile text-primary">Hiệu suất Sinh viên</h2>
+<p class="text-secondary font-body-md mt-1">Theo dõi tiến độ học tập của các lớp đang giảng dạy</p>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+<input class="pl-9 pr-4 py-2 rounded border-outline-variant text-sm w-full md:w-64 focus:ring-1 focus:ring-primary" placeholder="Tìm sinh viên..." type="text"/>
+</div>
+<button class="flex items-center gap-1 border border-outline-variant px-3 py-2 rounded text-sm font-label-md text-secondary hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-sm">filter_list</span> Bộ lọc
+                        </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container font-label-sm uppercase text-outline tracking-wider border-b border-outline-variant">
+<tr>
+<th class="px-space-lg py-4 font-semibold">Sinh viên</th>
+<th class="px-space-lg py-4 font-semibold">Khóa học</th>
+<th class="px-space-lg py-4 font-semibold text-center">Điểm trung bình</th>
+<th class="px-space-lg py-4 font-semibold">Hoạt động cuối</th>
+<th class="px-space-lg py-4 font-semibold text-right">Hành động</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-space-lg py-4">
+<div class="flex items-center gap-space-md">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs">LM</div>
+<span class="font-label-md text-on-surface font-semibold">Lê Minh</span>
+</div>
+</td>
+<td class="px-space-lg py-4">
+<span class="px-2 py-1 rounded bg-secondary-container text-on-secondary-container text-xs font-bold">IELTS Advanced</span>
+</td>
+<td class="px-space-lg py-4">
+<div class="flex flex-col items-center">
+<span class="text-primary font-bold">8.5</span>
+<div class="w-24 bg-surface-container rounded-full h-1.5 mt-1">
+<div class="bg-green-600 h-1.5 rounded-full" style="width: 85%"></div>
+</div>
+</div>
+</td>
+<td class="px-space-lg py-4 text-secondary text-sm">Hôm nay, 10:45</td>
+<td class="px-space-lg py-4 text-right">
+<a class="text-primary font-label-md hover:underline inline-flex items-center gap-1" href="#">
+                                        Chi tiết <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-space-lg py-4">
+<div class="flex items-center gap-space-md">
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary font-bold text-xs">TH</div>
+<span class="font-label-md text-on-surface font-semibold">Trần Hoa</span>
+</div>
+</td>
+<td class="px-space-lg py-4">
+<span class="px-2 py-1 rounded bg-secondary-container text-on-secondary-container text-xs font-bold">TOEIC 750+</span>
+</td>
+<td class="px-space-lg py-4">
+<div class="flex flex-col items-center">
+<span class="text-primary font-bold">6.8</span>
+<div class="w-24 bg-surface-container rounded-full h-1.5 mt-1">
+<div class="bg-yellow-500 h-1.5 rounded-full" style="width: 68%"></div>
+</div>
+</div>
+</td>
+<td class="px-space-lg py-4 text-secondary text-sm">Hôm qua, 15:20</td>
+<td class="px-space-lg py-4 text-right">
+<a class="text-primary font-label-md hover:underline inline-flex items-center gap-1" href="#">
+                                        Chi tiết <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-space-lg py-4">
+<div class="flex items-center gap-space-md">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary font-bold text-xs">PV</div>
+<span class="font-label-md text-on-surface font-semibold">Phạm Văn</span>
+</div>
+</td>
+<td class="px-space-lg py-4">
+<span class="px-2 py-1 rounded bg-secondary-container text-on-secondary-container text-xs font-bold">IELTS Intensive</span>
+</td>
+<td class="px-space-lg py-4">
+<div class="flex flex-col items-center">
+<span class="text-primary font-bold">5.2</span>
+<div class="w-24 bg-surface-container rounded-full h-1.5 mt-1">
+<div class="bg-error h-1.5 rounded-full" style="width: 52%"></div>
+</div>
+</div>
+</td>
+<td class="px-space-lg py-4 text-secondary text-sm">3 ngày trước</td>
+<td class="px-space-lg py-4 text-right">
+<a class="text-primary font-label-md hover:underline inline-flex items-center gap-1" href="#">
+                                        Chi tiết <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-space-lg border-t border-outline-variant flex justify-between items-center bg-surface-container-low">
+<span class="text-secondary text-sm">Hiển thị 3 trên 48 sinh viên</span>
+<div class="flex gap-2">
+<button class="p-2 rounded border border-outline-variant hover:bg-surface-container transition-all disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-2 rounded border border-outline-variant hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+<!-- Footer -->
+<footer class="w-full py-space-xl px-gutter max-w-container-max-width mx-auto flex flex-col md:flex-row justify-between items-center gap-space-md bg-surface-container-low border-t border-outline-variant">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary">school</span>
+<span class="font-headline-lg text-primary font-bold">EduMetrics</span>
+</div>
+<p class="text-secondary font-body-md text-center">© 2024 Hệ thống Quản lý Học thuật. Bảo lưu mọi quyền.</p>
+<div class="flex gap-space-lg">
+<a class="text-secondary font-label-sm hover:underline hover:text-primary transition-all" href="#">Điều khoản</a>
+<a class="text-secondary font-label-sm hover:underline hover:text-primary transition-all" href="#">Bảo mật</a>
+<a class="text-secondary font-label-sm hover:underline hover:text-primary transition-all" href="#">Hỗ trợ</a>
+</div>
+</footer>
+</main>
+<script>
+        // Simple Interaction logic
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drop-zone-active');
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('drop-zone-active');
+            });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                alert(`Đã nhận: ${files[0].name}`);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                alert(`Đã chọn: ${e.target.files[0].name}`);
+            }
+        });
+    </script>
+
+<!-- Supabase SDK & Configuration & Session Control -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth_check.js"></script>
+<script src="js/teacher_dashboard.js"></script>
+</body>
+</html>
+

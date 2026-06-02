@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Đăng nhập | Hannah English Portal</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#001e40",
+                        "primary-container": "#003366",
+                        "outline-variant": "#c3c6d1",
+                        background: "#f8f9fa",
+                        surface: "#ffffff"
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        };
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8f9fa;
+            background-image: radial-gradient(#001e4008 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .auth-container {
+            box-shadow: 0 10px 30px rgba(0, 30, 64, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-slate-800">
+
+    <!-- Supabase JS Client Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+
+    <!-- Header / Brand -->
+    <header class="w-full px-6 py-6 max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">
+                <span class="material-symbols-outlined text-lg font-bold">school</span>
+            </div>
+            <span class="font-bold text-lg text-primary tracking-tight">Hannah English</span>
+        </div>
+        <a href="home.html" class="text-xs font-semibold text-slate-500 hover:text-primary transition-colors flex items-center gap-1">
+            <span class="material-symbols-outlined text-xs">arrow_back</span> Quay lại trang chủ
+        </a>
+    </header>
+
+    <!-- Main Auth Card -->
+    <main class="w-full max-w-md mx-auto px-4 py-8">
+        <div class="auth-container bg-white border border-outline-variant/65 rounded-2xl p-8">
+            
+            <!-- Logo, Title & Description -->
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-extrabold text-primary" id="auth-title">Đăng nhập tài khoản</h2>
+                <p class="text-slate-400 text-xs mt-2" id="auth-subtitle">Kết nối trực tuyến với hệ thống học liệu Hannah English</p>
+            </div>
+
+            <!-- Error/Success Alert Box -->
+            <div id="alert-box" class="hidden mb-6 p-4 rounded-xl text-xs font-semibold border flex items-start gap-2">
+                <span class="material-symbols-outlined text-sm shrink-0" id="alert-icon">info</span>
+                <span id="alert-message"></span>
+            </div>
+
+            <!-- Tab Switchers -->
+            <div class="grid grid-cols-2 p-1 bg-slate-100 rounded-xl mb-6">
+                <button onclick="switchTab('signin')" id="tab-signin" class="py-2 text-xs font-bold rounded-lg transition-all bg-white text-primary shadow-sm">Đăng Nhập</button>
+                <button onclick="switchTab('signup')" id="tab-signup" class="py-2 text-xs font-semibold rounded-lg transition-all text-slate-500 hover:text-slate-800">Đăng Ký</button>
+            </div>
+
+            <!-- Auth Form -->
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                
+                <!-- Full name field (Only visible in signup mode) -->
+                <div id="name-field-group" class="hidden">
+                    <label class="block text-xs font-bold text-primary mb-1.5 uppercase tracking-wide">Họ và Tên</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined text-slate-400 text-sm absolute left-3.5 top-1/2 -translate-y-1/2">person</span>
+                        <input type="text" id="input-fullname" class="pl-10 pr-4 py-2.5 bg-slate-50 border border-outline-variant rounded-xl focus:ring-1 focus:ring-primary focus:border-primary text-sm w-full" placeholder="Ví dụ: Nguyễn Văn Minh"/>
+                    </div>
+                </div>
+
+                <!-- Email Address -->
+                <div>
+                    <label class="block text-xs font-bold text-primary mb-1.5 uppercase tracking-wide">Địa chỉ Email</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined text-slate-400 text-sm absolute left-3.5 top-1/2 -translate-y-1/2">mail</span>
+                        <input type="email" id="input-email" required class="pl-10 pr-4 py-2.5 bg-slate-50 border border-outline-variant rounded-xl focus:ring-1 focus:ring-primary focus:border-primary text-sm w-full" placeholder="name@domain.com"/>
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="block text-xs font-bold text-primary uppercase tracking-wide">Mật khẩu</label>
+                        <a href="#" class="text-[10px] font-semibold text-slate-400 hover:text-primary hover:underline">Quên mật khẩu?</a>
+                    </div>
+                    <div class="relative">
+                        <span class="material-symbols-outlined text-slate-400 text-sm absolute left-3.5 top-1/2 -translate-y-1/2">lock</span>
+                        <input type="password" id="input-password" required class="pl-10 pr-4 py-2.5 bg-slate-50 border border-outline-variant rounded-xl focus:ring-1 focus:ring-primary focus:border-primary text-sm w-full" placeholder="••••••••"/>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="btn-submit" class="w-full py-3 bg-primary hover:bg-primary-container text-white font-bold rounded-xl text-xs uppercase tracking-wide transition-all shadow-md active:scale-98 flex items-center justify-center gap-2">
+                    <span id="btn-text">Đăng Nhập</span>
+                    <span class="material-symbols-outlined text-sm" id="btn-icon">arrow_forward</span>
+                </button>
+            </form>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-6 text-center text-xs text-slate-400 border-t border-slate-200 bg-white/40">
+        <p>© 2026 Hannah English Portal. Bảo mật bởi Supabase.</p>
+    </footer>
+
+    <!-- Auth logic scripts -->
+    <script>
+        let currentMode = 'signin'; // Mode is either 'signin' or 'signup'
+
+        function switchTab(mode) {
+            currentMode = mode;
+            
+            const tabSignin = document.getElementById('tab-signin');
+            const tabSignup = document.getElementById('tab-signup');
+            const nameField = document.getElementById('name-field-group');
+            const authTitle = document.getElementById('auth-title');
+            const authSubtitle = document.getElementById('auth-subtitle');
+            const btnText = document.getElementById('btn-text');
+            const btnIcon = document.getElementById('btn-icon');
+            const inputFullname = document.getElementById('input-fullname');
+
+            // Hide alert
+            showAlert(false);
+
+            if (mode === 'signup') {
+                tabSignin.className = "py-2 text-xs font-semibold rounded-lg transition-all text-slate-500 hover:text-slate-800";
+                tabSignup.className = "py-2 text-xs font-bold rounded-lg transition-all bg-white text-primary shadow-sm";
+                nameField.classList.remove('hidden');
+                inputFullname.required = true;
+                
+                authTitle.textContent = "Tạo tài khoản mới";
+                authSubtitle.textContent = "Nhận phân quyền từ giảng viên và bắt đầu lộ trình ôn thi";
+                btnText.textContent = "Đăng Ký Tài Khoản";
+                btnIcon.textContent = "person_add";
+            } else {
+                tabSignin.className = "py-2 text-xs font-bold rounded-lg transition-all bg-white text-primary shadow-sm";
+                tabSignup.className = "py-2 text-xs font-semibold rounded-lg transition-all text-slate-500 hover:text-slate-800";
+                nameField.classList.add('hidden');
+                inputFullname.required = false;
+                
+                authTitle.textContent = "Đăng nhập tài khoản";
+                authSubtitle.textContent = "Kết nối trực tuyến với hệ thống học liệu Hannah English";
+                btnText.textContent = "Đăng Nhập";
+                btnIcon.textContent = "arrow_forward";
+            }
+        }
+
+        // Display Alerts
+        function showAlert(show, type = 'error', message = '') {
+            const box = document.getElementById('alert-box');
+            const icon = document.getElementById('alert-icon');
+            const msgEl = document.getElementById('alert-message');
+
+            if (!show) {
+                box.classList.add('hidden');
+                return;
+            }
+
+            box.classList.remove('hidden');
+            msgEl.textContent = message;
+
+            if (type === 'error') {
+                box.className = "mb-6 p-4 rounded-xl text-xs font-semibold border flex items-start gap-2 bg-red-50 border-red-200 text-red-700";
+                icon.textContent = "error";
+            } else {
+                box.className = "mb-6 p-4 rounded-xl text-xs font-semibold border flex items-start gap-2 bg-emerald-50 border-emerald-200 text-emerald-700";
+                icon.textContent = "check_circle";
+            }
+        }
+
+        // Handle Submission
+        async function handleAuthSubmit(event) {
+            event.preventDefault();
+            
+            // Check connection
+            if (!supabase) {
+                showAlert(true, 'error', "Chưa cấu hình Supabase! Vui lòng vào file js/config.js để cấu hình URL và API Key trước.");
+                return;
+            }
+
+            const email = document.getElementById('input-email').value.trim();
+            const password = document.getElementById('input-password').value;
+            const fullName = document.getElementById('input-fullname').value.trim();
+            const btnSubmit = document.getElementById('btn-submit');
+            
+            // Show loading
+            btnSubmit.disabled = true;
+            btnSubmit.classList.add('opacity-70');
+            const originalBtnText = btnSubmit.innerHTML;
+            btnSubmit.innerHTML = "Đang xử lý...";
+
+            try {
+                showAlert(false);
+                
+                if (currentMode === 'signup') {
+                    // 1. Register with Supabase
+                    const { data, error } = await supabase.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: {
+                                full_name: fullName
+                            }
+                        }
+                    });
+
+                    if (error) throw error;
+                    
+                    showAlert(true, 'success', "Đăng ký thành công! Một email xác nhận có thể đã được gửi, hoặc bạn có thể đăng nhập ngay nếu không bật xác thực email.");
+                    setTimeout(() => switchTab('signin'), 1500);
+
+                } else {
+                    // 2. Sign In
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+
+                    if (error) throw error;
+
+                    showAlert(true, 'success', "Đăng nhập thành công! Đang chuyển hướng...");
+                    
+                    // Redirect to Launcher Hub
+                    setTimeout(() => {
+                        window.location.href = "index.html";
+                    }, 1000);
+                }
+            } catch (err) {
+                console.error(err);
+                showAlert(true, 'error', err.message || "Đã xảy ra lỗi hệ thống. Vui lòng thử lại!");
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.classList.remove('opacity-70');
+                btnSubmit.innerHTML = originalBtnText;
+            }
+        }
+
+        // Check if user is already logged in, redirect
+        async function checkSession() {
+            if (supabase) {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    window.location.href = "index.html";
+                }
+            }
+        }
+
+        window.addEventListener('load', checkSession);
+    </script>
+</body>
+</html>

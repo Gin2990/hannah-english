@@ -1,0 +1,1257 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../supabase';
+
+// Helper to convert Google Drive audio links to direct media links
+const convertGoogleDriveAudioLink = (url) => {
+  if (!url) return '';
+  const trimmed = url.trim();
+  const fileDMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fileDMatch) {
+    return `https://docs.google.com/uc?export=download&id=${fileDMatch[1]}`;
+  }
+  const idMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (idMatch && (trimmed.includes('drive.google.com') || trimmed.includes('docs.google.com'))) {
+    return `https://docs.google.com/uc?export=download&id=${idMatch[1]}`;
+  }
+  return trimmed;
+};
+
+// Helper to isolate instructions from question text
+const parseQuestionInstruction = (q) => {
+  if (!q) return { instruction: "", questionText: "" };
+  if (q.instruction) {
+    return { instruction: q.instruction, questionText: q.question };
+  }
+  const match = q.question?.match(/^\[\s*([\s\S]+?)\s*\]\s*\n([\s\S]*)$/);
+  if (match) {
+    return { instruction: match[1].trim(), questionText: match[2].trim() };
+  }
+  return { instruction: "", questionText: q.question || "" };
+};
+
+// Helper to split options that got concatenated into a single block
+const splitEmbeddedOptions = (text) => {
+  if (!text) return [];
+  const hasMultiple = /[\.\s\u00A0][B-D][\.\-\)\s\u00A0]/i.test(text) && 
+                      /[\.\s\u00A0][C-E][\.\-\)\s\u00A0]/i.test(text);
+  if (!hasMultiple) return [text];
+  const parts = text.split(/(?=\b[B-K][\.\-\)\s\u00A0])/i);
+  return parts.map(p => p.trim()).filter(Boolean);
+};
+
+const TeacherDashboard = () => {
+  const { user } = useAuth();
+  
+  // General platform states
+  const [courses, setCourses] = useState([]);
+  const [publishedExams, setPublishedExams] = useState([]);
+  const [studentAttempts, setStudentAttempts] = useState([]);
+  const [loadingAttempts, setLoadingAttempts] = useState(true);
+  const [publishing, setPublishing] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  // States for DOCX Conversion & Creation
+  const [examTitle, setExamTitle] = useState('');
+  const [examCourseId, setExamCourseId] = useState('');
+  const [examDuration, setExamDuration] = useState(60);
+  const [examType, setExamType] = useState('test'); // 'test' (Full Test) hoặc 'homework' (Practice)
+  const [activePartIdx, setActivePartIdx] = useState(0);
+  const [studentAnswers, setStudentAnswers] = useState({});
+  const [highlightEnabled, setHighlightEnabled] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [previewActive, setPreviewActive] = useState(false);
+
+  // Word DOCX Files States
+  const [docxTestFile, setDocxTestFile] = useState(null);
+  const [docxKeyFile, setDocxKeyFile] = useState(null);
+  const [convertingDocx, setConvertingDocx] = useState(false);
+  const [convertedExam, setConvertedExam] = useState(null);
+
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    fetchCourses();
+    fetchPublishedExams();
+    fetchStudentAttempts();
+  }, []);
+
+  useEffect(() => {
+    if (previewActive) {
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds(prev => prev + 1);
+      }, 1000);
+    } else {
+      clearInterval(timerRef.current);
+      setElapsedSeconds(0);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [previewActive]);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const fetchCourses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .order('title', { ascending: true });
+      if (error) throw error;
+      setCourses(data || []);
+      if (data && data.length > 0) {
+        const ieltsCourse = data.find(c => c.code === 'ielts');
+        setExamCourseId(ieltsCourse ? ieltsCourse.id : data[0].id);
+      }
+    } catch (err) {
+      console.error("Lỗi tải khóa học:", err);
+    }
+  };
+
+  const fetchPublishedExams = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('exams')
+        .select(`
+          *,
+          courses (
+            title,
+            code
+          )
+        `)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setPublishedExams(data || []);
+    } catch (err) {
+      console.error("Lỗi tải đề thi:", err);
+    }
+  };
+
+  const fetchStudentAttempts = async () => {
+    try {
+      setLoadingAttempts(true);
+      const { data, error } = await supabase
+        .from('exam_results')
+        .select(`
+          id,
+          score,
+          total_questions,
+          duration_seconds,
+          taken_at,
+          profiles (
+            full_name,
+            email
+          ),
+          exams (
+            title
+          )
+        `)
+        .order('taken_at', { ascending: false });
+
+      if (error) throw error;
+      setStudentAttempts(data || []);
+    } catch (err) {
+      console.error("Lỗi tải lịch sử thi học viên:", err);
+    } finally {
+      setLoadingAttempts(false);
+    }
+  };
+
+  const handleDeleteExam = async (examId) => {
+    if (!window.confirm("🔥 CẢNH BÁO: Hành động này sẽ XÓA VĨNH VIỄN đề thi này cùng mọi lịch sử kết quả của học sinh liên quan! Bạn có chắc chắn muốn tiếp tục?")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('exams')
+        .delete()
+        .eq('id', examId);
+
+      if (error) throw error;
+      showToast("Đã xóa vĩnh viễn đề thi thành công!");
+      fetchPublishedExams();
+      fetchStudentAttempts();
+    } catch (err) {
+      alert("Lỗi xóa đề: " + err.message);
+    }
+  };
+
+  const loadMammoth = () => {
+    return new Promise((resolve, reject) => {
+      if (window.mammoth) {
+        resolve(window.mammoth);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js";
+      script.onload = () => resolve(window.mammoth);
+      script.onerror = (err) => reject(new Error("Không thể tải thư viện giải nén file Word (mammoth.js)."));
+      document.head.appendChild(script);
+    });
+  };
+
+  const parseAnswersKeyText = (text) => {
+    const keysMap = {};
+    if (!text) return keysMap;
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    
+    lines.forEach(line => {
+      const singleMatch = line.match(/^(\d+)\s*[\.\-\:\)\]\/]?\s*(.+)$/i);
+      if (singleMatch) {
+        const qNum = parseInt(singleMatch[1]);
+        const ans = singleMatch[2].trim();
+        if (qNum >= 1 && qNum <= 45) {
+          keysMap[qNum] = ans;
+          return;
+        }
+      }
+
+      let lineMatch;
+      const lineRegex = /(\d+)\s*[\.\-\:\)\]\/]?\s*(.+?)(?=\s+\d+[\.\-\:\)\]\/]?\s+|\s*$)/gi;
+      while ((lineMatch = lineRegex.exec(line)) !== null) {
+        const qNum = parseInt(lineMatch[1]);
+        const ans = lineMatch[2].trim();
+        if (qNum >= 1 && qNum <= 45 && ans) {
+          keysMap[qNum] = ans;
+        }
+      }
+    });
+
+    if (Object.keys(keysMap).length < 5) {
+      let pendingNum = null;
+      lines.forEach(line => {
+        const parts = line.split(/\t|\s{2,}|\|/).map(p => p.trim()).filter(Boolean);
+        parts.forEach(part => {
+          const pairMatch = part.match(/^(\d+)\s*[\.\-\:\)\]\/]?\s*(.+)$/i);
+          if (pairMatch) {
+            const qNum = parseInt(pairMatch[1]);
+            const ans = pairMatch[2].trim();
+            if (ans && qNum >= 1 && qNum <= 45) {
+              keysMap[qNum] = ans;
+              pendingNum = null;
+            }
+          } else {
+            const numMatch = part.match(/^(\d+)$/);
+            if (numMatch) {
+              const qNum = parseInt(numMatch[1]);
+              if (qNum >= 1 && qNum <= 45) {
+                pendingNum = qNum;
+              }
+            } else if (pendingNum !== null) {
+              keysMap[pendingNum] = part;
+              pendingNum = null;
+            }
+          }
+        });
+      });
+    }
+
+    return keysMap;
+  };
+
+  const extractPassageTitle = (elements, partNum) => {
+    for (let i = 0; i < Math.min(elements.length, 5); i++) {
+      const text = elements[i].textContent.trim();
+      if (!text) continue;
+      if (text.match(/READING\s+PASSAGE/i)) continue;
+      if (text.match(/You should spend/i)) continue;
+      return text;
+    }
+    return `Reading Passage ${partNum}`;
+  };
+
+  const parsePassageQuestions = (elements, keysMap) => {
+    const questions = [];
+    let currentQuestion = null;
+    const sharedOptions = [];
+    let pendingInstruction = "";
+
+    elements.forEach(el => {
+      const originalText = el.textContent.trim();
+      if (!originalText) return;
+
+      const texts = splitEmbeddedOptions(originalText);
+      const isSharedOptionsBlock = texts.length > 5 || texts.some(t => t.match(/^[F-K][\.\-\)\s\u00A0]/i));
+
+      texts.forEach(text => {
+        const isInstructionText = text.match(/^questions?\s+\d+/i) || 
+                                  text.match(/^choose\s+/i) || 
+                                  text.match(/^complete\s+/i) || 
+                                  text.match(/^write\s+/i) || 
+                                  text.match(/^do the following/i) || 
+                                  text.match(/^classify\s+/i) || 
+                                  text.match(/^label\s+/i) || 
+                                  text.match(/^read\s+/i) ||
+                                  text.match(/^look at the/i);
+
+        if (isInstructionText) {
+          if (currentQuestion) {
+            questions.push(currentQuestion);
+            currentQuestion = null;
+          }
+          if (pendingInstruction) {
+            pendingInstruction += "\n" + text;
+          } else {
+            pendingInstruction = text;
+          }
+          return;
+        }
+
+        const qMatch = text.match(/^(\d+)[\.\-\s\)\/]*\s*(.+)$/i);
+        if (qMatch && parseInt(qMatch[1]) <= 40) {
+          if (currentQuestion) {
+            questions.push(currentQuestion);
+          }
+          const qNum = parseInt(qMatch[1]);
+          const cleanQuestionText = qMatch[2].trim();
+          
+          currentQuestion = {
+            id: qNum,
+            question: cleanQuestionText,
+            instruction: pendingInstruction || "",
+            options: [],
+            correct: keysMap[qNum] || ""
+          };
+          pendingInstruction = "";
+        } else if (currentQuestion) {
+          const optMatch = text.match(/^([A-E])[\.\-\)\s\u00A0]+\s*(.+)$/i);
+          const bulletMatch = text.match(/^[\u2022\u00b7\u2013\u2014\-\*]\s*(.+)$/);
+          
+          if (optMatch && !text.match(/^ANSWER\s*:/i)) {
+            const letter = optMatch[1].toUpperCase();
+            const optText = optMatch[2].trim();
+            if (isSharedOptionsBlock) {
+              sharedOptions.push(`${letter}. ${optText}`);
+            } else {
+              currentQuestion.options.push(`${letter}. ${optText}`);
+            }
+          } else if (el.tagName?.toLowerCase() === 'li' || bulletMatch) {
+            const cleanText = bulletMatch ? bulletMatch[1].trim() : text;
+            const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+            const nextLetter = optionLetters[currentQuestion.options.length] || 'A';
+            if (isSharedOptionsBlock) {
+              sharedOptions.push(`${nextLetter}. ${cleanText}`);
+            } else {
+              currentQuestion.options.push(`${nextLetter}. ${cleanText}`);
+            }
+          } else {
+            const sharedOptMatch = text.match(/^([A-K])[\.\-\)\s\u00A0]+\s*(.+)$/i);
+            if (sharedOptMatch) {
+              const letter = sharedOptMatch[1].toUpperCase();
+              const optText = sharedOptMatch[2].trim();
+              sharedOptions.push(`${letter}. ${optText}`);
+            } else {
+              if (currentQuestion.options.length === 0) {
+                currentQuestion.question += " " + text;
+              } else {
+                currentQuestion.options[currentQuestion.options.length - 1] += " " + text;
+              }
+            }
+          }
+        } else {
+          const sharedOptMatch = text.match(/^([A-K])[\.\-\)\s\u00A0]+\s*(.+)$/i);
+          if (sharedOptMatch) {
+            const letter = sharedOptMatch[1].toUpperCase();
+            const optText = sharedOptMatch[2].trim();
+            sharedOptions.push(`${letter}. ${optText}`);
+          }
+        }
+      });
+    });
+
+    if (currentQuestion) {
+      questions.push(currentQuestion);
+    }
+
+    if (questions.length > 0 && sharedOptions.length > 0) {
+      const lastQ = questions[questions.length - 1];
+      if (lastQ.options && lastQ.options.length > 0) {
+        const lastSpecificOpt = lastQ.options[lastQ.options.length - 1].trim();
+        const firstSharedOpt = sharedOptions[0].trim();
+        const lastSpecificMatch = lastSpecificOpt.match(/^([A-K])[\.\-\)\s\u00A0]/i);
+        const firstSharedMatch = firstSharedOpt.match(/^([A-K])[\.\-\)\s\u00A0]/i);
+        
+        if (lastSpecificMatch && firstSharedMatch) {
+          const lastChar = lastSpecificMatch[1].toUpperCase();
+          const firstChar = firstSharedMatch[1].toUpperCase();
+          const lastCode = lastChar.charCodeAt(0);
+          const firstCode = firstChar.charCodeAt(0);
+          if (firstCode === lastCode + 1) {
+            sharedOptions.unshift(...lastQ.options);
+            lastQ.options = [];
+          }
+        }
+      }
+    }
+
+    if (sharedOptions.length > 0) {
+      questions.forEach(q => {
+        if (q.options.length === 0) {
+          q.options = [...sharedOptions];
+        }
+      });
+    }
+
+    questions.forEach(q => {
+      if (!q.correct) return;
+      const cleanCorrect = q.correct.toUpperCase().trim();
+      if (cleanCorrect.includes("YES") || cleanCorrect.includes("NO")) {
+        q.options = ["YES", "NO", "NOT GIVEN"];
+      } else if (cleanCorrect.includes("TRUE") || cleanCorrect.includes("FALSE")) {
+        q.options = ["TRUE", "FALSE", "NOT GIVEN"];
+      } else if (cleanCorrect === "NOT GIVEN" || cleanCorrect === "NOTGIVEN") {
+        q.options = ["YES", "NO", "NOT GIVEN"];
+      }
+    });
+
+    return questions;
+  };
+
+  const handleDocxConvert = async () => {
+    if (!docxTestFile) {
+      alert("⚠️ Vui lòng tải lên file đề thi Word (.docx)!");
+      return;
+    }
+    if (!docxKeyFile) {
+      alert("⚠️ Vui lòng tải lên file đáp án Word (.docx)!");
+      return;
+    }
+
+    try {
+      setConvertingDocx(true);
+      const mammothInstance = await loadMammoth();
+
+      const keyBuffer = await docxKeyFile.arrayBuffer();
+      const keyTextResult = await mammothInstance.extractRawText({ arrayBuffer: keyBuffer });
+      const keysMap = parseAnswersKeyText(keyTextResult.value);
+
+      if (Object.keys(keysMap).length === 0) {
+        throw new Error("Không thể trích xuất đáp án nào từ file key. Vui lòng kiểm tra lại định dạng!");
+      }
+
+      const testBuffer = await docxTestFile.arrayBuffer();
+      const testHtmlResult = await mammothInstance.convertToHtml({ arrayBuffer: testBuffer });
+      const testHtml = testHtmlResult.value;
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(testHtml, 'text/html');
+      const bodyElements = Array.from(doc.body.children);
+
+      const passageElements = [[], [], []];
+      let currentPassageIdx = 0;
+
+      bodyElements.forEach(el => {
+        const text = el.textContent.trim();
+        if (text.match(/READING\s+PASSAGE\s+1/i)) {
+          currentPassageIdx = 1;
+        } else if (text.match(/READING\s+PASSAGE\s+2/i)) {
+          currentPassageIdx = 2;
+        } else if (text.match(/READING\s+PASSAGE\s+3/i)) {
+          currentPassageIdx = 3;
+        }
+        if (currentPassageIdx > 0) {
+          passageElements[currentPassageIdx - 1].push(el);
+        }
+      });
+
+      if (passageElements[0].length === 0 && passageElements[1].length === 0 && passageElements[2].length === 0) {
+        throw new Error("Không tìm thấy các thẻ 'READING PASSAGE 1/2/3' để tách phần! Vui lòng kiểm tra tiêu đề các đoạn văn.");
+      }
+
+      const generatedParts = [];
+      for (let pIdx = 0; pIdx < 3; pIdx++) {
+        const elements = passageElements[pIdx];
+        if (elements.length === 0) continue;
+        const partNum = pIdx + 1;
+
+        let questionsStartIdx = -1;
+        for (let i = 0; i < elements.length; i++) {
+          const el = elements[i];
+          const text = el.textContent.trim();
+          if (text.match(/^Questions?\s+\d+-\d+/i) || text.match(/^Questions?\s+\d+/i)) {
+            questionsStartIdx = i;
+            break;
+          }
+        }
+
+        let passageContentHtml = "";
+        let questionsList = [];
+        const title = extractPassageTitle(elements, partNum);
+
+        if (questionsStartIdx !== -1) {
+          const textElements = elements.slice(0, questionsStartIdx);
+          const qElements = elements.slice(questionsStartIdx);
+
+          passageContentHtml = `<h2>READING PASSAGE ${partNum}</h2>\n`;
+          passageContentHtml += `<p>You should spend about 20 minutes on <strong>Questions ${partNum === 1 ? '1-13' : (partNum === 2 ? '14-27' : '28-40')}</strong> which are based on READING PASSAGE ${partNum} below.</p>\n\n`;
+          passageContentHtml += `<div class="highlight-box" style="text-align: center; background-color: #f8fafc; border-left: 4px solid #001e40; padding: 1rem; margin: 1.5rem 0; border-radius: 0 0.75rem 0.75rem 0;">\n  <h3 style="margin-top: 0; font-size: 1.125rem; font-weight: 800; color: #001e40; text-transform: uppercase;">${title}</h3>\n</div>\n\n`;
+
+          let titleFound = false;
+          textElements.forEach(el => {
+            const text = el.textContent.trim();
+            if (text.match(/READING PASSAGE/i)) return;
+            if (text.match(/You should spend/i)) return;
+            if (text === title && !titleFound) {
+              titleFound = true;
+              return;
+            }
+            passageContentHtml += el.outerHTML + "\n";
+          });
+
+          const flattenHtmlElements = (nodes) => {
+            const result = [];
+            const traverse = (n) => {
+              if (!n) return;
+              const tagName = n.tagName?.toLowerCase();
+              if (['p', 'li', 'td', 'th', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
+                result.push(n);
+                return;
+              }
+              if (n.children && n.children.length > 0) {
+                Array.from(n.children).forEach(child => traverse(child));
+              }
+            };
+            nodes.forEach(node => traverse(node));
+            return result;
+          };
+
+          const flatQElements = flattenHtmlElements(qElements);
+          questionsList = parsePassageQuestions(flatQElements, keysMap);
+        } else {
+          passageContentHtml = elements.map(el => el.outerHTML).join("\n");
+        }
+
+        generatedParts.push({
+          part_code: `ielts_reading_passage${partNum}`,
+          part_name: `Reading Passage ${partNum}`,
+          part_title: title,
+          part_content: passageContentHtml,
+          questions: questionsList
+        });
+      }
+
+      const totalQCount = generatedParts.reduce((acc, curr) => acc + curr.questions.length, 0);
+      const guessedTitle = docxTestFile.name.replace(/\.[^/.]+$/, "").replace(/_test/i, "").replace(/_/g, ' ');
+      
+      setExamTitle(guessedTitle);
+      setConvertedExam({
+        title: guessedTitle,
+        course_id: examCourseId,
+        duration: 60,
+        type: examType,
+        question_count: totalQCount,
+        test_parts: generatedParts,
+        questions: []
+      });
+
+      showToast(`Chuyển đổi thành công! Phân tích được ${generatedParts.length} Passage với ${totalQCount} Câu hỏi.`);
+      setPreviewActive(true);
+      setActivePartIdx(0);
+      setStudentAnswers({});
+    } catch (err) {
+      console.error(err);
+      alert(`⚠️ Lỗi trích xuất và phân tích Word: ${err.message}`);
+    } finally {
+      setConvertingDocx(false);
+    }
+  };
+
+  const selectPreviewAnswer = (qId, answer) => {
+    setStudentAnswers(prev => ({
+      ...prev,
+      [qId]: answer
+    }));
+  };
+
+  const handlePreviewMapClick = (partIndex, qId) => {
+    setActivePartIdx(partIndex);
+    setTimeout(() => {
+      const card = document.getElementById(`preview-q-card-${qId}`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.add('border-indigo-600', 'ring-2', 'ring-indigo-100', 'shadow-md');
+        setTimeout(() => {
+          card.classList.remove('border-indigo-600', 'ring-2', 'ring-indigo-100', 'shadow-md');
+        }, 1500);
+      }
+    }, 120);
+  };
+
+  const handlePreviewSubmit = () => {
+    if (!convertedExam) return;
+    let allQuestions = [];
+    convertedExam.test_parts.forEach(p => {
+      allQuestions = [...allQuestions, ...p.questions];
+    });
+
+    let score = 0;
+    allQuestions.forEach(q => {
+      const selected = studentAnswers[q.id] ? studentAnswers[q.id].trim().toLowerCase() : '';
+      const correctAns = q.correct ? q.correct.trim().toLowerCase() : '';
+      const correctAnswersArray = correctAns.split('/').map(a => a.trim());
+      if (correctAnswersArray.includes(selected)) score++;
+    });
+
+    alert(`🏆 [XEM TRƯỚC] Giả lập kết quả làm bài:\n👉 Đúng: ${score}/${allQuestions.length} câu\n👉 Độ chính xác: ${Math.round((score / allQuestions.length) * 100)}%\n👉 Thời gian làm bài: ${Math.floor(elapsedSeconds / 60)} phút`);
+  };
+
+  const publishToSupabase = async (e) => {
+    if (e) e.preventDefault();
+    if (!convertedExam) return;
+    if (!examTitle.trim()) {
+      alert('⚠️ Vui lòng điền tiêu đề bài thi!');
+      return;
+    }
+    if (!examCourseId) {
+      alert('⚠️ Vui lòng chọn khóa học target!');
+      return;
+    }
+
+    try {
+      setPublishing(true);
+
+      const payload = {
+        title: examTitle.trim(),
+        course_id: examCourseId,
+        duration: parseInt(examDuration),
+        type: examType,
+        question_count: convertedExam.question_count,
+        test_parts: convertedExam.test_parts.map(p => ({
+          part_code: p.part_code,
+          part_name: p.part_name,
+          audio_url: p.audio_url ? convertGoogleDriveAudioLink(p.audio_url) : null,
+          part_content: p.part_content || null,
+          questions: p.questions
+        })),
+        questions: [],
+        created_by: user?.id || null
+      };
+
+      const { data, error } = await supabase
+        .from('exams')
+        .insert(payload)
+        .select();
+
+      if (error) throw error;
+
+      showToast(`Đã xuất bản đề thi "${examTitle.trim()}" thành công trực tuyến lên Supabase!`);
+      
+      // Reset form chung
+      setExamTitle('');
+      setConvertedExam(null);
+      setPreviewActive(false);
+      setDocxTestFile(null);
+      setDocxKeyFile(null);
+      fetchPublishedExams();
+      fetchStudentAttempts();
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi xuất bản đề thi: " + err.message);
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const formatStopwatch = () => {
+    const min = Math.floor(elapsedSeconds / 60);
+    const sec = elapsedSeconds % 60;
+    return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  };
+
+  const activePart = convertedExam?.test_parts[activePartIdx];
+  const activeQuestions = activePart?.questions || [];
+  const uniqueStudentsCount = new Set(studentAttempts.map(a => a.profiles?.email).filter(Boolean)).size;
+
+  return (
+    <div className="bg-[#f8f9fa] min-h-screen text-slate-800 pb-20 selection:bg-indigo-900 selection:text-white">
+      {/* Dynamic inline styles for premium Study4 Mock Exam Room previewer */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .study4-passage {
+          font-family: 'Inter', system-ui, sans-serif;
+          color: #334155;
+          font-size: 0.85rem;
+          line-height: 1.75;
+        }
+        .study4-passage h2 {
+          font-size: 1.15rem;
+          font-weight: 800;
+          color: #001e40;
+          margin-bottom: 0.75rem;
+          text-transform: uppercase;
+        }
+        .study4-passage h3 {
+          font-size: 1rem;
+          font-weight: 800;
+          color: #001e40;
+          margin-top: 1.25rem;
+          margin-bottom: 0.5rem;
+          text-transform: uppercase;
+          border-bottom: 2px solid #f1f5f9;
+          padding-bottom: 4px;
+        }
+        .study4-passage p {
+          margin-bottom: 0.75rem;
+          text-align: justify;
+        }
+        .study4-passage table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 1.25rem 0;
+          font-size: 0.8rem;
+        }
+        .study4-passage th, .study4-passage td {
+          border: 1px solid #cbd5e1;
+          padding: 8px 12px;
+          text-align: left;
+        }
+        .study4-passage th {
+          background-color: #f8fafc;
+          color: #001e40;
+          font-weight: 700;
+        }
+        .study4-passage tr:nth-child(even) {
+          background-color: #f8fafc;
+        }
+        .study4-passage .highlight-box {
+          background-color: #f8fafc;
+          border-left: 4px solid #001e40;
+          padding: 1rem;
+          margin: 1.25rem 0;
+          border-radius: 0 0.75rem 0.75rem 0;
+        }
+        .custom-preview-scrollbar::-webkit-scrollbar {
+          width: 5px;
+          height: 5px;
+        }
+        .custom-preview-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 8px;
+        }
+        .custom-preview-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 8px;
+        }
+        .custom-preview-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+          border-radius: 8px;
+        }
+        .highlighted-text {
+          background-color: rgba(254, 240, 138, 0.6);
+          border-radius: 3px;
+          padding: 1px 3px;
+        }
+      `}} />
+      
+      {/* Banner */}
+      <section className="bg-[#001e40] text-white py-10 px-6 relative overflow-hidden">
+        <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6 z-10 relative">
+          <div className="space-y-2">
+            <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-xs font-bold text-blue-300 uppercase tracking-widest">
+              Teacher Dashboard
+            </span>
+            <h1 className="font-display text-2xl font-extrabold tracking-tight">Cổng Quản Trị Giảng Viên</h1>
+            <p className="text-slate-400 text-xs">Biên soạn, kiểm tra và xuất bản đề thi trực tuyến tự động từ file Word (.docx) sang Supabase.</p>
+          </div>
+          <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl backdrop-blur-md">
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs text-white">GV</div>
+            <div>
+              <p className="text-xs font-bold">{user?.full_name}</p>
+              <span className="text-[10px] text-blue-300 font-bold uppercase tracking-wider">Hannah English Mentor</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-[1440px] mx-auto px-6 mt-8 space-y-8">
+        
+        {/* Stats */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Tổng số học viên trực tuyến</p>
+            <h3 className="text-2xl font-extrabold text-[#001e40] mt-1">{uniqueStudentsCount} học viên</h3>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Tổng số đề & bài tập</p>
+            <h3 className="text-2xl font-extrabold text-[#001e40] mt-1">{publishedExams.length} bài đăng</h3>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Lượt làm bài tập hệ thống</p>
+            <h3 className="text-2xl font-extrabold text-[#001e40] mt-1">{studentAttempts.length} lượt nộp bài</h3>
+          </div>
+        </section>
+
+        {/* BỘ BIÊN SOẠN ĐỀ THI WORD (.DOCX) - TÍCH HỢP CONVERTER & PREVIEW TRỰC TIẾP */}
+        <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-slate-150 bg-slate-50/50">
+            <h2 className="font-display text-base font-bold text-[#001e40]">Bộ Biên Soạn Đề Thi Trực Tuyến Tự Động</h2>
+            <p className="text-slate-400 text-[10px] mt-0.5">Tải lên tệp đề thi và đáp án Word để tự động bóc tách bài đọc, câu hỏi và xem trước Study4 tức thì.</p>
+          </div>
+
+          <div className="p-6 space-y-6">
+            
+            {/* Uploader Form Controls */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+              <div className="space-y-1">
+                <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-wide">Khóa học đích</label>
+                <select 
+                  value={examCourseId}
+                  onChange={(e) => setExamCourseId(e.target.value)}
+                  className="w-full text-xs border border-slate-200 rounded-xl py-2 px-3 focus:outline-none focus:border-blue-600 bg-white font-semibold"
+                >
+                  <option value="">-- Chọn Khóa Học Target --</option>
+                  {courses.map(c => (
+                    <option key={c.id} value={c.id}>{c.title} ({c.code.toUpperCase()})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-wide">Hình thức</label>
+                <select 
+                  value={examType}
+                  onChange={(e) => setExamType(e.target.value)}
+                  className="w-full text-xs border border-slate-200 rounded-xl py-2 px-3 focus:outline-none focus:border-blue-600 bg-white font-bold text-blue-700"
+                >
+                  <option value="test">Đề thi thử (Full Test)</option>
+                  <option value="homework">Bài tập ôn tập (Practice)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-wide">Thời gian (Phút)</label>
+                <input 
+                  type="number"
+                  value={examDuration}
+                  onChange={(e) => setExamDuration(parseInt(e.target.value) || 0)}
+                  className="w-full text-xs border border-slate-200 rounded-xl py-2 px-3 focus:outline-none focus:border-blue-600 font-semibold"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-extrabold text-slate-700 uppercase tracking-wide">Tiêu đề (Tự động nhận diện)</label>
+                <input 
+                  type="text"
+                  value={examTitle}
+                  onChange={(e) => setExamTitle(e.target.value)}
+                  placeholder="Nhập tiêu đề hoặc để tự động nhận diện..."
+                  className="w-full text-xs border border-slate-200 rounded-xl py-2 px-3 focus:outline-none focus:border-blue-600 font-semibold"
+                />
+              </div>
+            </div>
+
+            {/* File selection boxes */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              <div className="border border-slate-200 rounded-2xl p-5 bg-slate-50/50 flex flex-col items-center text-center justify-center space-y-3">
+                <span className="material-symbols-outlined text-3xl text-indigo-600">menu_book</span>
+                <div>
+                  <h4 className="text-xs font-bold text-[#001e40]">Tệp Đề Thi (.docx)</h4>
+                  <p className="text-[9px] text-slate-400 mt-0.5">File chứa 3 Passage bắt đầu bằng thẻ READING PASSAGE 1/2/3</p>
+                </div>
+                <label className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-bold hover:bg-slate-100 hover:border-indigo-500 cursor-pointer shadow-sm transition-all active:scale-95">
+                  {docxTestFile ? `📄 ${docxTestFile.name}` : "Chọn File Word Đề Thi"}
+                  <input 
+                    type="file" 
+                    accept=".docx" 
+                    className="hidden" 
+                    onChange={(e) => setDocxTestFile(e.target.files[0])}
+                  />
+                </label>
+              </div>
+
+              <div className="border border-slate-200 rounded-2xl p-5 bg-slate-50/50 flex flex-col items-center text-center justify-center space-y-3">
+                <span className="material-symbols-outlined text-3xl text-indigo-600">done_all</span>
+                <div>
+                  <h4 className="text-xs font-bold text-[#001e40]">Tệp Đáp Án (.docx / key)</h4>
+                  <p className="text-[9px] text-slate-400 mt-0.5">File Word hoặc Text chứa đáp án các câu từ 1 đến 40</p>
+                </div>
+                <label className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-bold hover:bg-slate-100 hover:border-indigo-500 cursor-pointer shadow-sm transition-all active:scale-95">
+                  {docxKeyFile ? `📄 ${docxKeyFile.name}` : "Chọn File Word Đáp Án"}
+                  <input 
+                    type="file" 
+                    accept=".docx" 
+                    className="hidden" 
+                    onChange={(e) => setDocxKeyFile(e.target.files[0])}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Convert action trigger */}
+            <div className="flex justify-center pt-2">
+              <button
+                type="button"
+                onClick={handleDocxConvert}
+                disabled={convertingDocx || !docxTestFile || !docxKeyFile}
+                className="px-10 py-3.5 bg-gradient-to-r from-indigo-700 to-indigo-900 text-white font-extrabold text-xs rounded-xl shadow-md disabled:opacity-50 disabled:pointer-events-none transition-all active:scale-97 flex items-center justify-center gap-2"
+              >
+                {convertingDocx ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Đang bóc tách đề thi...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-sm font-bold">query_stats</span>
+                    <span>CHUYỂN ĐỔI ĐỀ THI (.DOCX) ĐỂ XEM TRƯỚC ⚡</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+          </div>
+        </section>
+
+        {/* 2. PREMIUM STUDY4 STYLE PREVIEW - ONLY RENDERS IF CONVERTED */}
+        {previewActive && convertedExam && (
+          <section className="bg-white border border-slate-200 rounded-3xl shadow-md overflow-hidden flex flex-col p-6 animate-fade-in space-y-6">
+            
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-150 pb-4">
+              <div>
+                <span className="px-2.5 py-0.5 bg-indigo-50 border border-indigo-200 rounded-full text-[9px] font-bold text-indigo-700 uppercase tracking-widest">
+                  Preview Mode
+                </span>
+                <h3 className="font-display font-extrabold text-sm text-[#001e40] mt-1">Giả Lập Phòng Thi Trực Tuyến Học Viên (Study4 UI)</h3>
+                <p className="text-[10px] text-slate-400">Rà soát lại hiển thị văn bản, câu hỏi và đáp án trước khi nhấn xuất bản lên hệ thống.</p>
+              </div>
+
+              {/* Highlight switch */}
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-150 rounded-xl px-3 py-1.5 shadow-sm text-xs font-semibold text-slate-600">
+                <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={highlightEnabled}
+                    onChange={(e) => setHighlightEnabled(e.target.checked)}
+                    className="rounded text-indigo-600 focus:ring-indigo-600 border-slate-300 w-3.5 h-3.5"
+                  />
+                  <span>Tô sáng từ vựng khóa</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Split Screen Simulated Mock Test area */}
+            <div className="h-[550px] w-full flex flex-col lg:flex-row gap-6 p-1 overflow-hidden min-h-0">
+              
+              {/* Passage Column (Left) */}
+              <div className="flex-grow bg-white border border-slate-150 rounded-2xl p-5 shadow-sm flex flex-col lg:h-full relative overflow-hidden min-w-0">
+                {/* Passage tabs swapper */}
+                <div className="flex overflow-x-auto gap-1 border-b border-slate-150 pb-2 mb-3 shrink-0 max-w-full custom-preview-scrollbar">
+                  {convertedExam.test_parts.map((p, idx) => (
+                    <button
+                      key={p.part_code}
+                      onClick={() => setActivePartIdx(idx)}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold shrink-0 transition-all ${activePartIdx === idx ? 'bg-[#001e40] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}
+                    >
+                      {p.part_name}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex-grow overflow-y-auto pr-2 custom-preview-scrollbar min-h-0 select-text">
+                  {activePart?.part_content ? (
+                    <div
+                      className={`study4-passage ${highlightEnabled ? 'has-highlights' : ''}`}
+                      dangerouslySetInnerHTML={{
+                        __html: highlightEnabled 
+                          ? activePart.part_content.replace(/(A\.\s|B\.\s|C\.\s|D\.\s|Paragraph [A-G])/g, '<span class="highlighted-text">$1</span>')
+                          : activePart.part_content
+                      }}
+                    />
+                  ) : (
+                    <div className="text-center py-20 text-slate-400 text-xs">
+                      Không có văn bản bài đọc cho phần này.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Bubble Sheet Column (Middle) */}
+              <div className="w-full lg:w-[35%] shrink-0 bg-white border border-slate-150 rounded-2xl p-4 shadow-sm flex flex-col lg:h-full overflow-hidden min-w-0">
+                <div className="border-b border-slate-150 pb-2 mb-2 shrink-0 flex justify-between items-center text-xs font-bold text-[#001e40]">
+                  <span>Phiếu Trả Lời Đề Thi</span>
+                  <span className="text-[9px] bg-slate-100 px-2 py-0.5 rounded-full">
+                    {Object.keys(studentAnswers).filter(k => activeQuestions.some(q => q.id === parseInt(k) || q.id === k)).length} / {activeQuestions.length} câu
+                  </span>
+                </div>
+
+                <div className="flex-grow overflow-y-auto pr-1 space-y-3 custom-preview-scrollbar text-[11px] min-h-0">
+                  {(() => {
+                    let lastInstruction = "";
+                    return activeQuestions.map((q, idx) => {
+                      const selectedOpt = studentAnswers[q.id];
+                      const hasOptions = q.options && q.options.length > 0;
+                      const { instruction, questionText } = parseQuestionInstruction(q);
+                      const showInstruction = instruction && instruction !== lastInstruction;
+                      if (showInstruction) lastInstruction = instruction;
+
+                      return (
+                        <React.Fragment key={q.id}>
+                          {showInstruction && (
+                            <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-3 mb-2 text-slate-700 leading-relaxed font-semibold text-[10px] whitespace-pre-line shadow-sm border-l-4 border-l-indigo-600 animate-fade-in">
+                              {instruction}
+                            </div>
+                          )}
+                          <div
+                            id={`preview-q-card-${q.id}`}
+                            className="flex flex-col py-3 px-3 border border-slate-100 rounded-xl gap-2.5 transition-all bg-white shadow-sm hover:shadow border-l-2 hover:border-l-indigo-600"
+                          >
+                            <div className="flex justify-between items-start gap-2">
+                              <span className="w-5 h-5 rounded-full bg-[#001e40]/10 text-[#001e40] font-extrabold text-[9px] flex items-center justify-center shrink-0 mt-0.5">
+                                {q.id}
+                              </span>
+                              <p className="font-semibold text-slate-800 leading-relaxed flex-grow whitespace-pre-line text-[10px]">
+                                {questionText.startsWith('Câu') ? questionText : `Câu ${q.id}: ${questionText}`}
+                              </p>
+                            </div>
+
+                            {hasOptions ? (
+                              <div className="w-full pt-0.5">
+                                {(() => {
+                                    const isYesNoNotGiven = q.options.length > 0 && q.options.every(opt => {
+                                      const u = opt.trim().toUpperCase();
+                                      return u === 'YES' || u === 'NO' || u === 'NOT GIVEN' || u === 'TRUE' || u === 'FALSE';
+                                    });
+
+                                    if (isYesNoNotGiven) {
+                                      return (
+                                        <div className="flex flex-wrap gap-1">
+                                          {q.options.map(opt => {
+                                            const val = opt.trim();
+                                            const isSelected = selectedOpt === val;
+                                            return (
+                                              <button
+                                                key={val}
+                                                type="button"
+                                                onClick={() => selectPreviewAnswer(q.id, val)}
+                                                className={`px-2.5 py-0.5 rounded-md font-extrabold text-[8px] border ${isSelected ? 'bg-[#001e40] border-[#001e40] text-white shadow-sm' : 'border-slate-200 text-slate-400 hover:bg-slate-50'}`}
+                                              >
+                                                {val}
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      );
+                                    }
+
+                                    return (
+                                      <div className="w-full flex flex-col gap-1">
+                                        {q.options.map((opt) => {
+                                          const optMatch = opt.trim().match(/^([A-K])[\.\-\)\s\u00A0]*\s*(.*)$/i);
+                                          const letter = optMatch ? optMatch[1].toUpperCase() : '';
+                                          const description = optMatch ? optMatch[2].trim() : opt.trim();
+                                          const isSelected = selectedOpt === letter;
+                                          
+                                          return (
+                                            <div
+                                              key={opt}
+                                              onClick={() => selectPreviewAnswer(q.id, letter || opt)}
+                                              className={`flex items-start gap-2 p-1.5 rounded-lg border text-[9px] cursor-pointer transition-all hover:bg-slate-50 ${isSelected ? 'bg-indigo-50/30 border-indigo-500 text-indigo-950 font-semibold' : 'border-slate-100 text-slate-600'}`}
+                                            >
+                                              <span className={`w-4 h-4 rounded flex items-center justify-center shrink-0 border text-[8px] font-extrabold ${isSelected ? 'bg-[#001e40] border-[#001e40] text-white' : 'border-slate-300 text-slate-500 bg-white'}`}>
+                                                {letter}
+                                              </span>
+                                              <span className="leading-normal pt-0.5">{description}</span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    );
+                                })()}
+                              </div>
+                            ) : (
+                              <input
+                                type="text"
+                                value={studentAnswers[q.id] || ''}
+                                onChange={(e) => selectPreviewAnswer(q.id, e.target.value)}
+                                placeholder="Nhập câu trả lời điền từ..."
+                                className="w-full border border-slate-200 focus:border-[#001e40] focus:ring-1 focus:ring-[#001e40] rounded-lg px-2.5 py-1 text-[9px] font-semibold focus:outline-none bg-white text-slate-800"
+                              />
+                            )}
+                          </div>
+                        </React.Fragment>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+
+              {/* Sidebar Column (Right) */}
+              <div className="w-full lg:w-60 shrink-0 flex flex-col gap-4 lg:h-full overflow-hidden">
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col justify-center items-center shadow-sm shrink-0 gap-1.5">
+                  <span className="block text-[8px] font-bold text-slate-450 uppercase tracking-wider">Thời gian xem trước</span>
+                  <span className="font-bold text-xl font-mono text-[#001e40]">{formatStopwatch()}</span>
+                  <button
+                    type="button"
+                    onClick={handlePreviewSubmit}
+                    className="w-full bg-[#001e40] hover:bg-[#003366] text-white font-extrabold text-[9px] py-2 rounded-lg transition-all shadow active:scale-97 flex items-center justify-center gap-1"
+                  >
+                    NỘP BÀI THỬ
+                  </button>
+                </div>
+
+                <div className="bg-white border border-slate-150 p-4 rounded-xl flex flex-col shadow-sm flex-grow min-h-0 overflow-hidden">
+                  <span className="block text-[8px] font-extrabold text-slate-450 uppercase tracking-wider mb-2 pb-1.5 border-b border-slate-100 shrink-0">
+                    Bản Đồ Câu Hỏi
+                  </span>
+                  <div className="flex-grow overflow-y-auto pr-1 custom-preview-scrollbar space-y-3 min-h-0">
+                    {convertedExam.test_parts.map((part, pIdx) => {
+                      if (!part.questions || part.questions.length === 0) return null;
+                      return (
+                        <div key={part.part_code} className="space-y-1">
+                          <h4 className="text-[7.5px] font-extrabold text-slate-500 uppercase tracking-wider">
+                            {part.part_name}
+                          </h4>
+                          <div className="flex flex-wrap gap-1">
+                            {part.questions.map((q) => {
+                              const isAnswered = !!studentAnswers[q.id];
+                              const isActive = activePartIdx === pIdx;
+                              return (
+                                <button
+                                  key={q.id}
+                                  type="button"
+                                  onClick={() => handlePreviewMapClick(pIdx, q.id)}
+                                  className={`w-7 h-7 font-extrabold text-[9px] flex items-center justify-center rounded-md transition-all border shrink-0 ${isAnswered ? 'bg-[#001e40] border-[#001e40] text-white shadow-sm' : isActive ? 'border-[#001e40] text-[#001e40] bg-indigo-50/50' : 'border-slate-200 text-slate-400'}`}
+                                >
+                                  {q.id}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Packaged Action panel for exports and direct db pushes */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-150 pt-4">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={publishToSupabase}
+                  disabled={publishing}
+                  className="flex-grow py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-850 text-white rounded-xl text-xs font-extrabold shadow-md disabled:opacity-50 transition-all active:scale-97 flex items-center justify-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-sm font-bold">cloud_upload</span>
+                  {publishing ? 'Đang xuất bản...' : 'ĐĂNG TRỰC TIẾP LÊN SUPABASE'}
+                </button>
+              </div>
+
+              <div className="flex gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm("🗑️ Bạn có chắc chắn muốn hủy bản convert hiện tại để chọn file khác?")) {
+                      setConvertedExam(null);
+                      setPreviewActive(false);
+                      setDocxTestFile(null);
+                      setDocxKeyFile(null);
+                      setExamTitle('');
+                    }
+                  }}
+                  className="px-6 py-3 bg-white border border-slate-250 hover:bg-red-50 hover:border-red-300 text-red-600 hover:text-red-700 rounded-xl text-xs font-bold transition-all active:scale-97 flex items-center justify-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-sm">delete_sweep</span>
+                  Hủy bản nháp
+                </button>
+              </div>
+            </div>
+
+          </section>
+        )}
+
+        {/* Hàng chứa Kho đề thi và Kết quả học viên (Nằm bên dưới, chia thành 2 cột song song trên màn hình rộng) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          {/* Published Exams / Practice */}
+          <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col max-h-[500px]">
+            <div className="p-5 border-b border-slate-150 bg-slate-50/50">
+              <h3 className="font-display text-sm font-bold text-[#001e40]">Kho Bài Giảng & Đề Đã Đăng</h3>
+              <p className="text-slate-400 text-[9px]">Lọc, tìm kiếm hoặc xóa hoàn toàn dữ liệu đề thi trên bảng lưu trữ.</p>
+            </div>
+
+            <div className="flex-grow overflow-y-auto p-4 space-y-3 custom-preview-scrollbar">
+              {publishedExams.map(ex => (
+                <div key={ex.id} className="p-3 border border-slate-100 hover:border-blue-500/20 rounded-2xl bg-white transition-all flex items-center justify-between gap-3 group">
+                  <div className="flex-grow min-w-0 space-y-1">
+                    <h4 className="font-extrabold text-xs text-[#001e40] truncate" title={ex.title}>{ex.title}</h4>
+                    <div className="flex flex-wrap items-center gap-x-2 text-[9px] font-bold text-slate-450">
+                      <span className="text-blue-700 uppercase">{ex.courses?.title?.split(' ')[0]}</span>
+                      <span>•</span>
+                      <span className={`px-1 rounded ${ex.type === 'homework' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                        {ex.type === 'homework' ? 'Bài tập' : 'Full Test'}
+                      </span>
+                      <span>•</span>
+                      <span>{ex.question_count} câu hỏi</span>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => handleDeleteExam(ex.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-450 hover:text-red-650 transition-all shrink-0"
+                    title="Xóa đề vĩnh viễn"
+                  >
+                    <span className="material-symbols-outlined text-[16px] font-bold">delete_forever</span>
+                  </button>
+                </div>
+              ))}
+
+              {publishedExams.length === 0 && (
+                <p className="text-center py-10 text-slate-400 italic text-xs">Chưa có bài tập/đề thi nào.</p>
+              )}
+            </div>
+          </section>
+
+          {/* Student Exam Attempts */}
+          <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col max-h-[500px]">
+            <div className="p-5 border-b border-slate-150 bg-slate-50/50">
+              <h3 className="font-display text-sm font-bold text-[#001e40]">Kết Quả Làm Bài Của Học Viên</h3>
+              <p className="text-slate-450 text-[9px]">Xem tiến độ học tập và điểm số mới nhất của lớp học.</p>
+            </div>
+
+            <div className="flex-grow overflow-y-auto p-4 space-y-3 custom-preview-scrollbar">
+              {loadingAttempts ? (
+                <p className="text-center py-10 text-slate-400 italic text-xs">Đang nạp kết quả...</p>
+              ) : studentAttempts.map(att => {
+                const studentName = att.profiles?.full_name || "Học viên ẩn danh";
+                const scoreDisplay = `${att.score} / ${att.total_questions}`;
+                return (
+                  <div key={att.id} className="p-3 border border-slate-100 rounded-xl flex items-center justify-between gap-3 text-xs bg-slate-50/30">
+                    <div>
+                      <p className="font-bold text-[#001e40]">{studentName}</p>
+                      <p className="text-[9px] text-slate-450 truncate max-w-[200px]" title={att.exams?.title}>{att.exams?.title}</p>
+                    </div>
+                    <span className="px-2 py-0.5 bg-blue-50 border border-blue-100 text-blue-700 rounded-full font-extrabold text-[9px]">
+                      {scoreDisplay}
+                    </span>
+                  </div>
+                );
+              })}
+
+              {studentAttempts.length === 0 && (
+                <p className="text-center py-10 text-slate-400 italic text-xs">Chưa có học viên nào nộp bài.</p>
+              )}
+            </div>
+          </section>
+
+        </div>
+
+      </div>
+
+      {/* Floating Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-4 right-4 z-[99999] bg-[#001e40] text-white text-xs font-bold px-4 py-3 rounded-xl shadow-2xl border border-white/10 flex items-center gap-2 animate-slide-in">
+          <span className="material-symbols-outlined text-sm text-emerald-400">check_circle</span>
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+export default TeacherDashboard;
