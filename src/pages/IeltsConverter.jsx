@@ -293,11 +293,12 @@ const IeltsConverter = () => {
 
         const totalQCount = sortedParts.reduce((acc, curr) => acc + curr.questions.length, 0);
         const guessedTitle = file.name.replace(/\.[^/.]+$/, "").replace(/_draft/i, "").replace(/_/g, ' ');
+        const finalTitle = examTitle.trim() ? examTitle.trim() : guessedTitle;
 
-        setExamTitle(guessedTitle);
+        setExamTitle(finalTitle);
         setIsListening(listeningFound);
         setConvertedExam({
-          title: guessedTitle,
+          title: finalTitle,
           course_id: targetCourseId,
           duration: listeningFound ? 40 : 60,
           type: examType,
@@ -946,10 +947,11 @@ const IeltsConverter = () => {
       const totalQCount = generatedParts.reduce((acc, curr) => acc + curr.questions.length, 0);
 
       const guessedTitle = docxTestFile.name.replace(/\.[^/.]+$/, "").replace(/_test/i, "").replace(/_/g, ' ');
-      setExamTitle(guessedTitle);
+      const finalTitle = examTitle.trim() ? examTitle.trim() : guessedTitle;
+      setExamTitle(finalTitle);
       setIsListening(false);
       setConvertedExam({
-        title: guessedTitle,
+        title: finalTitle,
         course_id: targetCourseId,
         duration: 60,
         type: examType,

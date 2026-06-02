@@ -51,6 +51,14 @@ const TeacherDashboard = () => {
   const [publishing, setPublishing] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
+  // States for Editing Exams
+  const [editingExam, setEditingExam] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editCourseId, setEditCourseId] = useState('');
+  const [editDuration, setEditDuration] = useState(60);
+  const [editType, setEditType] = useState('test');
+  const [updatingExam, setUpdatingExam] = useState(false);
+
   // States for DOCX Conversion & Creation
   const [examTitle, setExamTitle] = useState('');
   const [examCourseId, setExamCourseId] = useState('');
@@ -176,6 +184,47 @@ const TeacherDashboard = () => {
       fetchStudentAttempts();
     } catch (err) {
       alert("Lỗi xóa đề: " + err.message);
+    }
+  };
+
+  const handleStartEdit = (exam) => {
+    setEditingExam(exam);
+    setEditTitle(exam.title || '');
+    setEditCourseId(exam.course_id || '');
+    setEditDuration(exam.duration || 60);
+    setEditType(exam.type || 'test');
+  };
+
+  const handleUpdateExam = async (e) => {
+    if (e) e.preventDefault();
+    if (!editingExam) return;
+    if (!editTitle.trim()) {
+      alert("⚠️ Vui lòng nhập tiêu đề bài thi!");
+      return;
+    }
+
+    try {
+      setUpdatingExam(true);
+      const { error } = await supabase
+        .from('exams')
+        .update({
+          title: editTitle.trim(),
+          course_id: editCourseId,
+          duration: parseInt(editDuration) || 0,
+          type: editType
+        })
+        .eq('id', editingExam.id);
+
+      if (error) throw error;
+      
+      showToast(`Đã cập nhật đề thi "${editTitle.trim()}" thành công!`);
+      setEditingExam(null);
+      fetchPublishedExams();
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi khi cập nhật đề thi: " + err.message);
+    } finally {
+      setUpdatingExam(false);
     }
   };
 
@@ -535,10 +584,11 @@ const TeacherDashboard = () => {
 
       const totalQCount = generatedParts.reduce((acc, curr) => acc + curr.questions.length, 0);
       const guessedTitle = docxTestFile.name.replace(/\.[^/.]+$/, "").replace(/_test/i, "").replace(/_/g, ' ');
+      const finalTitle = examTitle.trim() ? examTitle.trim() : guessedTitle;
       
-      setExamTitle(guessedTitle);
+      setExamTitle(finalTitle);
       setConvertedExam({
-        title: guessedTitle,
+        title: finalTitle,
         course_id: examCourseId,
         duration: 60,
         type: examType,
@@ -742,6 +792,20 @@ const TeacherDashboard = () => {
           background-color: rgba(254, 240, 138, 0.6);
           border-radius: 3px;
           padding: 1px 3px;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(16px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.2s ease-out forwards;
+        }
+        .animate-slide-up {
+          animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `}} />
       
@@ -1186,17 +1250,28 @@ const TeacherDashboard = () => {
                         {ex.type === 'homework' ? 'Bài tập' : 'Full Test'}
                       </span>
                       <span>•</span>
+                      <span>{ex.duration || 60} phút</span>
+                      <span>•</span>
                       <span>{ex.question_count} câu hỏi</span>
                     </div>
                   </div>
 
-                  <button 
-                    onClick={() => handleDeleteExam(ex.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-450 hover:text-red-650 transition-all shrink-0"
-                    title="Xóa đề vĩnh viễn"
-                  >
-                    <span className="material-symbols-outlined text-[16px] font-bold">delete_forever</span>
-                  </button>
+                  <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1.5 shrink-0 transition-all">
+                    <button 
+                      onClick={() => handleStartEdit(ex)}
+                      className="p-1 text-slate-450 hover:text-blue-650 transition-all"
+                      title="Chỉnh sửa đề thi"
+                    >
+                      <span className="material-symbols-outlined text-[16px] font-bold">edit</span>
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteExam(ex.id)}
+                      className="p-1 text-slate-450 hover:text-red-650 transition-all"
+                      title="Xóa đề vĩnh viễn"
+                    >
+                      <span className="material-symbols-outlined text-[16px] font-bold">delete_forever</span>
+                    </button>
+                  </div>
                 </div>
               ))}
 
@@ -1241,6 +1316,114 @@ const TeacherDashboard = () => {
         </div>
 
       </div>
+
+      {/* Edit Exam Modal */}
+      {editingExam && (
+        <div className="fixed inset-0 bg-[#001e40]/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white border border-slate-200 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-slide-up">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-150 bg-slate-50/50 flex justify-between items-center">
+              <div>
+                <h3 className="font-display text-sm font-bold text-[#001e40] flex items-center gap-2">
+                  <span className="material-symbols-outlined text-indigo-600 font-bold">edit</span>
+                  Chỉnh Sửa Thông Tin Đề Thi
+                </h3>
+                <p className="text-slate-400 text-[9px] mt-0.5">Thay đổi thông tin cơ bản của đề thi hiện tại.</p>
+              </div>
+              <button 
+                onClick={() => setEditingExam(null)}
+                className="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-all active:scale-90"
+              >
+                <span className="material-symbols-outlined text-[14px] font-bold">close</span>
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleUpdateExam} className="p-5 space-y-4">
+              {/* Title */}
+              <div className="space-y-1">
+                <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wide">Tiêu đề bài thi</label>
+                <input 
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="Nhập tên đề thi..."
+                  className="w-full text-xs border border-slate-200 focus:border-[#001e40] focus:ring-1 focus:ring-[#001e40] rounded-xl py-2 px-3 focus:outline-none font-semibold bg-white text-slate-800"
+                />
+              </div>
+
+              {/* Course & Type */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wide">Khóa học đích</label>
+                  <select 
+                    value={editCourseId}
+                    onChange={(e) => setEditCourseId(e.target.value)}
+                    className="w-full text-xs border border-slate-200 focus:border-[#001e40] focus:ring-1 focus:ring-[#001e40] rounded-xl py-2 px-3 focus:outline-none bg-white font-semibold text-slate-800"
+                  >
+                    <option value="">-- Chọn Khóa Học Target --</option>
+                    {courses.map(c => (
+                      <option key={c.id} value={c.id}>{c.title} ({c.code.toUpperCase()})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wide">Hình thức</label>
+                  <select 
+                    value={editType}
+                    onChange={(e) => setEditType(e.target.value)}
+                    className="w-full text-xs border border-slate-200 focus:border-[#001e40] focus:ring-1 focus:ring-[#001e40] rounded-xl py-2 px-3 focus:outline-none bg-white font-bold text-blue-700"
+                  >
+                    <option value="test">Đề thi thử (Full Test)</option>
+                    <option value="homework">Bài tập ôn tập (Practice)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Duration */}
+              <div className="space-y-1">
+                <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wide">Thời gian làm bài (phút)</label>
+                <input 
+                  type="number"
+                  value={editDuration}
+                  onChange={(e) => setEditDuration(parseInt(e.target.value) || 0)}
+                  placeholder="Thời gian thi..."
+                  className="w-full text-xs border border-slate-200 focus:border-[#001e40] focus:ring-1 focus:ring-[#001e40] rounded-xl py-2 px-3 focus:outline-none font-semibold bg-white text-slate-800"
+                />
+              </div>
+
+              {/* Form Buttons */}
+              <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setEditingExam(null)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all active:scale-95"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={updatingExam}
+                  className="px-5 py-2 bg-[#001e40] hover:bg-[#003366] text-white rounded-xl text-xs font-bold shadow-md disabled:opacity-50 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  {updatingExam ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Đang lưu...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-xs font-bold">save</span>
+                      <span>Lưu thay đổi</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Floating Toast Notification */}
       {toastMessage && (
