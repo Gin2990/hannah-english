@@ -106,7 +106,129 @@ const splitEmbeddedOptions = (text) => {
   return parts.map(p => p.trim()).filter(Boolean);
 };
 
+const isOptionAnswer = (ans) => {
+  if (!ans) return false;
+  const clean = ans.trim().toUpperCase();
+  if (/^[A-K]$/.test(clean)) return true;
+  if (/^[A-K](\s*,\s*[A-K])+$/.test(clean)) return true;
+  return false;
+};
 
+const parseListeningQuestions = (elements, keysMap, startQ, endQ) => {
+  const questions = [];
+  const items = elements.map((el, index) => ({
+    el,
+    text: el.textContent.trim(),
+    html: el.outerHTML,
+    index
+  })).filter(item => item.text !== "");
+
+  for (let qId = startQ; qId <= endQ; qId++) {
+    const qRegex = new RegExp("(?:^|\\s|\\(|\\-|\\u00A0)" + qId + "(?:\\.|\\s|\\)|\\_|\\]|$)");
+    let foundItem = null;
+    for (let i = 0; i < items.length; i++) {
+      if (qRegex.test(items[i].text)) {
+        foundItem = items[i];
+        break;
+      }
+    }
+
+    let questionText = "";
+    let options = [];
+    const correct = keysMap[qId] || "";
+
+    if (foundItem) {
+      const isHeader = foundItem.text.match(/^questions?\s+\d+/i);
+      
+      if (isHeader) {
+        let scanIdx = foundItem.index + 1;
+        let foundQText = "";
+        const collectedOpts = [];
+        
+        while (scanIdx < elements.length) {
+          const el = elements[scanIdx];
+          const text = el.textContent.trim();
+          scanIdx++;
+          if (!text) continue;
+          
+          if (text.match(/^questions?\s+\d+/i) || text.match(/^\d+[\.\-\)]/)) {
+            break;
+          }
+          
+          const optMatch = text.match(/^([A-K])[\.\-\)\s\u00A0]+\s*(.+)$/i);
+          if (optMatch) {
+            collectedOpts.push(text);
+          } else {
+            const isInstruction = text.match(/^choose\s+/i) || 
+                                  text.match(/^complete\s+/i) || 
+                                  text.match(/^write\s+/i) || 
+                                  text.match(/^do the following/i) || 
+                                  text.match(/^classify\s+/i) || 
+                                  text.match(/^label\s+/i);
+            if (!isInstruction && !foundQText) {
+              foundQText = text;
+            }
+          }
+        }
+        
+        questionText = foundQText || foundItem.text;
+        options = collectedOpts;
+      } else {
+        questionText = foundItem.text;
+        let scanIdx = foundItem.index - 1;
+        const collectedOpts = [];
+        let maxLookup = 15;
+        
+        while (scanIdx >= 0 && maxLookup > 0) {
+          const el = elements[scanIdx];
+          const text = el.textContent.trim();
+          scanIdx--;
+          maxLookup--;
+          if (!text) continue;
+          
+          if ((text.match(/^\d+[\.\-\)]/) || text.match(/^questions?\s+\d+/i)) && !text.match(/^([A-K])[\.\-\)\s\u00A0]+/i)) {
+            break;
+          }
+          
+          const optMatch = text.match(/^([A-K])[\.\-\)\s\u00A0]+\s*(.*)$/i);
+          if (optMatch) {
+            collectedOpts.push(text);
+            if (optMatch[1].toUpperCase() === 'A') {
+              break;
+            }
+          }
+        }
+        
+        if (collectedOpts.length > 0) {
+          options = collectedOpts.reverse();
+        }
+      }
+    } else {
+      questionText = `Question ${qId}`;
+    }
+
+    let cleanQText = questionText.replace(new RegExp("^" + qId + "\\s*[\\.\\-\\)\\s]*\\s*"), "").trim();
+    
+    const cleanOptions = options.map(opt => {
+      const match = opt.match(/^([A-K])[\.\-\)\s\u00A0]*\s*(.*)$/i);
+      if (match) {
+        return `${match[1].toUpperCase()}. ${match[2].trim()}`;
+      }
+      return opt;
+    });
+
+    const isOpt = isOptionAnswer(correct);
+    
+    questions.push({
+      id: qId,
+      question: cleanQText || `Question ${qId}`,
+      options: isOpt ? cleanOptions : [],
+      correct
+    });
+  }
+
+  return questions;
+};
 
 const IeltsConverter = () => {
   const { user } = useAuth();
@@ -131,6 +253,12 @@ const IeltsConverter = () => {
   const [rawPdfText, setRawPdfText] = useState('');
   const [rawAnswerKey, setRawAnswerKey] = useState('');
   const [rawAikenText, setRawAikenText] = useState('');
+  
+  // Section-specific Google Drive Listening audio links (pre-filled with user links)
+  const [listeningAudio1, setListeningAudio1] = useState('https://drive.google.com/file/d/1yTw7wbXtCasbjgEHNrqnmuTG2FEfZ8A-/view');
+  const [listeningAudio2, setListeningAudio2] = useState('https://drive.google.com/file/d/199H0GiVLr1HXmyLKaN4sr6ykpO2v-XyO/view');
+  const [listeningAudio3, setListeningAudio3] = useState('https://drive.google.com/file/d/18pA5u7PLY7TjpbKyRk230d7HqeGRZg8B/view');
+  const [listeningAudio4, setListeningAudio4] = useState('https://drive.google.com/file/d/1IEKORPXBBqPpldiuJUJLslk1gY9kn9dn/view');
   
   // Word DOCX Parser States
   const [docxTestFile, setDocxTestFile] = useState(null);
@@ -291,6 +419,14 @@ const IeltsConverter = () => {
           return aFirst - bFirst;
         });
 
+        // Gán audio url cho từng Section nếu là đề thi nghe (Listening)
+        if (listeningFound) {
+          if (sortedParts[0]) sortedParts[0].audio_url = listeningAudio1;
+          if (sortedParts[1]) sortedParts[1].audio_url = listeningAudio2;
+          if (sortedParts[2]) sortedParts[2].audio_url = listeningAudio3;
+          if (sortedParts[3]) sortedParts[3].audio_url = listeningAudio4;
+        }
+
         const totalQCount = sortedParts.reduce((acc, curr) => acc + curr.questions.length, 0);
         const guessedTitle = file.name.replace(/\.[^/.]+$/, "").replace(/_draft/i, "").replace(/_/g, ' ');
         const finalTitle = examTitle.trim() ? examTitle.trim() : guessedTitle;
@@ -437,13 +573,56 @@ const IeltsConverter = () => {
         return;
       }
 
-      const generatedParts = [{
-        part_code: isListening ? 'listening_section_1' : 'reading_passage_1',
-        part_name: isListening ? 'Listening Part 1' : 'Reading Passage 1',
-        part_title: examTitle || 'Đề thi đã chuyển đổi',
-        part_content: `<div class="highlight-box"><h3>${examTitle || 'ĐỀ THI ĐÃ CHUYỂN ĐỔI'}</h3><p>Mời nhập bài viết hoặc transcript tại đây...</p></div>`,
-        questions: finalQuestions
-      }];
+      let generatedParts = [];
+      if (isListening) {
+        const part1Qs = finalQuestions.filter(q => q.id <= 10);
+        const part2Qs = finalQuestions.filter(q => q.id >= 11 && q.id <= 20);
+        const part3Qs = finalQuestions.filter(q => q.id >= 21 && q.id <= 30);
+        const part4Qs = finalQuestions.filter(q => q.id >= 31);
+
+        generatedParts = [
+          {
+            part_code: 'listening_section_1',
+            part_name: 'Section 1',
+            part_title: 'Section 1: Questions 1-10',
+            part_content: '<h3>Section 1</h3><p>Complete the form below. Write ONE WORD AND/OR A NUMBER for each answer.</p>',
+            audio_url: listeningAudio1,
+            questions: part1Qs
+          },
+          {
+            part_code: 'listening_section_2',
+            part_name: 'Section 2',
+            part_title: 'Section 2: Questions 11-20',
+            part_content: '<h3>Section 2</h3><p>Complete the details/flowchart/sentences below.</p>',
+            audio_url: listeningAudio2,
+            questions: part2Qs
+          },
+          {
+            part_code: 'listening_section_3',
+            part_name: 'Section 3',
+            part_title: 'Section 3: Questions 21-30',
+            part_content: '<h3>Section 3</h3><p>Choose the correct letter A, B, C or D.</p>',
+            audio_url: listeningAudio3,
+            questions: part3Qs
+          },
+          {
+            part_code: 'listening_section_4',
+            part_name: 'Section 4',
+            part_title: 'Section 4: Questions 31-40',
+            part_content: '<h3>Section 4</h3><p>Complete the summary below.</p>',
+            audio_url: listeningAudio4,
+            questions: part4Qs
+          }
+        ].filter(p => p.questions.length > 0);
+      } else {
+        generatedParts = [{
+          part_code: 'reading_passage_1',
+          part_name: 'Reading Passage 1',
+          part_title: examTitle || 'Đề thi đã chuyển đổi',
+          part_content: `<div class="highlight-box"><h3>${examTitle || 'ĐỀ THI ĐÃ CHUYỂN ĐỔI'}</h3><p>Mời nhập bài viết hoặc transcript tại đây...</p></div>`,
+          questions: finalQuestions
+        }];
+      }
 
       setConvertedExam({
         title: examTitle || 'Đề thi trích xuất PDF',
@@ -532,13 +711,56 @@ const IeltsConverter = () => {
         return;
       }
 
-      const generatedParts = [{
-        part_code: isListening ? 'listening_section_1' : 'reading_passage_1',
-        part_name: isListening ? 'Listening Section 1' : 'Reading Passage 1',
-        part_title: examTitle || 'Đề thi Aiken',
-        part_content: '<h3>Đọc hiểu đề thi và lựa chọn các câu hỏi tương ứng</h3>',
-        questions: finalQuestions
-      }];
+      let generatedParts = [];
+      if (isListening) {
+        const part1Qs = finalQuestions.filter(q => q.id <= 10);
+        const part2Qs = finalQuestions.filter(q => q.id >= 11 && q.id <= 20);
+        const part3Qs = finalQuestions.filter(q => q.id >= 21 && q.id <= 30);
+        const part4Qs = finalQuestions.filter(q => q.id >= 31);
+
+        generatedParts = [
+          {
+            part_code: 'listening_section_1',
+            part_name: 'Section 1',
+            part_title: 'Section 1: Questions 1-10',
+            part_content: '<h3>Section 1</h3><p>Choose the correct letter A, B, C or D.</p>',
+            audio_url: listeningAudio1,
+            questions: part1Qs
+          },
+          {
+            part_code: 'listening_section_2',
+            part_name: 'Section 2',
+            part_title: 'Section 2: Questions 11-20',
+            part_content: '<h3>Section 2</h3><p>Choose the correct letter A, B, C or D.</p>',
+            audio_url: listeningAudio2,
+            questions: part2Qs
+          },
+          {
+            part_code: 'listening_section_3',
+            part_name: 'Section 3',
+            part_title: 'Section 3: Questions 21-30',
+            part_content: '<h3>Section 3</h3><p>Choose the correct letter A, B, C or D.</p>',
+            audio_url: listeningAudio3,
+            questions: part3Qs
+          },
+          {
+            part_code: 'listening_section_4',
+            part_name: 'Section 4',
+            part_title: 'Section 4: Questions 31-40',
+            part_content: '<h3>Section 4</h3><p>Choose the correct letter A, B, C or D.</p>',
+            audio_url: listeningAudio4,
+            questions: part4Qs
+          }
+        ].filter(p => p.questions.length > 0);
+      } else {
+        generatedParts = [{
+          part_code: 'reading_passage_1',
+          part_name: 'Reading Passage 1',
+          part_title: examTitle || 'Đề thi Aiken',
+          part_content: '<h3>Đọc hiểu đề thi và lựa chọn các câu hỏi tương ứng</h3>',
+          questions: finalQuestions
+        }];
+      }
 
       setConvertedExam({
         title: examTitle || 'Đề thi Aiken',
@@ -585,6 +807,23 @@ const IeltsConverter = () => {
     
     // We try to extract answers using multiple strategies
     lines.forEach(line => {
+      // Handle joint answers like "17&18. B, E" or "17 and 18. B, E" or "17,18. B, E"
+      const jointMatch = line.match(/^(\d+)\s*(?:&|and|,)\s*(\d+)\s*[\.\-\:\)\]\/]?\s*(.+)$/i);
+      if (jointMatch) {
+        const qNum1 = parseInt(jointMatch[1]);
+        const qNum2 = parseInt(jointMatch[2]);
+        const ansText = jointMatch[3].trim();
+        const answers = ansText.split(/[\s,;/]+/).map(a => a.trim()).filter(Boolean);
+        if (answers.length >= 2) {
+          keysMap[qNum1] = answers[0];
+          keysMap[qNum2] = answers[1];
+        } else if (answers.length === 1) {
+          keysMap[qNum1] = answers[0];
+          keysMap[qNum2] = answers[0];
+        }
+        return;
+      }
+
       // Strategy 1: Check if the line matches a single item like "1. YES"
       const singleMatch = line.match(/^(\d+)\s*[\.\-\:\)\]\/]?\s*(.+)$/i);
       if (singleMatch) {
@@ -843,32 +1082,49 @@ const IeltsConverter = () => {
       const doc = parser.parseFromString(testHtml, 'text/html');
       const bodyElements = Array.from(doc.body.children);
 
-      const passageElements = [[], [], []];
+      const isListeningTest = isListening;
+      const totalSectionsCount = isListeningTest ? 4 : 3;
+      const passageElements = isListeningTest ? [[], [], [], []] : [[], [], []];
       let currentPassageIdx = 0;
 
       bodyElements.forEach(el => {
         const text = el.textContent.trim();
-        if (text.match(/READING\s+PASSAGE\s+1/i)) {
-          currentPassageIdx = 1;
-        } else if (text.match(/READING\s+PASSAGE\s+2/i)) {
-          currentPassageIdx = 2;
-        } else if (text.match(/READING\s+PASSAGE\s+3/i)) {
-          currentPassageIdx = 3;
+        if (isListeningTest) {
+          if (text.match(/SECTION\s+1/i) || text.match(/PART\s+1/i) || text.match(/LISTENING\s+SECTION\s+1/i) || text.match(/LISTENING\s+PART\s+1/i)) {
+            currentPassageIdx = 1;
+          } else if (text.match(/SECTION\s+2/i) || text.match(/PART\s+2/i) || text.match(/LISTENING\s+SECTION\s+2/i) || text.match(/LISTENING\s+PART\s+2/i)) {
+            currentPassageIdx = 2;
+          } else if (text.match(/SECTION\s+3/i) || text.match(/PART\s+3/i) || text.match(/LISTENING\s+SECTION\s+3/i) || text.match(/LISTENING\s+PART\s+3/i)) {
+            currentPassageIdx = 3;
+          } else if (text.match(/SECTION\s+4/i) || text.match(/PART\s+4/i) || text.match(/LISTENING\s+SECTION\s+4/i) || text.match(/LISTENING\s+PART\s+4/i)) {
+            currentPassageIdx = 4;
+          }
+        } else {
+          if (text.match(/READING\s+PASSAGE\s+1/i) || text.match(/PASSAGE\s+1/i)) {
+            currentPassageIdx = 1;
+          } else if (text.match(/READING\s+PASSAGE\s+2/i) || text.match(/PASSAGE\s+2/i)) {
+            currentPassageIdx = 2;
+          } else if (text.match(/READING\s+PASSAGE\s+3/i) || text.match(/PASSAGE\s+3/i)) {
+            currentPassageIdx = 3;
+          }
         }
 
-        if (currentPassageIdx > 0) {
+        if (currentPassageIdx > 0 && currentPassageIdx <= totalSectionsCount) {
           passageElements[currentPassageIdx - 1].push(el);
         }
       });
 
       // Validate passages split
-      if (passageElements[0].length === 0 && passageElements[1].length === 0 && passageElements[2].length === 0) {
-        throw new Error("Không tìm thấy các thẻ 'READING PASSAGE 1/2/3' để tách phần! Vui lòng kiểm tra tiêu đề các đoạn văn.");
+      if (passageElements[0].length === 0 && passageElements[1].length === 0 && passageElements[2].length === 0 && (!isListeningTest || passageElements[3].length === 0)) {
+        throw new Error(isListeningTest
+          ? "Không tìm thấy các thẻ 'SECTION 1/2/3/4' để tách phần! Vui lòng kiểm tra tiêu đề các phần nghe trong file."
+          : "Không tìm thấy các thẻ 'READING PASSAGE 1/2/3' để tách phần! Vui lòng kiểm tra tiêu đề các đoạn văn."
+        );
       }
 
       const generatedParts = [];
 
-      for (let pIdx = 0; pIdx < 3; pIdx++) {
+      for (let pIdx = 0; pIdx < totalSectionsCount; pIdx++) {
         const elements = passageElements[pIdx];
         if (elements.length === 0) continue;
 
@@ -888,58 +1144,78 @@ const IeltsConverter = () => {
         let passageContentHtml = "";
         let questionsList = [];
 
-        const title = extractPassageTitle(elements, partNum);
+        const title = isListeningTest
+          ? (partNum === 1 ? 'Section 1: Conversation' : (partNum === 2 ? 'Section 2: Social Monologue' : (partNum === 3 ? 'Section 3: Academic Talk' : 'Section 4: Academic Lecture')))
+          : extractPassageTitle(elements, partNum);
 
-        if (questionsStartIdx !== -1) {
-          const textElements = elements.slice(0, questionsStartIdx);
-          const qElements = elements.slice(questionsStartIdx);
-
-          // Build Passage HTML nicely
-          passageContentHtml = `<h2>READING PASSAGE ${partNum}</h2>\n`;
-          passageContentHtml += `<p>You should spend about 20 minutes on <strong>Questions ${partNum === 1 ? '1-13' : (partNum === 2 ? '14-27' : '28-40')}</strong> which are based on READING PASSAGE ${partNum} below.</p>\n\n`;
-          passageContentHtml += `<div class="highlight-box" style="text-align: center; background-color: #f8fafc; border-left: 4px solid #001e40; padding: 1rem; margin: 1.5rem 0; border-radius: 0 0.75rem 0.75rem 0;">\n  <h3 style="margin-top: 0; font-size: 1.125rem; font-weight: 800; color: #001e40; text-transform: uppercase;">${title}</h3>\n</div>\n\n`;
-
-          let titleFound = false;
-          textElements.forEach(el => {
+        if (isListeningTest) {
+          passageContentHtml = `<h2>${title}</h2>\n`;
+          passageContentHtml += `<p>You should spend about 10 minutes on <strong>Questions ${partNum === 1 ? '1-10' : (partNum === 2 ? '11-20' : (partNum === 3 ? '21-30' : '31-40'))}</strong>.</p>\n\n`;
+          
+          elements.forEach(el => {
             const text = el.textContent.trim();
-            if (text.match(/READING PASSAGE/i)) return;
-            if (text.match(/You should spend/i)) return;
-            if (text === title && !titleFound) {
-              titleFound = true;
-              return;
-            }
+            if (text.match(/SECTION\s+\d/i) || text.match(/PART\s+\d/i) || text.match(/IELTS LISTENING TEST/i)) return;
             passageContentHtml += el.outerHTML + "\n";
           });
 
-          // Parse questions with recursive element flattening to process child list items or nested elements
-          const flattenHtmlElements = (nodes) => {
-            const result = [];
-            const traverse = (n) => {
-              if (!n) return;
-              const tagName = n.tagName?.toLowerCase();
-              if (['p', 'li', 'td', 'th', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
-                result.push(n);
+          const startQ = partNum === 1 ? 1 : (partNum === 2 ? 11 : (partNum === 3 ? 21 : 31));
+          const endQ = partNum === 1 ? 10 : (partNum === 2 ? 20 : (partNum === 3 ? 30 : 40));
+          questionsList = parseListeningQuestions(elements, keysMap, startQ, endQ);
+        } else {
+          if (questionsStartIdx !== -1) {
+            const textElements = elements.slice(0, questionsStartIdx);
+            const qElements = elements.slice(questionsStartIdx);
+
+            passageContentHtml = `<h2>READING PASSAGE ${partNum}</h2>\n`;
+            passageContentHtml += `<p>You should spend about 20 minutes on <strong>Questions ${partNum === 1 ? '1-13' : (partNum === 2 ? '14-27' : '28-40')}</strong> which are based on READING PASSAGE ${partNum} below.</p>\n\n`;
+            passageContentHtml += `<div class="highlight-box" style="text-align: center; background-color: #f8fafc; border-left: 4px solid #001e40; padding: 1rem; margin: 1.5rem 0; border-radius: 0 0.75rem 0.75rem 0;">\n  <h3 style="margin-top: 0; font-size: 1.125rem; font-weight: 800; color: #001e40; text-transform: uppercase;">${title}</h3>\n</div>\n\n`;
+
+            let titleFound = false;
+            textElements.forEach(el => {
+              const text = el.textContent.trim();
+              if (text.match(/READING PASSAGE/i) || text.match(/SECTION\s+\d/i) || text.match(/PART\s+\d/i)) return;
+              if (text.match(/You should spend/i)) return;
+              if (text === title && !titleFound) {
+                titleFound = true;
                 return;
               }
-              if (n.children && n.children.length > 0) {
-                Array.from(n.children).forEach(child => traverse(child));
-              }
-            };
-            nodes.forEach(node => traverse(node));
-            return result;
-          };
+              passageContentHtml += el.outerHTML + "\n";
+            });
 
-          const flatQElements = flattenHtmlElements(qElements);
-          questionsList = parsePassageQuestions(flatQElements, keysMap);
-        } else {
-          passageContentHtml = elements.map(el => el.outerHTML).join("\n");
+            const flattenHtmlElements = (nodes) => {
+              const result = [];
+              const traverse = (n) => {
+                if (!n) return;
+                const tagName = n.tagName?.toLowerCase();
+                if (['p', 'li', 'td', 'th', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
+                  result.push(n);
+                  return;
+                }
+                if (n.children && n.children.length > 0) {
+                  Array.from(n.children).forEach(child => traverse(child));
+                }
+              };
+              nodes.forEach(node => traverse(node));
+              return result;
+            };
+
+            const flatQElements = flattenHtmlElements(qElements);
+            questionsList = parsePassageQuestions(flatQElements, keysMap);
+          } else {
+            passageContentHtml = elements.map(el => el.outerHTML).join("\n");
+          }
         }
 
+        const audioUrlMapping = [listeningAudio1, listeningAudio2, listeningAudio3, listeningAudio4];
+
         generatedParts.push({
-          part_code: `ielts_reading_passage${partNum}`,
-          part_name: `Reading Passage ${partNum}`,
+          part_code: isListeningTest ? `ielts_listening_part${partNum}` : `ielts_reading_passage${partNum}`,
+          part_name: isListeningTest 
+            ? (partNum === 1 ? 'Section 1' : (partNum === 2 ? 'Section 2' : (partNum === 3 ? 'Section 3' : 'Section 4')))
+            : `Reading Passage ${partNum}`,
           part_title: title,
           part_content: passageContentHtml,
+          audio_url: isListeningTest ? audioUrlMapping[partNum - 1] : null,
           questions: questionsList
         });
       }
@@ -949,18 +1225,18 @@ const IeltsConverter = () => {
       const guessedTitle = docxTestFile.name.replace(/\.[^/.]+$/, "").replace(/_test/i, "").replace(/_/g, ' ');
       const finalTitle = examTitle.trim() ? examTitle.trim() : guessedTitle;
       setExamTitle(finalTitle);
-      setIsListening(false);
+      
       setConvertedExam({
         title: finalTitle,
         course_id: targetCourseId,
-        duration: 60,
+        duration: isListeningTest ? 40 : 60,
         type: examType,
         question_count: totalQCount,
         test_parts: generatedParts,
         questions: []
       });
 
-      setSuccessMessage(`🎉 Chuyển đổi thành công đề thi từ Word! Phân tích được ${generatedParts.length} Passage với tổng cộng ${totalQCount} Câu hỏi.`);
+      setSuccessMessage(`🎉 Chuyển đổi thành công đề thi từ Word! Phân tích được ${generatedParts.length} Phần với tổng cộng ${totalQCount} Câu hỏi.`);
       setPreviewActive(true);
       setActivePartIdx(0);
       setStudentAnswers({});
@@ -1299,6 +1575,55 @@ const IeltsConverter = () => {
                 </div>
               </div>
 
+              {isListening && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-5 bg-indigo-50/40 border border-indigo-100 rounded-2xl animate-fade-in">
+                  <div className="md:col-span-4 flex items-center gap-1.5 text-indigo-900 border-b border-indigo-100 pb-2">
+                    <span className="material-symbols-outlined text-base font-bold">headphones</span>
+                    <span className="text-xs font-extrabold uppercase tracking-wide">Link Audio Google Drive (Section 1 - 4)</span>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-indigo-850 uppercase tracking-wide">Section 1 Audio</label>
+                    <input
+                      type="text"
+                      value={listeningAudio1}
+                      onChange={(e) => setListeningAudio1(e.target.value)}
+                      placeholder="Link Drive Audio Section 1"
+                      className="w-full text-xs border border-indigo-200 focus:border-indigo-650 focus:ring-1 focus:ring-indigo-100 rounded-xl py-2.5 px-3 bg-white font-medium"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-indigo-850 uppercase tracking-wide">Section 2 Audio</label>
+                    <input
+                      type="text"
+                      value={listeningAudio2}
+                      onChange={(e) => setListeningAudio2(e.target.value)}
+                      placeholder="Link Drive Audio Section 2"
+                      className="w-full text-xs border border-indigo-200 focus:border-indigo-650 focus:ring-1 focus:ring-indigo-100 rounded-xl py-2.5 px-3 bg-white font-medium"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-indigo-850 uppercase tracking-wide">Section 3 Audio</label>
+                    <input
+                      type="text"
+                      value={listeningAudio3}
+                      onChange={(e) => setListeningAudio3(e.target.value)}
+                      placeholder="Link Drive Audio Section 3"
+                      className="w-full text-xs border border-indigo-200 focus:border-indigo-650 focus:ring-1 focus:ring-indigo-100 rounded-xl py-2.5 px-3 bg-white font-medium"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-indigo-850 uppercase tracking-wide">Section 4 Audio</label>
+                    <input
+                      type="text"
+                      value={listeningAudio4}
+                      onChange={(e) => setListeningAudio4(e.target.value)}
+                      placeholder="Link Drive Audio Section 4"
+                      className="w-full text-xs border border-indigo-200 focus:border-indigo-650 focus:ring-1 focus:ring-indigo-100 rounded-xl py-2.5 px-3 bg-white font-medium"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* INPUT TYPE SWAPPER TABS */}
               <div className="pt-4 border-t border-slate-100 space-y-4">
                 <div className="flex gap-2 border-b border-slate-100 pb-2.5">
@@ -1585,36 +1910,33 @@ const IeltsConverter = () => {
               </div>
             </div>
 
-            {/* SPLIT SCREEN WORKSPACE */}
-            <main className="flex-grow flex flex-col lg:flex-row gap-6 p-6 overflow-hidden min-h-0 bg-[#f8f9fa]">
-              {/* COLUMN 1: PASSAGE OR AUDIO VIEWER (Left) */}
-              <div className="flex-grow bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col lg:h-full relative overflow-hidden min-w-0">
-                {/* Listening Audio player if flagged */}
-                {isListening && (
-                  <div className="bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-4 shadow-sm space-y-2.5 mb-4 shrink-0">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-indigo-750 text-base font-bold">headphones</span>
-                        <span className="text-[10px] font-extrabold text-[#001e40] uppercase tracking-wider">
-                          Audio: {activePart?.part_name || 'Phần nghe IELTS'}
-                        </span>
-                      </div>
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    </div>
-                    {/* Simulated Player for demonstration */}
-                    <div className="flex items-center gap-3 bg-white border border-indigo-150 p-2 rounded-xl">
-                      <button className="w-8 h-8 rounded-full bg-indigo-650 text-white flex items-center justify-center shadow hover:bg-indigo-750 transition-all active:scale-95 shrink-0">
-                        <span className="material-symbols-outlined text-sm font-bold">play_arrow</span>
-                      </button>
-                      <div className="flex-grow bg-slate-100 h-2.5 rounded-full overflow-hidden relative">
-                        <div className="bg-indigo-650 h-full w-1/4"></div>
-                      </div>
-                      <span className="text-[9px] font-bold text-slate-500 font-mono">00:00 / 30:00</span>
-                      <span className="material-symbols-outlined text-sm text-slate-400 cursor-pointer">volume_up</span>
-                    </div>
-                  </div>
-                )}
+            {/* Top audio player bar */}
+            {isListening && (
+              <div className="px-6 py-1 shrink-0 bg-transparent">
+                <div className="w-full mx-auto flex items-center gap-3">
+                  {activePart?.audio_url && (activePart.audio_url.includes('drive.google.com') || activePart.audio_url.includes('docs.google.com')) ? (
+                    <iframe
+                      key={activePart.audio_url}
+                      src={convertGoogleDrivePdfLink(activePart.audio_url)}
+                      className="w-full h-[55px] rounded-xl border-0 bg-transparent"
+                      allow="autoplay"
+                    />
+                  ) : (
+                    <audio
+                      key={activePart?.audio_url}
+                      src={activePart?.audio_url}
+                      controls
+                      className="w-full h-8 outline-none"
+                    />
+                  )}
+                </div>
+              </div>
+            )}
 
+            {/* SPLIT SCREEN WORKSPACE */}
+            <main className="flex-grow flex flex-col lg:flex-row gap-4 p-4 overflow-hidden min-h-0 bg-[#f8f9fa]">
+              {/* COLUMN 1: PASSAGE OR AUDIO VIEWER (Left) */}
+              <div className="w-full lg:w-[50%] bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col lg:h-full relative overflow-hidden min-w-0">
                 {/* Main scrollable content view */}
                 <div className="flex-grow overflow-y-auto pr-2 custom-preview-scrollbar min-h-0">
                   {activePart?.part_content ? (
@@ -1636,7 +1958,7 @@ const IeltsConverter = () => {
               </div>
 
               {/* COLUMN 2: INTERACTIVE BUBBLE SHEET / QUESTIONS LIST (Middle) */}
-              <div className="w-full lg:w-[35%] shrink-0 bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col lg:h-full overflow-hidden min-w-0">
+              <div className="w-full lg:w-[25%] shrink-0 bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col lg:h-full overflow-hidden min-w-0">
                 <div className="border-b border-slate-150 pb-3 mb-3 shrink-0 flex justify-between items-center">
                   <h3 className="font-extrabold text-xs text-[#001e40] uppercase tracking-wider flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-blue-650 text-base">fact_check</span>
@@ -1648,105 +1970,75 @@ const IeltsConverter = () => {
                 </div>
 
                 {/* Scrollable list of questions */}
-                <div className="flex-grow overflow-y-auto pr-1 space-y-4 custom-preview-scrollbar text-xs min-h-0">
+                <div className="flex-grow overflow-y-auto pr-1 space-y-2.5 custom-preview-scrollbar text-xs min-h-0">
                   {(() => {
-                    let lastInstruction = "";
-                    return activeQuestions.map((q, idx) => {
+                    return activeQuestions.map((q) => {
                       const selectedOpt = studentAnswers[q.id];
-                      const correctAns = q.correct ? q.correct.trim() : '';
                       const hasOptions = q.options && q.options.length > 0;
-                      const { instruction, questionText } = parseQuestionInstruction(q);
                       
-                      const showInstruction = instruction && instruction !== lastInstruction;
-                      if (showInstruction) {
-                        lastInstruction = instruction;
-                      }
-                      
+                      const isYesNoNotGiven = q.options.length > 0 && q.options.every(opt => {
+                        const u = opt.trim().toUpperCase();
+                        return u === 'YES' || u === 'NO' || u === 'NOT GIVEN' || u === 'TRUE' || u === 'FALSE';
+                      });
+
                       return (
-                        <React.Fragment key={q.id}>
-                          {showInstruction && (
-                            <div className="bg-[#f8fafc] border border-slate-200 rounded-2xl p-4 mb-3 text-slate-700 leading-relaxed font-semibold text-[11px] whitespace-pre-line shadow-sm border-l-4 border-l-indigo-650 animate-fade-in">
-                              <span className="material-symbols-outlined text-[12px] text-indigo-650 mr-1.5 align-middle font-bold">info</span>
-                              {instruction}
-                            </div>
-                          )}
-                          <div
-                            id={`preview-q-card-${q.id}`}
-                            className="flex flex-col py-3.5 px-4 border border-slate-100 rounded-2xl gap-3 transition-all bg-white shadow-sm hover:shadow-md border-l-2 hover:border-l-indigo-600"
-                          >
-                            <div className="flex justify-between items-start gap-2">
-                              <span className="w-5 h-5 rounded-full bg-[#001e40]/10 text-[#001e40] font-extrabold text-[9px] flex items-center justify-center shrink-0 mt-0.5">
-                                {q.id}
-                              </span>
-                              <p className="font-semibold text-slate-800 leading-relaxed flex-grow whitespace-pre-line text-[11px]">
-                                {questionText.startsWith('Câu') ? questionText : `Câu ${q.id}: ${questionText}`}
-                              </p>
-                            </div>
-
-                            {hasOptions ? (
-                              <div className="w-full pt-1">
-                                {(() => {
-                                  const isYesNoNotGiven = q.options.length > 0 && q.options.every(opt => {
-                                    const u = opt.trim().toUpperCase();
-                                    return u === 'YES' || u === 'NO' || u === 'NOT GIVEN' || u === 'TRUE' || u === 'FALSE';
-                                  });
-
-                                  if (isYesNoNotGiven) {
+                        <div
+                          key={q.id}
+                          id={`preview-q-card-${q.id}`}
+                          className="flex items-center gap-3 py-2 px-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition-all bg-white"
+                        >
+                          <span className="w-7 h-7 rounded-full bg-blue-50 text-blue-700 border border-blue-150 font-extrabold text-xs flex items-center justify-center shrink-0">
+                            {q.id}
+                          </span>
+                          
+                          <div className="flex-grow min-w-0">
+                            {hasOptions && !isListening ? (
+                              isYesNoNotGiven ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {q.options.map(opt => {
+                                    const val = opt.trim();
+                                    const isSelected = selectedOpt === val;
                                     return (
-                                      <div className="flex flex-wrap gap-1.5 shrink-0">
-                                        {q.options.map(opt => {
-                                          const val = opt.trim();
-                                          const isSelected = selectedOpt === val;
-                                          return (
-                                            <button
-                                              key={val}
-                                              onClick={() => selectPreviewAnswer(q.id, val)}
-                                              className={`px-3 py-1 rounded-lg font-extrabold text-[9px] flex items-center justify-center transition-all border ${isSelected ? 'bg-[#001e40] border-[#001e40] text-white shadow-sm scale-105' : 'border-slate-200 text-slate-450 hover:border-[#001e40] hover:text-[#001e40] hover:bg-slate-50'}`}
-                                            >
-                                              {val}
-                                            </button>
-                                          );
-                                        })}
-                                      </div>
+                                      <button
+                                        key={val}
+                                        onClick={() => selectPreviewAnswer(q.id, val)}
+                                        className={`px-2 py-1 rounded-lg font-bold text-[9px] border transition-all ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                                      >
+                                        {val}
+                                      </button>
                                     );
-                                  }
-
-                                  return (
-                                    <div className="w-full flex flex-col gap-1.5">
-                                      {q.options.map((opt) => {
-                                        const optMatch = opt.trim().match(/^([A-K])[\.\-\)\s\u00A0]*\s*(.*)$/i);
-                                        const letter = optMatch ? optMatch[1].toUpperCase() : '';
-                                        const description = optMatch ? optMatch[2].trim() : opt.trim();
-                                        const isSelected = selectedOpt === letter;
-                                        
-                                        return (
-                                          <div
-                                            key={opt}
-                                            onClick={() => selectPreviewAnswer(q.id, letter || opt)}
-                                            className={`flex items-start gap-2.5 p-2 rounded-xl border text-[10px] cursor-pointer transition-all hover:bg-slate-50/80 active:scale-[0.99] ${isSelected ? 'bg-indigo-50/40 border-indigo-500 text-indigo-950 font-bold shadow-sm' : 'border-slate-100 text-slate-600'}`}
-                                          >
-                                            <span className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 border text-[9px] font-extrabold transition-all ${isSelected ? 'bg-[#001e40] border-[#001e40] text-white shadow-sm' : 'border-slate-250 text-slate-500 bg-white'}`}>
-                                              {letter}
-                                            </span>
-                                            <span className="leading-relaxed pt-0.5">{description}</span>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  );
-                                })()}
-                              </div>
+                                  })}
+                                </div>
+                              ) : (
+                                <div className="flex flex-wrap gap-1">
+                                  {q.options.map((opt) => {
+                                    const optMatch = opt.trim().match(/^([A-K])[\.\-\)\s\u00A0]*\s*(.*)$/i);
+                                    const letter = optMatch ? optMatch[1].toUpperCase() : opt.trim().toUpperCase();
+                                    const isSelected = selectedOpt === letter;
+                                    return (
+                                      <button
+                                        key={opt}
+                                        onClick={() => selectPreviewAnswer(q.id, letter)}
+                                        className={`w-7 h-7 rounded-lg font-extrabold text-[10px] border flex items-center justify-center transition-all ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                                        title={opt}
+                                      >
+                                        {letter}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )
                             ) : (
                               <input
                                 type="text"
                                 value={studentAnswers[q.id] || ''}
                                 onChange={(e) => selectPreviewAnswer(q.id, e.target.value)}
-                                placeholder="Nhập kết quả điền từ..."
-                                className="w-full border border-slate-200 focus:border-[#001e40] focus:ring-1 focus:ring-[#001e40] rounded-xl px-3 py-1.5 text-[10px] font-semibold focus:outline-none bg-white text-slate-800 transition-colors shadow-sm"
+                                placeholder="Nhập đáp án..."
+                                className="w-full border border-slate-200 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 rounded-lg px-2.5 py-1 text-xs font-medium focus:outline-none bg-white text-slate-800 transition-colors shadow-sm"
                               />
                             )}
                           </div>
-                        </React.Fragment>
+                        </div>
                       );
                     });
                   })()}
@@ -1760,17 +2052,19 @@ const IeltsConverter = () => {
               </div>
 
               {/* COLUMN 3: STICKY CONTROL & NAVIGATION SIDEBAR (Right) */}
-              <div className="w-full lg:w-64 shrink-0 flex flex-col gap-4 lg:h-full overflow-hidden">
+              <div className="w-full lg:w-[25%] shrink-0 flex flex-col gap-4 lg:h-full overflow-hidden">
                 {/* Timer card */}
-                <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex flex-col justify-center items-center shadow-sm shrink-0 gap-2">
-                  <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider text-center">Thời gian xem trước</span>
-                  <span className="font-bold text-2xl font-mono text-[#001e40]">{formatStopwatch()}</span>
+                <div className="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col shadow-sm shrink-0 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Thời gian làm bài:</span>
+                    <span className="font-bold text-2xl font-mono text-slate-800">{formatStopwatch()}</span>
+                  </div>
                   
                   <button
                     onClick={handlePreviewSubmit}
-                    className="w-full bg-[#001e40] hover:bg-[#003366] text-white font-extrabold text-[10px] py-3 rounded-xl transition-all shadow active:scale-97 flex items-center justify-center gap-1"
+                    className="w-full border-2 border-[#001e40] hover:bg-slate-50 text-[#001e40] font-bold text-xs py-2.5 rounded-xl transition-all active:scale-97 flex items-center justify-center gap-1 bg-white"
                   >
-                    <span className="material-symbols-outlined text-xs">check_circle</span> NỘP BÀI THỬ
+                    NỘP BÀI
                   </button>
                 </div>
 

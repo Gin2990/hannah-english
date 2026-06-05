@@ -54,6 +54,48 @@ const parseQuestionInstruction = (q) => {
   return { instruction: "", questionText: q.question || "" };
 };
 
+const matchIeltsAnswer = (studentAns, databaseAns) => {
+  if (!databaseAns) return false;
+  const selected = studentAns ? studentAns.trim().toLowerCase() : '';
+  const correctAns = databaseAns.trim().toLowerCase();
+  
+  if (!selected) return false;
+
+  const expandIeltsAnswer = (ans) => {
+    const results = new Set();
+    const clean = ans.trim().toLowerCase();
+    results.add(clean);
+    
+    const normalized = clean.replace(/\s+/g, ' ');
+    results.add(normalized);
+    
+    // Remove parentheses but keep content inside: e.g. "10(th)" -> "10th"
+    const keepContent = normalized.replace(/\(([^)]+)\)/g, '$1');
+    results.add(keepContent);
+    results.add(keepContent.replace(/\s+/g, ' '));
+    
+    // Remove parentheses and their content entirely: e.g. "10(th)" -> "10"
+    const removeContent = normalized.replace(/\([^)]*\)/g, '');
+    results.add(removeContent.trim());
+    results.add(removeContent.replace(/\s+/g, ' ').trim());
+    
+    return Array.from(results);
+  };
+
+  // 1. Check direct match of full string
+  const fullExpansions = expandIeltsAnswer(correctAns);
+  if (fullExpansions.includes(selected)) return true;
+
+  // 2. Split by slash and check each option
+  const alternatives = correctAns.split('/').map(a => a.trim());
+  for (const alt of alternatives) {
+    const expansions = expandIeltsAnswer(alt);
+    if (expansions.includes(selected)) return true;
+  }
+
+  return false;
+};
+
 const ExamTaker = () => {
   const { id } = useParams();
   const { user } = useAuth();
@@ -162,10 +204,7 @@ const ExamTaker = () => {
 
   const checkQuestionCorrect = (q) => {
     if (!q) return false;
-    const selected = studentAnswers[q.id] ? studentAnswers[q.id].trim().toLowerCase() : '';
-    const correctAns = q.correct ? q.correct.trim().toLowerCase() : '';
-    const correctAnswersArray = correctAns.split('/').map(a => a.trim());
-    return correctAnswersArray.includes(selected);
+    return matchIeltsAnswer(studentAnswers[q.id], q.correct);
   };
 
   const getButtonColorClass = (q, isActive) => {
@@ -232,13 +271,7 @@ const ExamTaker = () => {
     // Chấm điểm trắc nghiệm & tự luận IELTS tự động
     let correctCount = 0;
     allQuestionsList.forEach((q) => {
-      const selected = studentAnswers[q.id] ? studentAnswers[q.id].trim().toLowerCase() : '';
-      const correctAns = q.correct ? q.correct.trim().toLowerCase() : '';
-      
-      // Hỗ trợ so khớp nhiều đáp án đúng, cách nhau bằng dấu gạch chéo '/' (Vd: '10 minutes/ten minutes')
-      const correctAnswersArray = correctAns.split('/').map(a => a.trim());
-      
-      if (correctAnswersArray.includes(selected)) {
+      if (matchIeltsAnswer(studentAnswers[q.id], q.correct)) {
         correctCount++;
       }
     });
@@ -308,6 +341,7 @@ const ExamTaker = () => {
   
   const hasPassageContent = isFullTest ? !!currentPart?.part_content : !!exam?.passage_text;
   const activeAudioUrl = isFullTest ? (currentPart?.audio_url || exam?.listening_audio_url) : exam?.listening_audio_url;
+  const isListening = exam?.test_parts?.some(p => p.audio_url) || !!exam?.listening_audio_url;
   const showSplitScreen = exam && (exam.pdf_url || hasPassageContent);
 
   if (showSplitScreen) {
@@ -428,6 +462,41 @@ const ExamTaker = () => {
           </div>
         </header>
 
+        {/* Top Audio Player Bar if isListening and activeAudioUrl exists */}
+        {activeAudioUrl && (
+          <div className="px-6 pt-4 shrink-0 bg-transparent">
+            <div className="w-full mx-auto bg-indigo-50 border border-indigo-200/85 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-indigo-900 shrink-0">
+                <span className="material-symbols-outlined text-lg font-bold">headphones</span>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider">
+                  {isFullTest 
+                    ? (currentPart?.audio_url ? `Audio: ${currentPart.part_name}` : 'Audio Toàn Bài Thi') 
+                    : 'File nghe bài tập'}
+                </span>
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              </div>
+              <div className="flex-grow max-w-full">
+                {activeAudioUrl.includes('drive.google.com') || activeAudioUrl.includes('docs.google.com') ? (
+                  <iframe
+                    key={activeAudioUrl}
+                    src={convertGoogleDrivePdfLink(activeAudioUrl)}
+                    className="w-full h-[55px] rounded-xl border-0 bg-transparent"
+                    allow="autoplay"
+                  />
+                ) : (
+                  <audio
+                    key={activeAudioUrl}
+                    src={convertGoogleDriveAudioLink(activeAudioUrl)}
+                    controls
+                    className="w-full h-8 outline-none"
+                    controlsList="nodownload"
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Split Screen Workspace */}
         <main className="flex-grow flex flex-col lg:flex-row gap-6 p-6 overflow-hidden min-h-0">
           
@@ -446,30 +515,6 @@ const ExamTaker = () => {
                     {p.part_name}
                   </button>
                 ))}
-              </div>
-            )}
-
-            {/* 2. LISTENING AUDIO PLAYER FOR ACTIVE PART / EXAM */}
-            {activeAudioUrl && (
-              <div className="bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-4 shadow-sm space-y-2.5 mb-4 shrink-0">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-indigo-750 text-base font-bold">headphones</span>
-                    <span className="text-[10px] font-extrabold text-[#001e40] uppercase tracking-wider">
-                      {isFullTest 
-                        ? (currentPart?.audio_url ? `Audio: ${currentPart.part_name}` : 'Audio Toàn Bài Thi') 
-                        : 'File nghe bài tập'}
-                    </span>
-                  </div>
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                </div>
-                <audio 
-                  key={activeAudioUrl}
-                  src={convertGoogleDriveAudioLink(activeAudioUrl)} 
-                  controls 
-                  className="w-full h-8 outline-none"
-                  controlsList="nodownload"
-                />
               </div>
             )}
 
@@ -503,66 +548,38 @@ const ExamTaker = () => {
 
             <div className="flex-grow overflow-y-auto pr-1 space-y-4 custom-scrollbar text-xs min-h-0">
               {(() => {
-                let lastInstruction = "";
                 return currentQuestions.map((q, idx) => {
                   const selectedOpt = studentAnswers[q.id];
                   const hasOptions = q.options && q.options.length > 0 && q.options.some(opt => opt && opt.trim() && !opt.includes('Đáp án A') && !opt.includes('Đáp án B'));
-                  
+
                   if (hasPassageContent) {
-                    const { instruction, questionText } = parseQuestionInstruction(q);
-                    const showInstruction = instruction && instruction !== lastInstruction;
-                    if (showInstruction) {
-                      lastInstruction = instruction;
-                    }
                     const isCorrect = checkQuestionCorrect(q);
 
                     return (
-                      <React.Fragment key={q.id}>
-                        {showInstruction && (
-                          <div className="bg-[#f8fafc] border border-slate-200 rounded-2xl p-4 mb-3 text-slate-700 leading-relaxed font-semibold text-[11px] whitespace-pre-line shadow-sm border-l-4 border-l-[#001e40] animate-fade-in">
-                            <span className="material-symbols-outlined text-[12px] text-[#001e40] mr-1.5 align-middle font-bold">info</span>
-                            {instruction}
-                          </div>
-                        )}
-                        <div
-                          id={`q-card-${q.id}`}
-                          className={`flex flex-col py-3.5 px-4 border rounded-2xl gap-3 transition-all bg-white shadow-sm hover:shadow-md border-l-2 hover:border-l-[#001e40] ${
-                            isSubmitted
-                              ? isCorrect
-                                ? 'border-emerald-200 shadow-emerald-50 border-l-emerald-600'
-                                : 'border-red-200 shadow-red-50 border-l-red-500'
-                              : 'border-slate-100'
-                          }`}
-                        >
-                          <div className="flex justify-between items-start gap-2">
-                            <div className="flex items-center gap-2 flex-grow">
-                              <span className={`w-5 h-5 rounded-full font-extrabold text-[9px] flex items-center justify-center shrink-0 ${
-                                isSubmitted
-                                  ? isCorrect
-                                    ? 'bg-emerald-50 border border-emerald-500 text-emerald-750'
-                                    : 'bg-red-50 border border-red-500 text-red-750'
-                                  : 'bg-[#001e40]/10 text-[#001e40]'
-                              }`}>
-                                {isFullTest ? q.id : (idx + 1)}
-                              </span>
-                              <p className="font-semibold text-slate-800 leading-relaxed whitespace-pre-line text-[11px]">
-                                {questionText.startsWith('Câu') ? questionText : `Câu ${isFullTest ? q.id : (idx + 1)}: ${questionText}`}
-                              </p>
-                            </div>
-                            {isSubmitted && (
-                              <span className={`text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 shrink-0 ${
-                                isCorrect ? 'text-emerald-600' : 'text-red-500'
-                              }`}>
-                                <span className="material-symbols-outlined text-sm font-bold">
-                                  {isCorrect ? 'check_circle' : 'cancel'}
-                                </span>
-                                {isCorrect ? 'Đúng' : 'Sai'}
-                              </span>
-                            )}
-                          </div>
+                      <div
+                        key={q.id}
+                        id={`q-card-${q.id}`}
+                        className={`flex items-center gap-3 py-2.5 px-3 border rounded-xl hover:bg-slate-50 transition-all bg-white shadow-sm border-l-2 hover:border-l-[#001e40] ${
+                          isSubmitted
+                            ? isCorrect
+                              ? 'border-emerald-250 shadow-emerald-50 border-l-emerald-600'
+                              : 'border-red-200 shadow-red-50 border-l-red-500'
+                            : 'border-slate-100'
+                        }`}
+                      >
+                        <span className={`w-6 h-6 rounded-full font-extrabold text-[9px] flex items-center justify-center shrink-0 ${
+                          isSubmitted
+                            ? isCorrect
+                              ? 'bg-emerald-50 border border-emerald-500 text-emerald-750'
+                              : 'bg-red-50 border border-red-500 text-red-750'
+                            : 'bg-[#001e40]/10 text-[#001e40]'
+                        }`}>
+                          {isFullTest ? q.id : (idx + 1)}
+                        </span>
 
-                          {hasOptions ? (
-                            <div className="w-full pt-1">
+                        <div className="flex-grow min-w-0">
+                          {hasOptions && !isListening ? (
+                            <div className="w-full">
                               {(() => {
                                 const isYesNoNotGiven = q.options.length > 0 && q.options.every(opt => {
                                   const u = opt.trim().toUpperCase();
@@ -571,25 +588,25 @@ const ExamTaker = () => {
 
                                 if (isYesNoNotGiven) {
                                   return (
-                                    <div className="flex flex-wrap gap-1.5 shrink-0">
+                                    <div className="flex flex-wrap gap-1">
                                       {q.options.map(opt => {
                                         const val = opt.trim();
                                         const isSelected = selectedOpt === val;
                                         const isCorrectOption = q.correct && q.correct.split('/').map(a => a.trim().toLowerCase()).includes(val.toLowerCase());
-                                        
+
                                         let btnClass = "";
                                         if (isSubmitted) {
                                           if (isCorrectOption) {
-                                            btnClass = "bg-emerald-600 border-emerald-600 text-white shadow-sm scale-105 pointer-events-none";
+                                            btnClass = "bg-emerald-600 border-emerald-600 text-white shadow-sm pointer-events-none";
                                           } else if (isSelected) {
-                                            btnClass = "bg-red-500 border-red-500 text-white shadow-sm scale-105 pointer-events-none";
+                                            btnClass = "bg-red-500 border-red-500 text-white shadow-sm pointer-events-none";
                                           } else {
                                             btnClass = "border-slate-100 text-slate-300 pointer-events-none opacity-50";
                                           }
                                         } else {
                                           btnClass = isSelected
-                                            ? 'bg-[#001e40] border-[#001e40] text-white shadow-sm scale-105'
-                                            : 'border-slate-200 text-slate-450 hover:border-[#001e40] hover:text-[#001e40] hover:bg-slate-50';
+                                            ? 'bg-[#001e40] border-[#001e40] text-white shadow-sm'
+                                            : 'border-slate-200 text-slate-450 hover:bg-slate-100';
                                         }
 
                                         return (
@@ -597,7 +614,7 @@ const ExamTaker = () => {
                                             key={val}
                                             disabled={isSubmitted}
                                             onClick={() => selectAnswer(q.id, val)}
-                                            className={`px-3 py-1 rounded-lg font-extrabold text-[9px] flex items-center justify-center transition-all border ${btnClass}`}
+                                            className={`px-2.5 py-0.5 rounded-md font-extrabold text-[8px] border transition-all ${btnClass}`}
                                           >
                                             {val}
                                           </button>
@@ -608,45 +625,45 @@ const ExamTaker = () => {
                                 }
 
                                 return (
-                                  <div className="w-full flex flex-col gap-1.5">
+                                  <div className="w-full flex flex-col gap-1">
                                     {q.options.map((opt) => {
                                       const optMatch = opt.trim().match(/^([A-K])[\.\-\)\s\u00A0]*\s*(.*)$/i);
                                       const letter = optMatch ? optMatch[1].toUpperCase() : '';
                                       const description = optMatch ? optMatch[2].trim() : opt.trim();
                                       const isSelected = selectedOpt === letter;
                                       const isCorrectOption = q.correct && q.correct.split('/').map(a => a.trim().toLowerCase()).includes(letter.toLowerCase());
-                                      
-                                      let cardClass = "";
+
+                                      let optionClass = "";
                                       if (isSubmitted) {
                                         if (isCorrectOption) {
-                                          cardClass = "bg-emerald-50 border-emerald-500 text-emerald-950 font-bold pointer-events-none";
+                                          optionClass = "bg-emerald-50 border-emerald-500 text-emerald-950 font-semibold pointer-events-none";
                                         } else if (isSelected) {
-                                          cardClass = "bg-red-50 border-red-500 text-red-950 font-bold pointer-events-none";
+                                          optionClass = "bg-red-50 border-red-500 text-red-950 font-semibold pointer-events-none";
                                         } else {
-                                          cardClass = "border-slate-100 text-slate-300 pointer-events-none opacity-50";
+                                          optionClass = "border-slate-100 text-slate-300 pointer-events-none opacity-50";
                                         }
                                       } else {
-                                        cardClass = isSelected
-                                          ? 'bg-indigo-50/40 border-indigo-500 text-indigo-950 font-bold shadow-sm'
-                                          : 'border-slate-100 text-slate-600 hover:bg-slate-50/80';
+                                        optionClass = isSelected
+                                          ? 'bg-indigo-50/30 border-indigo-500 text-indigo-950 font-semibold'
+                                          : 'border-slate-100 text-slate-600 hover:bg-slate-100/55';
                                       }
 
                                       return (
                                         <div
                                           key={opt}
                                           onClick={() => !isSubmitted && selectAnswer(q.id, letter || opt)}
-                                          className={`flex items-start gap-2.5 p-2 rounded-xl border text-[10px] cursor-pointer transition-all active:scale-[0.99] ${cardClass}`}
+                                          className={`flex items-start gap-2 p-1.5 rounded-lg border text-[9px] cursor-pointer transition-all ${optionClass}`}
                                         >
-                                          <span className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 border text-[9px] font-extrabold transition-all ${
+                                          <span className={`w-4 h-4 rounded flex items-center justify-center shrink-0 border text-[8px] font-extrabold ${
                                             isSubmitted && isCorrectOption
                                               ? 'bg-emerald-600 border-emerald-600 text-white'
                                               : isSelected
                                                 ? 'bg-[#001e40] border-[#001e40] text-white shadow-sm'
-                                                : 'border-slate-250 text-slate-500 bg-white'
+                                                : 'border-slate-300 text-slate-500 bg-white'
                                           }`}>
                                             {letter}
                                           </span>
-                                          <span className="leading-relaxed pt-0.5">{description}</span>
+                                          <span className="leading-normal pt-0.5">{description}</span>
                                         </div>
                                       );
                                     })}
@@ -661,24 +678,24 @@ const ExamTaker = () => {
                                 value={studentAnswers[q.id] || ''}
                                 onChange={(e) => selectAnswer(q.id, e.target.value)}
                                 disabled={isSubmitted}
-                                placeholder="Nhập kết quả điền từ..."
-                                className={`w-full border rounded-xl px-3 py-1.5 text-[10px] font-semibold focus:outline-none transition-colors shadow-sm ${
+                                placeholder="Nhập câu trả lời..."
+                                className={`w-full border rounded-lg px-2.5 py-1 text-[9px] font-semibold focus:outline-none transition-colors shadow-sm ${
                                   isSubmitted
-                                    ? checkQuestionCorrect(q)
+                                    ? isCorrect
                                       ? 'border-emerald-500 bg-emerald-50 text-emerald-950 font-bold'
                                       : 'border-red-500 bg-red-50 text-red-950 font-bold'
-                                    : 'border-slate-200 focus:border-[#001e40] bg-white text-slate-800'
+                                    : 'border-slate-200 focus:border-[#001e40] focus:ring-1 focus:ring-[#001e40] bg-white text-slate-850'
                                 }`}
                               />
                               {isSubmitted && (
-                                <div className="text-[10px] font-bold text-emerald-700 mt-1 pl-1">
+                                <div className="text-[9px] font-bold text-emerald-700 mt-1 pl-1">
                                   Đáp án chính xác: {q.correct}
                                 </div>
                               )}
                             </div>
                           )}
                         </div>
-                      </React.Fragment>
+                      </div>
                     );
                   } else {
                     // FALLBACK: PDF MODE OR TRADITIONAL SHEET ONLY
@@ -965,13 +982,22 @@ const ExamTaker = () => {
                 </div>
                 
                 <div className="flex-grow max-w-md w-full">
-                  <audio 
-                    key={activeAudioUrl}
-                    src={convertGoogleDriveAudioLink(activeAudioUrl)} 
-                    controls 
-                    className="w-full h-8 rounded-lg outline-none cursor-pointer"
-                    controlsList="nodownload"
-                  />
+                  {activeAudioUrl.includes('drive.google.com') || activeAudioUrl.includes('docs.google.com') ? (
+                    <iframe
+                      key={activeAudioUrl}
+                      src={convertGoogleDrivePdfLink(activeAudioUrl)}
+                      className="w-full h-[55px] rounded-xl border-0 bg-transparent"
+                      allow="autoplay"
+                    />
+                  ) : (
+                    <audio 
+                      key={activeAudioUrl}
+                      src={convertGoogleDriveAudioLink(activeAudioUrl)} 
+                      controls 
+                      className="w-full h-8 rounded-lg outline-none cursor-pointer"
+                      controlsList="nodownload"
+                    />
+                  )}
                 </div>
               </div>
             )}
