@@ -1325,10 +1325,17 @@ const TeacherDashboard = () => {
             {isListening && (
               <div className="px-1 py-1 shrink-0 bg-transparent mb-3">
                 <div className="w-full mx-auto flex items-center gap-3">
-                  {activePart?.audio_url && (
-                    <audio
+                  {activePart?.audio_url && (activePart.audio_url.includes('drive.google.com') || activePart.audio_url.includes('docs.google.com')) ? (
+                    <iframe
                       key={activePart.audio_url}
-                      src={convertGoogleDriveAudioLink(activePart.audio_url)}
+                      src={convertGoogleDrivePdfLink(activePart.audio_url)}
+                      className="w-full h-[55px] rounded-xl border-0 bg-transparent"
+                      allow="autoplay"
+                    />
+                  ) : (
+                    <audio
+                      key={activePart?.audio_url}
+                      src={convertGoogleDriveAudioLink(activePart?.audio_url)}
                       controls
                       className="w-full h-8 outline-none"
                     />

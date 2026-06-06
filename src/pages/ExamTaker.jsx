@@ -476,13 +476,22 @@ const ExamTaker = () => {
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               </div>
               <div className="flex-grow max-w-full">
-                <audio
-                  key={activeAudioUrl}
-                  src={convertGoogleDriveAudioLink(activeAudioUrl)}
-                  controls
-                  className="w-full h-8 outline-none"
-                  controlsList="nodownload"
-                />
+                {activeAudioUrl.includes('drive.google.com') || activeAudioUrl.includes('docs.google.com') ? (
+                  <iframe
+                    key={activeAudioUrl}
+                    src={convertGoogleDrivePdfLink(activeAudioUrl)}
+                    className="w-full h-[55px] rounded-xl border-0 bg-transparent"
+                    allow="autoplay"
+                  />
+                ) : (
+                  <audio
+                    key={activeAudioUrl}
+                    src={convertGoogleDriveAudioLink(activeAudioUrl)}
+                    controls
+                    className="w-full h-8 outline-none"
+                    controlsList="nodownload"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -977,13 +986,22 @@ const ExamTaker = () => {
                 </div>
                 
                 <div className="flex-grow w-full">
-                  <audio 
-                    key={activeAudioUrl}
-                    src={convertGoogleDriveAudioLink(activeAudioUrl)} 
-                    controls 
-                    className="w-full h-8 rounded-lg outline-none cursor-pointer"
-                    controlsList="nodownload"
-                  />
+                  {activeAudioUrl.includes('drive.google.com') || activeAudioUrl.includes('docs.google.com') ? (
+                    <iframe
+                      key={activeAudioUrl}
+                      src={convertGoogleDrivePdfLink(activeAudioUrl)}
+                      className="w-full h-[55px] rounded-xl border-0 bg-transparent"
+                      allow="autoplay"
+                    />
+                  ) : (
+                    <audio 
+                      key={activeAudioUrl}
+                      src={convertGoogleDriveAudioLink(activeAudioUrl)} 
+                      controls 
+                      className="w-full h-8 rounded-lg outline-none cursor-pointer"
+                      controlsList="nodownload"
+                    />
+                  )}
                 </div>
               </div>
             )}
