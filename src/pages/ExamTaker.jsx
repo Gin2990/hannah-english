@@ -193,7 +193,7 @@ const ExamTaker = () => {
     } catch (err) {
       console.error("Lỗi nạp phòng thi:", err);
       alert("Không thể tải phòng thi này!");
-      navigate('/practice');
+      navigate('/student');
     } finally {
       setLoading(false);
     }
@@ -331,10 +331,10 @@ const ExamTaker = () => {
       return;
     }
     if (isSubmitted) {
-      navigate(exam?.type === 'homework' ? '/practice' : '/mock-tests');
+      navigate('/student');
     } else {
       if (window.confirm("⚠️ Tiến trình làm bài sẽ BỊ HỦY BỎ và không được lưu lại nếu bạn thoát ra lúc này! Bạn có thực sự muốn thoát?")) {
-        navigate(exam?.type === 'homework' ? '/practice' : '/mock-tests');
+        navigate('/student');
       }
     }
   };
@@ -955,7 +955,7 @@ const ExamTaker = () => {
                 </button>
                 
                 <button 
-                  onClick={() => navigate(exam.type === 'homework' ? '/practice' : '/mock-tests')}
+                  onClick={() => navigate('/student')}
                   className="w-full py-2.5 bg-[#001e40] hover:bg-[#003366] text-white font-bold rounded-xl text-xs uppercase tracking-wide transition-all shadow-md active:scale-97 flex items-center justify-center gap-1.5"
                 >
                   <span className="material-symbols-outlined text-sm">dashboard</span>
@@ -1337,7 +1337,7 @@ const ExamTaker = () => {
               </button>
               
               <button 
-                onClick={() => navigate(exam?.type === 'homework' ? '/practice' : '/mock-tests')}
+                onClick={() => navigate('/student')}
                 className="w-full py-2.5 bg-[#001e40] hover:bg-[#003366] text-white font-bold rounded-xl text-xs uppercase tracking-wide transition-all shadow-md active:scale-97 flex items-center justify-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-sm">dashboard</span>

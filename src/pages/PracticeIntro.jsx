@@ -54,7 +54,7 @@ const PracticeIntro = () => {
     } catch (err) {
       console.error("Lỗi lấy thông tin chi tiết bài tập:", err);
       alert("Không thể tải thông tin bài tập này!");
-      navigate('/practice');
+      navigate('/student');
     } finally {
       setLoading(false);
     }
@@ -169,7 +169,7 @@ const PracticeIntro = () => {
         {/* Big Start button */}
         <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
           <button 
-            onClick={() => navigate('/practice')}
+            onClick={() => navigate('/student')}
             className="w-full sm:w-auto px-6 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 font-bold rounded-xl text-xs uppercase tracking-wide transition-all text-center"
           >
             Quay lại

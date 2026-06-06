@@ -8,11 +8,7 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleStartPractice = (courseCode) => {
-    if (courseCode === 'ielts') {
-      navigate('/mock-tests');
-    } else {
-      navigate('/practice');
-    }
+    navigate('/student');
   };
 
   const handleSearchSubmit = (e) => {
