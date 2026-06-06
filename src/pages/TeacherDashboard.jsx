@@ -1347,8 +1347,8 @@ const TeacherDashboard = () => {
             {/* Split Screen Simulated Mock Test area */}
             <div className="h-[550px] w-full flex flex-col lg:flex-row gap-6 p-1 overflow-hidden min-h-0">
               
-              {/* Passage Column (Left - 50% width) */}
-              <div className="w-full lg:w-[50%] bg-white border border-slate-150 rounded-2xl p-5 shadow-sm flex flex-col lg:h-full relative overflow-hidden min-w-0">
+              {/* Passage Column (Left - 48% width) */}
+              <div className="w-full lg:w-[48%] bg-white border border-slate-150 rounded-2xl p-5 shadow-sm flex flex-col lg:h-full relative overflow-hidden min-w-0">
                 {/* Passage tabs swapper */}
                 <div className="flex overflow-x-auto gap-1 border-b border-slate-150 pb-2 mb-3 shrink-0 max-w-full custom-preview-scrollbar">
                   {convertedExam.test_parts.map((p, idx) => (
@@ -1380,8 +1380,8 @@ const TeacherDashboard = () => {
                 </div>
               </div>
 
-              {/* Bubble Sheet Column (Middle - 25% width) */}
-              <div className="w-full lg:w-[25%] shrink-0 bg-white border border-slate-150 rounded-2xl p-4 shadow-sm flex flex-col lg:h-full overflow-hidden min-w-0">
+              {/* Bubble Sheet Column (Middle - 42% width) */}
+              <div className="w-full lg:w-[42%] shrink-0 bg-white border border-slate-150 rounded-2xl p-4 shadow-sm flex flex-col lg:h-full overflow-hidden min-w-0">
                 <div className="border-b border-slate-150 pb-2 mb-2 shrink-0 flex justify-between items-center text-xs font-bold text-[#001e40]">
                   <span>Phiếu Trả Lời Đề Thi</span>
                   <span className="text-[9px] bg-slate-100 px-2 py-0.5 rounded-full">
@@ -1390,94 +1390,121 @@ const TeacherDashboard = () => {
                 </div>
 
                 <div className="flex-grow overflow-y-auto pr-1 space-y-3 custom-preview-scrollbar text-[11px] min-h-0">
-                  {activeQuestions.map((q) => {
-                    const selectedOpt = studentAnswers[q.id];
-                    const hasOptions = q.options && q.options.length > 0;
+                  {(() => {
+                    let lastInstruction = null;
 
-                    return (
-                      <div
-                        key={q.id}
-                        id={`preview-q-card-${q.id}`}
-                        className="flex items-center gap-3 py-2.5 px-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition-all bg-white shadow-sm"
-                      >
-                        <span className="w-6 h-6 rounded-full bg-[#001e40]/10 text-[#001e40] font-extrabold text-[9px] flex items-center justify-center shrink-0">
-                          {q.id}
-                        </span>
+                    return activeQuestions.map((q) => {
+                      const selectedOpt = studentAnswers[q.id];
+                      
+                      const isTFN = q.options && q.options.length > 0 && q.options.every(opt => {
+                        const u = opt.trim().toUpperCase();
+                        return u === 'YES' || u === 'NO' || u === 'NOT GIVEN' || u === 'TRUE' || u === 'FALSE';
+                      });
 
-                        <div className="flex-grow min-w-0">
+                      const isAK = q.options && q.options.length > 4 && (
+                        q.options.length > 5 ||
+                        q.options.some(opt => {
+                          const match = opt.trim().match(/^([A-K])[\.\-\)\s\u00A0]/i);
+                          return match && ['F', 'G', 'H', 'I', 'J', 'K'].includes(match[1].toUpperCase());
+                        })
+                      );
 
-                            {hasOptions && !isListening ? (
-                              <div className="w-full pt-0.5">
-                                {(() => {
-                                    const isYesNoNotGiven = q.options.length > 0 && q.options.every(opt => {
-                                      const u = opt.trim().toUpperCase();
-                                      return u === 'YES' || u === 'NO' || u === 'NOT GIVEN' || u === 'TRUE' || u === 'FALSE';
-                                    });
+                      const hasOptions = q.options && q.options.length > 0 && !isTFN && !isAK;
 
-                                    if (isYesNoNotGiven) {
+                      let instructionBlock = null;
+                      if (q.instruction && q.instruction.trim() !== lastInstruction) {
+                        lastInstruction = q.instruction.trim();
+                        if (isTFN) {
+                          instructionBlock = (
+                            <div className="bg-[#f8fafc] border-l-4 border-[#001e40] p-3.5 rounded-xl my-3 shadow-sm select-text">
+                              <h4 className="font-extrabold text-[9px] text-[#001e40] uppercase tracking-wider mb-1">TRUE / FALSE / NOT GIVEN</h4>
+                              <p className="text-[9.5px] italic text-slate-600 leading-relaxed whitespace-pre-wrap">{q.instruction}</p>
+                            </div>
+                          );
+                        } else if (isAK) {
+                          instructionBlock = (
+                            <div className="bg-[#f8fafc] border-l-4 border-indigo-650 p-3.5 rounded-xl my-3 shadow-sm select-text">
+                              <h4 className="font-extrabold text-[9px] text-indigo-700 uppercase tracking-wider mb-1">COMPLETE MATCHING CHOICES</h4>
+                              {q.instruction && <p className="text-[9.5px] italic text-slate-600 leading-relaxed mb-2 whitespace-pre-wrap">{q.instruction}</p>}
+                              <ul className="grid grid-cols-1 gap-1.5 pl-0">
+                                {q.options.map(opt => (
+                                  <li key={opt} className="text-[9.5px] text-slate-700 list-none pl-2 border-l-2 border-slate-200">{opt}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          );
+                        } else {
+                          instructionBlock = (
+                            <div className="bg-[#f8fafc] border-l-4 border-slate-400 p-3 rounded-xl my-3 select-text">
+                              <p className="text-[9.5px] font-bold text-slate-600 leading-relaxed whitespace-pre-wrap">{q.instruction}</p>
+                            </div>
+                          );
+                        }
+                      }
+
+                      return (
+                        <React.Fragment key={q.id}>
+                          {instructionBlock}
+                          <div
+                            key={q.id}
+                            id={`preview-q-card-${q.id}`}
+                            className="flex items-start gap-3 py-2.5 px-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition-all bg-white shadow-sm"
+                          >
+                            <span className="w-6 h-6 rounded-full bg-[#001e40]/10 text-[#001e40] font-extrabold text-[9px] flex items-center justify-center shrink-0 mt-0.5">
+                              {q.id}
+                            </span>
+
+                            <div className="flex-grow min-w-0">
+                              {q.question && (
+                                <div className="text-[10px] font-bold text-slate-800 mb-1.5 leading-snug">
+                                  {q.question}
+                                </div>
+                              )}
+
+                              {hasOptions && !isListening ? (
+                                <div className="w-full pt-0.5">
+                                  <div className="w-full flex flex-col gap-1">
+                                    {q.options.map((opt) => {
+                                      const optMatch = opt.trim().match(/^([A-K])[\.\-\)\s\u00A0]*\s*(.*)$/i);
+                                      const letter = optMatch ? optMatch[1].toUpperCase() : '';
+                                      const description = optMatch ? optMatch[2].trim() : opt.trim();
+                                      const isSelected = selectedOpt === letter;
+                                      
                                       return (
-                                        <div className="flex flex-wrap gap-1">
-                                          {q.options.map(opt => {
-                                            const val = opt.trim();
-                                            const isSelected = selectedOpt === val;
-                                            return (
-                                              <button
-                                                key={val}
-                                                type="button"
-                                                onClick={() => selectPreviewAnswer(q.id, val)}
-                                                className={`px-2.5 py-0.5 rounded-md font-extrabold text-[8px] border ${isSelected ? 'bg-[#001e40] border-[#001e40] text-white shadow-sm' : 'border-slate-200 text-slate-440 hover:bg-slate-50'}`}
-                                              >
-                                                {val}
-                                              </button>
-                                            );
-                                          })}
+                                        <div
+                                          key={opt}
+                                          onClick={() => selectPreviewAnswer(q.id, letter || opt)}
+                                          className={`flex items-start gap-2 p-1.5 rounded-lg border text-[9px] cursor-pointer transition-all hover:bg-slate-50 ${isSelected ? 'bg-indigo-50/30 border-indigo-500 text-indigo-950 font-semibold' : 'border-slate-100 text-slate-600'}`}
+                                        >
+                                          <span className={`w-4 h-4 rounded flex items-center justify-center shrink-0 border text-[8px] font-extrabold ${isSelected ? 'bg-[#001e40] border-[#001e40] text-white' : 'border-slate-300 text-slate-500 bg-white'}`}>
+                                            {letter}
+                                          </span>
+                                          <span className="leading-normal pt-0.5">{description}</span>
                                         </div>
                                       );
-                                    }
-
-                                    return (
-                                      <div className="w-full flex flex-col gap-1">
-                                        {q.options.map((opt) => {
-                                          const optMatch = opt.trim().match(/^([A-K])[\.\-\)\s\u00A0]*\s*(.*)$/i);
-                                          const letter = optMatch ? optMatch[1].toUpperCase() : '';
-                                          const description = optMatch ? optMatch[2].trim() : opt.trim();
-                                          const isSelected = selectedOpt === letter;
-                                          
-                                          return (
-                                            <div
-                                              key={opt}
-                                              onClick={() => selectPreviewAnswer(q.id, letter || opt)}
-                                              className={`flex items-start gap-2 p-1.5 rounded-lg border text-[9px] cursor-pointer transition-all hover:bg-slate-50 ${isSelected ? 'bg-indigo-50/30 border-indigo-500 text-indigo-950 font-semibold' : 'border-slate-100 text-slate-600'}`}
-                                            >
-                                              <span className={`w-4 h-4 rounded flex items-center justify-center shrink-0 border text-[8px] font-extrabold ${isSelected ? 'bg-[#001e40] border-[#001e40] text-white' : 'border-slate-300 text-slate-500 bg-white'}`}>
-                                                {letter}
-                                              </span>
-                                              <span className="leading-normal pt-0.5">{description}</span>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    );
-                                })()}
-                              </div>
-                            ) : (
-                              <input
-                                type="text"
-                                value={studentAnswers[q.id] || ''}
-                                onChange={(e) => selectPreviewAnswer(q.id, e.target.value)}
-                                placeholder="Nhập câu trả lời..."
-                                className="w-full border border-slate-200 focus:border-[#001e40] focus:ring-1 focus:ring-[#001e40] rounded-lg px-2.5 py-1 text-[9px] font-semibold focus:outline-none bg-white text-slate-800"
-                              />
-                            )}
+                                    })}
+                                  </div>
+                                </div>
+                              ) : (
+                                <input
+                                  type="text"
+                                  value={studentAnswers[q.id] || ''}
+                                  onChange={(e) => selectPreviewAnswer(q.id, e.target.value)}
+                                  placeholder="Nhập câu trả lời..."
+                                  className="w-full border border-slate-200 focus:border-[#001e40] focus:ring-1 focus:ring-[#001e40] rounded-lg px-2.5 py-1 text-[9px] font-semibold focus:outline-none bg-white text-slate-800"
+                                />
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        </React.Fragment>
                       );
-                    })}
+                    });
+                  })()}
                 </div>
               </div>
 
-              {/* Sidebar Column (Right - 25% width) */}
-              <div className="w-full lg:w-[25%] shrink-0 flex flex-col gap-4 lg:h-full overflow-hidden">
+              {/* Sidebar Column (Right - 10% width) */}
+              <div className="w-full lg:w-[10%] shrink-0 flex flex-col gap-4 lg:h-full overflow-hidden">
                 <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col justify-center items-center shadow-sm shrink-0 gap-1.5">
                   <span className="block text-[8px] font-bold text-slate-450 uppercase tracking-wider">Thời gian xem trước</span>
                   <span className="font-bold text-xl font-mono text-[#001e40]">{formatStopwatch()}</span>

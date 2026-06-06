@@ -1936,7 +1936,7 @@ const IeltsConverter = () => {
             {/* SPLIT SCREEN WORKSPACE */}
             <main className="flex-grow flex flex-col lg:flex-row gap-4 p-4 overflow-hidden min-h-0 bg-[#f8f9fa]">
               {/* COLUMN 1: PASSAGE OR AUDIO VIEWER (Left) */}
-              <div className="w-full lg:w-[50%] bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col lg:h-full relative overflow-hidden min-w-0">
+              <div className="w-full lg:w-[48%] bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col lg:h-full relative overflow-hidden min-w-0">
                 {/* Main scrollable content view */}
                 <div className="flex-grow overflow-y-auto pr-2 custom-preview-scrollbar min-h-0">
                   {activePart?.part_content ? (
@@ -1957,8 +1957,8 @@ const IeltsConverter = () => {
                 </div>
               </div>
 
-              {/* COLUMN 2: INTERACTIVE BUBBLE SHEET / QUESTIONS LIST (Middle) */}
-              <div className="w-full lg:w-[25%] shrink-0 bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col lg:h-full overflow-hidden min-w-0">
+              {/* COLUMN 2: INTERACTIVE BUBBLE SHEET / QUESTIONS LIST (Middle - 42% width) */}
+              <div className="w-full lg:w-[42%] shrink-0 bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col lg:h-full overflow-hidden min-w-0">
                 <div className="border-b border-slate-150 pb-3 mb-3 shrink-0 flex justify-between items-center">
                   <h3 className="font-extrabold text-xs text-[#001e40] uppercase tracking-wider flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-blue-650 text-base">fact_check</span>
@@ -1972,44 +1972,76 @@ const IeltsConverter = () => {
                 {/* Scrollable list of questions */}
                 <div className="flex-grow overflow-y-auto pr-1 space-y-2.5 custom-preview-scrollbar text-xs min-h-0">
                   {(() => {
+                    let lastInstruction = null;
+
                     return activeQuestions.map((q) => {
                       const selectedOpt = studentAnswers[q.id];
-                      const hasOptions = q.options && q.options.length > 0;
                       
-                      const isYesNoNotGiven = q.options.length > 0 && q.options.every(opt => {
+                      const isTFN = q.options && q.options.length > 0 && q.options.every(opt => {
                         const u = opt.trim().toUpperCase();
                         return u === 'YES' || u === 'NO' || u === 'NOT GIVEN' || u === 'TRUE' || u === 'FALSE';
                       });
 
+                      const isAK = q.options && q.options.length > 4 && (
+                        q.options.length > 5 ||
+                        q.options.some(opt => {
+                          const match = opt.trim().match(/^([A-K])[\.\-\)\s\u00A0]/i);
+                          return match && ['F', 'G', 'H', 'I', 'J', 'K'].includes(match[1].toUpperCase());
+                        })
+                      );
+
+                      const hasOptions = q.options && q.options.length > 0 && !isTFN && !isAK;
+
+                      let instructionBlock = null;
+                      if (q.instruction && q.instruction.trim() !== lastInstruction) {
+                        lastInstruction = q.instruction.trim();
+                        if (isTFN) {
+                          instructionBlock = (
+                            <div className="bg-[#f8fafc] border-l-4 border-[#001e40] p-3.5 rounded-xl my-3 shadow-sm select-text">
+                              <h4 className="font-extrabold text-[9px] text-[#001e40] uppercase tracking-wider mb-1">TRUE / FALSE / NOT GIVEN</h4>
+                              <p className="text-[9.5px] italic text-slate-600 leading-relaxed whitespace-pre-wrap">{q.instruction}</p>
+                            </div>
+                          );
+                        } else if (isAK) {
+                          instructionBlock = (
+                            <div className="bg-[#f8fafc] border-l-4 border-indigo-650 p-3.5 rounded-xl my-3 shadow-sm select-text">
+                              <h4 className="font-extrabold text-[9px] text-indigo-700 uppercase tracking-wider mb-1">COMPLETE MATCHING CHOICES</h4>
+                              {q.instruction && <p className="text-[9.5px] italic text-slate-600 leading-relaxed mb-2 whitespace-pre-wrap">{q.instruction}</p>}
+                              <ul className="grid grid-cols-1 gap-1.5 pl-0">
+                                {q.options.map(opt => (
+                                  <li key={opt} className="text-[9.5px] text-slate-700 list-none pl-2 border-l-2 border-slate-200">{opt}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          );
+                        } else {
+                          instructionBlock = (
+                            <div className="bg-[#f8fafc] border-l-4 border-slate-400 p-3 rounded-xl my-3 select-text">
+                              <p className="text-[9.5px] font-bold text-slate-600 leading-relaxed whitespace-pre-wrap">{q.instruction}</p>
+                            </div>
+                          );
+                        }
+                      }
+
                       return (
-                        <div
-                          key={q.id}
-                          id={`preview-q-card-${q.id}`}
-                          className="flex items-center gap-3 py-2 px-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition-all bg-white"
-                        >
-                          <span className="w-7 h-7 rounded-full bg-blue-50 text-blue-700 border border-blue-150 font-extrabold text-xs flex items-center justify-center shrink-0">
-                            {q.id}
-                          </span>
-                          
-                          <div className="flex-grow min-w-0">
-                            {hasOptions && !isListening ? (
-                              isYesNoNotGiven ? (
-                                <div className="flex flex-wrap gap-1">
-                                  {q.options.map(opt => {
-                                    const val = opt.trim();
-                                    const isSelected = selectedOpt === val;
-                                    return (
-                                      <button
-                                        key={val}
-                                        onClick={() => selectPreviewAnswer(q.id, val)}
-                                        className={`px-2 py-1 rounded-lg font-bold text-[9px] border transition-all ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}
-                                      >
-                                        {val}
-                                      </button>
-                                    );
-                                  })}
+                        <React.Fragment key={q.id}>
+                          {instructionBlock}
+                          <div
+                            id={`preview-q-card-${q.id}`}
+                            className="flex items-start gap-3 py-2 px-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition-all bg-white"
+                          >
+                            <span className="w-7 h-7 rounded-full bg-blue-50 text-blue-700 border border-blue-150 font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                              {q.id}
+                            </span>
+                            
+                            <div className="flex-grow min-w-0">
+                              {q.question && (
+                                <div className="text-[10px] font-bold text-slate-800 mb-1.5 leading-snug">
+                                  {q.question}
                                 </div>
-                              ) : (
+                              )}
+
+                              {hasOptions && !isListening ? (
                                 <div className="flex flex-wrap gap-1">
                                   {q.options.map((opt) => {
                                     const optMatch = opt.trim().match(/^([A-K])[\.\-\)\s\u00A0]*\s*(.*)$/i);
@@ -2027,18 +2059,18 @@ const IeltsConverter = () => {
                                     );
                                   })}
                                 </div>
-                              )
-                            ) : (
-                              <input
-                                type="text"
-                                value={studentAnswers[q.id] || ''}
-                                onChange={(e) => selectPreviewAnswer(q.id, e.target.value)}
-                                placeholder="Nhập đáp án..."
-                                className="w-full border border-slate-200 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 rounded-lg px-2.5 py-1 text-xs font-medium focus:outline-none bg-white text-slate-800 transition-colors shadow-sm"
-                              />
-                            )}
+                              ) : (
+                                <input
+                                  type="text"
+                                  value={studentAnswers[q.id] || ''}
+                                  onChange={(e) => selectPreviewAnswer(q.id, e.target.value)}
+                                  placeholder="Nhập đáp án..."
+                                  className="w-full border border-slate-200 focus:border-blue-600 focus:ring-1 focus:ring-blue-100 rounded-lg px-2.5 py-1 text-xs font-medium focus:outline-none bg-white text-slate-800 transition-colors shadow-sm"
+                                />
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        </React.Fragment>
                       );
                     });
                   })()}
@@ -2051,8 +2083,8 @@ const IeltsConverter = () => {
                 </div>
               </div>
 
-              {/* COLUMN 3: STICKY CONTROL & NAVIGATION SIDEBAR (Right) */}
-              <div className="w-full lg:w-[25%] shrink-0 flex flex-col gap-4 lg:h-full overflow-hidden">
+              {/* COLUMN 3: STICKY CONTROL & NAVIGATION SIDEBAR (Right - 10% width) */}
+              <div className="w-full lg:w-[10%] shrink-0 flex flex-col gap-4 lg:h-full overflow-hidden">
                 {/* Timer card */}
                 <div className="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col shadow-sm shrink-0 gap-3">
                   <div className="flex flex-col gap-1">
