@@ -34,6 +34,10 @@ const Navbar = () => {
           </Link>
           
           <nav class="hidden md:flex items-center gap-6">
+            {user && role === 'student' && (
+              <NavLink to="/student" end className={({ isActive }) => `text-xs font-semibold pb-1 border-b-2 transition-all ${isActive ? 'text-primary border-primary font-bold' : 'text-slate-500 border-transparent hover:text-primary'}`}>Bảng học tập</NavLink>
+            )}
+
             {role !== 'teacher' && (
               <>
                 <NavLink to="/practice" className={({ isActive }) => `text-xs font-semibold pb-1 border-b-2 transition-all ${isActive ? 'text-primary border-primary font-bold' : 'text-slate-500 border-transparent hover:text-primary'}`}>Ôn luyện</NavLink>
@@ -42,10 +46,7 @@ const Navbar = () => {
             )}
 
             {user && role === 'student' && (
-              <>
-                <NavLink to="/student" end className={({ isActive }) => `text-xs font-semibold pb-1 border-b-2 transition-all ${isActive ? 'text-primary border-primary font-bold' : 'text-slate-500 border-transparent hover:text-primary'}`}>Bảng học tập</NavLink>
-                <NavLink to="/profile" className={({ isActive }) => `text-xs font-semibold pb-1 border-b-2 transition-all ${isActive ? 'text-primary border-primary font-bold' : 'text-slate-500 border-transparent hover:text-primary'}`}>Hồ sơ</NavLink>
-              </>
+              <NavLink to="/profile" className={({ isActive }) => `text-xs font-semibold pb-1 border-b-2 transition-all ${isActive ? 'text-primary border-primary font-bold' : 'text-slate-500 border-transparent hover:text-primary'}`}>Hồ sơ</NavLink>
             )}
             
             {user && role === 'teacher' && (

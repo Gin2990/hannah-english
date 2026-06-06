@@ -23,6 +23,12 @@ const MockTests = () => {
   }, [activeCourse]);
 
   const loadMockTests = async () => {
+    if (!user) {
+      setTests([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const { data: course, error: cError } = await supabase
@@ -33,17 +39,56 @@ const MockTests = () => {
 
       if (cError) throw cError;
 
-      const { data, error } = await supabase
-        .from('exams')
-        .select('*')
-        .eq('course_id', course.id)
-        .eq('type', 'test')
-        .order('created_at', { ascending: false });
+      // Lấy class_id của học viên từ profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('class_id')
+        .eq('id', user.id)
+        .single();
 
+      // Lấy danh sách đề thi thử (assignments) đã giao
+      let query = supabase
+        .from('assignments')
+        .select(`
+          due_date,
+          exams (
+            id,
+            title,
+            type,
+            duration,
+            question_count,
+            course_id,
+            test_parts
+          )
+        `);
+
+      if (profile?.class_id) {
+        query = query.or(`student_id.eq.${user.id},class_id.eq.${profile.class_id}`);
+      } else {
+        query = query.eq('student_id', user.id);
+      }
+
+      const { data: assignmentsData, error } = await query;
       if (error) throw error;
-      setTests(data || []);
+
+      // Trích xuất các đề thi thuộc loại test (thi thử) và thuộc khóa học hiện tại
+      const examsList = assignmentsData
+        ?.map(ass => {
+          if (!ass.exams) return null;
+          return {
+            ...ass.exams,
+            due_date: ass.due_date
+          };
+        })
+        .filter(ex => ex && ex.course_id === course.id && ex.type === 'test')
+        || [];
+
+      // Loại bỏ trùng lặp nếu trùng id đề thi
+      const uniqueTests = Array.from(new Map(examsList.map(item => [item.id, item])).values());
+      setTests(uniqueTests);
     } catch (err) {
       console.error("Lỗi lấy danh sách đề thi thử:", err);
+      setTests([]);
     } finally {
       setLoading(false);
     }

@@ -24,6 +24,12 @@ const Practice = () => {
   }, [activeCourse]);
 
   const loadPracticeExercises = async () => {
+    if (!user) {
+      setExercises([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       // Lấy thông tin ID khóa học trước
@@ -35,18 +41,57 @@ const Practice = () => {
 
       if (cError) throw cError;
 
-      // Lấy toàn bộ bài tập (homework) của khóa học đó
-      const { data, error } = await supabase
-        .from('exams')
-        .select('*')
-        .eq('course_id', course.id)
-        .eq('type', 'homework')
-        .order('created_at', { ascending: false });
+      // Lấy class_id của học viên từ profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('class_id')
+        .eq('id', user.id)
+        .single();
 
+      // Lấy danh sách bài tập (assignments) đã giao
+      let query = supabase
+        .from('assignments')
+        .select(`
+          due_date,
+          exams (
+            id,
+            title,
+            type,
+            duration,
+            question_count,
+            listening_audio_url,
+            part_code,
+            course_id
+          )
+        `);
+
+      if (profile?.class_id) {
+        query = query.or(`student_id.eq.${user.id},class_id.eq.${profile.class_id}`);
+      } else {
+        query = query.eq('student_id', user.id);
+      }
+
+      const { data: assignmentsData, error } = await query;
       if (error) throw error;
-      setExercises(data || []);
+
+      // Trích xuất các đề thi thuộc loại homework và thuộc khóa học hiện tại
+      const examsList = assignmentsData
+        ?.map(ass => {
+          if (!ass.exams) return null;
+          return {
+            ...ass.exams,
+            due_date: ass.due_date
+          };
+        })
+        .filter(ex => ex && ex.course_id === course.id && ex.type === 'homework')
+        || [];
+
+      // Loại bỏ trùng lặp nếu trùng id bài thi
+      const uniqueExams = Array.from(new Map(examsList.map(item => [item.id, item])).values());
+      setExercises(uniqueExams);
     } catch (err) {
-      console.error("Lỗi lấy danh sách bài tập:", err);
+      console.error("Lỗi lấy danh sách bài tập ôn tập:", err);
+      setExercises([]);
     } finally {
       setLoading(false);
     }
