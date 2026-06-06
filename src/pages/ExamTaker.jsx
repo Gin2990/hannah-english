@@ -570,7 +570,7 @@ const ExamTaker = () => {
                   const hasOptions = q.options && q.options.length > 0 && q.options.some(opt => opt && opt.trim() && !opt.includes('Đáp án A') && !opt.includes('Đáp án B')) && !isTFN && !isAK;
 
                   let instructionBlock = null;
-                  if (q.instruction && q.instruction.trim() !== lastInstruction) {
+                  if (q.instruction && q.instruction.trim() !== lastInstruction && !isListening) {
                     lastInstruction = q.instruction.trim();
                     if (isTFN) {
                       instructionBlock = (
@@ -627,7 +627,7 @@ const ExamTaker = () => {
                           </span>
 
                           <div className="flex-grow min-w-0">
-                            {q.question && (
+                            {q.question && !isListening && (
                               <div className="text-[10px] font-bold text-slate-800 mb-1.5 leading-snug">
                                 {q.question}
                               </div>
@@ -731,7 +731,7 @@ const ExamTaker = () => {
                               {isFullTest ? q.id : (idx + 1)}
                             </span>
                             <span className="font-extrabold text-slate-700 text-[11px] leading-snug">
-                              {q.question ? q.question : `Câu ${isFullTest ? q.id : (idx + 1)}`}
+                              {(q.question && !isListening) ? q.question : `Câu ${isFullTest ? q.id : (idx + 1)}`}
                             </span>
                           </div>
                           {hasOptions ? (

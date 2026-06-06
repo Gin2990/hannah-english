@@ -1993,7 +1993,7 @@ const IeltsConverter = () => {
                       const hasOptions = q.options && q.options.length > 0 && !isTFN && !isAK;
 
                       let instructionBlock = null;
-                      if (q.instruction && q.instruction.trim() !== lastInstruction) {
+                      if (q.instruction && q.instruction.trim() !== lastInstruction && !isListening) {
                         lastInstruction = q.instruction.trim();
                         if (isTFN) {
                           instructionBlock = (
@@ -2035,7 +2035,7 @@ const IeltsConverter = () => {
                             </span>
                             
                             <div className="flex-grow min-w-0">
-                              {q.question && (
+                              {q.question && !isListening && (
                                 <div className="text-[10px] font-bold text-slate-800 mb-1.5 leading-snug">
                                   {q.question}
                                 </div>
