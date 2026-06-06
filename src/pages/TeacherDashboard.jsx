@@ -670,7 +670,7 @@ const TeacherDashboard = () => {
         class_name: assignHomeworkTargetType === 'class' ? targetClass?.name : null,
         student_id: assignHomeworkTargetType === 'student' ? assignHomeworkStudentId : null,
         student_name: assignHomeworkTargetType === 'student' ? targetStudent?.full_name : null,
-        due_date: assignHomeworkDueDate ? new Date(assignHomeworkDueDate).toISOString() : null,
+        due_date: assignHomeworkDueDate ? new Date(assignHomeworkDueDate + 'T23:59:59').toISOString() : null,
         created_at: new Date().toISOString()
       };
       setAssignments(prev => [newAssignItem, ...prev]);
@@ -693,7 +693,7 @@ const TeacherDashboard = () => {
         exam_id: assignHomeworkExamId,
         class_id: assignHomeworkTargetType === 'class' ? assignHomeworkClassId : null,
         student_id: assignHomeworkTargetType === 'student' ? assignHomeworkStudentId : null,
-        due_date: assignHomeworkDueDate ? new Date(assignHomeworkDueDate).toISOString() : null,
+        due_date: assignHomeworkDueDate ? new Date(assignHomeworkDueDate + 'T23:59:59').toISOString() : null,
         created_by: user?.id
       };
 
@@ -2511,10 +2511,17 @@ const TeacherDashboard = () => {
                 <div className="space-y-1">
                   <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Hạn chót nộp bài (Due date)</label>
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={assignHomeworkDueDate}
                     onChange={(e) => setAssignHomeworkDueDate(e.target.value)}
-                    className="w-full border border-slate-200 focus:border-blue-655 rounded-xl py-2 px-3 focus:outline-none bg-white font-medium text-slate-800"
+                    onClick={(e) => {
+                      try {
+                        e.target.showPicker();
+                      } catch (err) {
+                        console.error(err);
+                      }
+                    }}
+                    className="w-full border border-slate-200 focus:border-blue-655 rounded-xl py-2 px-3 focus:outline-none bg-white font-medium text-slate-800 cursor-pointer"
                   />
                 </div>
 
@@ -2758,10 +2765,17 @@ const TeacherDashboard = () => {
                 <div className="space-y-1">
                   <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Hạn chót nộp bài</label>
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={assignHomeworkDueDate}
                     onChange={(e) => setAssignHomeworkDueDate(e.target.value)}
-                    className="w-full border border-slate-200 focus:border-[#001e40] rounded-xl py-2 px-3 focus:outline-none bg-white font-medium text-slate-800"
+                    onClick={(e) => {
+                      try {
+                        e.target.showPicker();
+                      } catch (err) {
+                        console.error(err);
+                      }
+                    }}
+                    className="w-full border border-slate-200 focus:border-[#001e40] rounded-xl py-2 px-3 focus:outline-none bg-white font-medium text-slate-800 cursor-pointer"
                   />
                 </div>
 
