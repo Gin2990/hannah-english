@@ -102,6 +102,11 @@ const ExamTaker = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const queryParams = new URLSearchParams(location.search);
+  const mode = queryParams.get('mode');
+  const isTeacherMode = user?.role === 'teacher' || mode === 'teacher_review';
+  const [showAnswerKeys, setShowAnswerKeys] = useState(true);
+
   const [exam, setExam] = useState(null);
   const [loading, setLoading] = useState(true);
   const [studentAnswers, setStudentAnswers] = useState({});
@@ -128,7 +133,7 @@ const ExamTaker = () => {
   }, [id]);
 
   useEffect(() => {
-    if (exam && !isSubmitted) {
+    if (exam && !isSubmitted && !isTeacherMode) {
       timerRef.current = setInterval(() => {
         setElapsedSeconds(prev => prev + 1);
 
@@ -146,7 +151,7 @@ const ExamTaker = () => {
       }, 1000);
     }
     return () => clearInterval(timerRef.current);
-  }, [exam, isSubmitted, useCountdown]);
+  }, [exam, isSubmitted, useCountdown, isTeacherMode]);
 
   const loadExamDetails = async () => {
     try {
@@ -287,28 +292,33 @@ const ExamTaker = () => {
     });
 
     // Lưu trữ lên Supabase
-    try {
-      const { error } = await supabase
-        .from('exam_results')
-        .insert({
-          student_id: user.id,
-          exam_id: exam.id,
-          score: correctCount,
-          total_questions: totalCount,
-          duration_seconds: elapsedSeconds,
-          answers: studentAnswers
-        });
+    if (!isTeacherMode) {
+      try {
+        const { error } = await supabase
+          .from('exam_results')
+          .insert({
+            student_id: user.id,
+            exam_id: exam.id,
+            score: correctCount,
+            total_questions: totalCount,
+            duration_seconds: elapsedSeconds,
+            answers: studentAnswers
+          });
 
-      if (error) throw error;
-      console.log("Đã lưu kết quả thi thử lên database!");
-    } catch (err) {
-      console.error("Lỗi đồng bộ lịch sử thi:", err);
+        if (error) throw error;
+        console.log("Đã lưu kết quả thi thử lên database!");
+      } catch (err) {
+        console.error("Lỗi đồng bộ lịch sử thi:", err);
+      }
+    } else {
+      console.log("Teacher Preview Mode: Bỏ qua lưu kết quả.");
     }
 
     setShowResult(true);
   };
 
   const formatTimer = () => {
+    if (isTeacherMode) return "Teacher Mode";
     const time = useCountdown ? timeRemaining : elapsedSeconds;
     const m = Math.floor(time / 60);
     const s = time % 60;
@@ -316,6 +326,10 @@ const ExamTaker = () => {
   };
 
   const confirmExit = () => {
+    if (isTeacherMode) {
+      navigate('/teacher');
+      return;
+    }
     if (isSubmitted) {
       navigate(exam?.type === 'homework' ? '/practice' : '/mock-tests');
     } else {
@@ -461,6 +475,24 @@ const ExamTaker = () => {
             </button>
           </div>
         </header>
+
+        {isTeacherMode && (
+          <div className="bg-emerald-50 border-b border-emerald-200 py-2.5 px-6 flex items-center justify-between text-[11px] font-bold text-emerald-800 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-emerald-600 text-sm animate-pulse">lock_open</span>
+              <span>CHẾ ĐỘ XEM TRƯỚC CỦA GIÁO VIÊN (ĐÃ BỎ QUA GIỚI HẠN THỜI GIAN & KHÔNG LƯU LỊCH SỬ LÀM BÀI)</span>
+            </div>
+            <label className="flex items-center gap-1.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showAnswerKeys}
+                onChange={(e) => setShowAnswerKeys(e.target.checked)}
+                className="rounded text-emerald-600 focus:ring-emerald-600 border-slate-300 w-3.5 h-3.5"
+              />
+              <span>Hiển thị đáp án chi tiết</span>
+            </label>
+          </div>
+        )}
 
         {/* Top Audio Player Bar if isListening and activeAudioUrl exists */}
         {activeAudioUrl && (
@@ -651,6 +683,14 @@ const ExamTaker = () => {
                                       } else {
                                         optionClass = "border-slate-100 text-slate-300 pointer-events-none opacity-50";
                                       }
+                                    } else if (isTeacherMode && showAnswerKeys) {
+                                      if (isCorrectOption) {
+                                        optionClass = "bg-emerald-50 border-emerald-500 text-emerald-950 font-semibold";
+                                      } else {
+                                        optionClass = isSelected
+                                          ? 'bg-indigo-50/30 border-indigo-500 text-indigo-950 font-semibold'
+                                          : 'border-slate-100 text-slate-600 hover:bg-slate-100/55';
+                                      }
                                     } else {
                                       optionClass = isSelected
                                         ? 'bg-indigo-50/30 border-indigo-500 text-indigo-950 font-semibold'
@@ -664,7 +704,7 @@ const ExamTaker = () => {
                                         className={`flex items-start gap-2 p-1.5 rounded-lg border text-[9px] cursor-pointer transition-all ${optionClass}`}
                                       >
                                         <span className={`w-4 h-4 rounded flex items-center justify-center shrink-0 border text-[8px] font-extrabold ${
-                                          isSubmitted && isCorrectOption
+                                          (isSubmitted || (isTeacherMode && showAnswerKeys)) && isCorrectOption
                                             ? 'bg-emerald-600 border-emerald-600 text-white'
                                             : isSelected
                                               ? 'bg-[#001e40] border-[#001e40] text-white shadow-sm'
@@ -694,7 +734,7 @@ const ExamTaker = () => {
                                       : 'border-slate-200 focus:border-[#001e40] focus:ring-1 focus:ring-[#001e40] bg-white text-slate-850'
                                   }`}
                                 />
-                                {isSubmitted && (
+                                {(isSubmitted || (isTeacherMode && showAnswerKeys)) && (
                                   <div className="text-[9px] font-bold text-emerald-700 mt-1 pl-1">
                                     Đáp án chính xác: {q.correct}
                                   </div>
@@ -749,6 +789,14 @@ const ExamTaker = () => {
                                   } else {
                                     btnClass = "border-slate-100 text-slate-350 pointer-events-none opacity-50";
                                   }
+                                } else if (isTeacherMode && showAnswerKeys) {
+                                  if (isCorrectOption) {
+                                    btnClass = "bg-emerald-600 border-emerald-600 text-white shadow-sm scale-105";
+                                  } else {
+                                    btnClass = isSelected
+                                      ? 'bg-[#001e40] border-[#001e40] text-white shadow-sm scale-105'
+                                      : 'border-slate-200 text-slate-450 hover:border-[#001e40] hover:text-[#001e40] hover:bg-slate-50';
+                                  }
                                 } else {
                                   btnClass = isSelected
                                     ? 'bg-[#001e40] border-[#001e40] text-white shadow-sm scale-105'
@@ -783,7 +831,7 @@ const ExamTaker = () => {
                                     : 'border-slate-200 focus:border-[#001e40] focus:ring-1 focus:ring-[#001e40] bg-white text-slate-800'
                                 }`}
                               />
-                              {isSubmitted && (
+                              {(isSubmitted || (isTeacherMode && showAnswerKeys)) && (
                                 <div className="text-[9px] font-bold text-emerald-700 w-full text-left pl-1">
                                   Key: {q.correct}
                                 </div>
@@ -947,6 +995,26 @@ const ExamTaker = () => {
         </div>
       </header>
 
+      {isTeacherMode && (
+        <div className="bg-emerald-50 border-b border-emerald-200 py-2.5 px-6 flex items-center justify-between text-[11px] font-bold text-emerald-800 shrink-0">
+          <div className="max-w-[1440px] mx-auto w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-emerald-600 text-sm animate-pulse">lock_open</span>
+              <span>CHẾ ĐỘ XEM TRƯỚC CỦA GIÁO VIÊN (ĐÃ BỎ QUA GIỚI HẠN THỜI GIAN & KHÔNG LƯU LỊCH SỬ LÀM BÀI)</span>
+            </div>
+            <label className="flex items-center gap-1.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showAnswerKeys}
+                onChange={(e) => setShowAnswerKeys(e.target.checked)}
+                className="rounded text-emerald-600 focus:ring-emerald-600 border-slate-300 w-3.5 h-3.5"
+              />
+              <span>Hiển thị đáp án chi tiết</span>
+            </label>
+          </div>
+        </div>
+      )}
+
       {/* Main Container */}
       <main className="max-w-[1440px] mx-auto w-full px-6 py-8 flex-grow">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -1066,6 +1134,14 @@ const ExamTaker = () => {
                             } else {
                               optionClass = "border-slate-100 text-slate-350 pointer-events-none opacity-50";
                             }
+                          } else if (isTeacherMode && showAnswerKeys) {
+                            if (isCorrectOption) {
+                              optionClass = "bg-emerald-50 border-emerald-500 text-emerald-950 font-bold";
+                            } else {
+                              optionClass = isSelected
+                                ? "bg-indigo-50/50 border-[#001e40] text-[#001e40] font-bold"
+                                : "border-slate-100 hover:bg-slate-50 text-slate-700";
+                            }
                           } else {
                             optionClass = isSelected
                               ? "bg-indigo-50/50 border-[#001e40] text-[#001e40] font-bold"
@@ -1086,7 +1162,7 @@ const ExamTaker = () => {
                                 disabled={isSubmitted}
                                 onChange={() => {}}
                                 className={`focus:ring-[#001e40] border-slate-300 w-4 h-4 ${
-                                  isSubmitted
+                                  (isSubmitted || (isTeacherMode && showAnswerKeys))
                                     ? isCorrectOption
                                       ? 'text-emerald-600 focus:ring-emerald-500'
                                       : 'text-red-500 focus:ring-red-500'
@@ -1114,7 +1190,7 @@ const ExamTaker = () => {
                               : 'border-slate-200 focus:border-[#001e40] focus:ring-1 focus:ring-[#001e40] bg-white text-slate-800'
                           }`}
                         />
-                        {isSubmitted && (
+                        {(isSubmitted || (isTeacherMode && showAnswerKeys)) && (
                           <div className="text-xs font-bold text-emerald-700 pl-1">
                             Đáp án chính xác: {q.correct}
                           </div>

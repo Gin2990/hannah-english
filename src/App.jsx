@@ -58,7 +58,7 @@ const AppContent = () => {
           <Route 
             path="/exam-taker/:id" 
             element={
-              <PrivateRoute allowedRoles={['student', 'admin']}>
+              <PrivateRoute allowedRoles={['student', 'teacher', 'admin']}>
                 <ExamTaker />
               </PrivateRoute>
             } 

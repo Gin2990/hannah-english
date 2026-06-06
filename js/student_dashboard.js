@@ -19,182 +19,222 @@ async function initStudentDashboard() {
         return;
     }
 
-    // 1. Lấy thông tin các khóa học được phân quyền từ Supabase
-    const allowedCourseCodes = await fetchAllowedCourses(window.currentUser.id);
-    
-    // 2. Cập nhật giao diện Khóa học của tôi (Khóa nào chưa cấp quyền sẽ hiển thị Lock)
-    enforceCoursePermissions(allowedCourseCodes);
-
-    // 3. Tải Lịch học & Hoạt động gần đây cá nhân nếu có
-    loadStudentActivity();
-}
-
-// 1. Truy vấn các khóa học đã được phân quyền online
-async function fetchAllowedCourses(studentId) {
     try {
-        const { data, error } = await supabase
-            .from('student_courses')
-            .select(`
-                course_id,
-                courses (
-                    code
-                )
-            `)
-            .eq('student_id', studentId);
+        // 1. Tải toàn bộ dữ liệu cần thiết từ Supabase song song
+        const studentId = window.currentUser.id;
 
-        if (error) throw error;
+        const [coursesRes, studentCoursesRes, examsRes, resultsRes] = await Promise.all([
+            supabase.from('courses').select('*').order('title', { ascending: true }),
+            supabase.from('student_courses').select('course_id').eq('student_id', studentId),
+            supabase.from('exams').select('id, course_id'),
+            supabase.from('exam_results').select('id, exam_id, score, total_questions, taken_at').eq('student_id', studentId)
+        ]);
 
-        // Trích xuất mã code viết thường
-        const codes = data.map(item => item.courses?.code?.toLowerCase()).filter(Boolean);
-        console.log("Khóa học được phân quyền online:", codes);
-        return codes;
+        if (coursesRes.error) throw coursesRes.error;
+        if (studentCoursesRes.error) throw studentCoursesRes.error;
+        if (examsRes.error) throw examsRes.error;
+        if (resultsRes.error) throw resultsRes.error;
+
+        const allCourses = coursesRes.data || [];
+        const allowedCourseIds = (studentCoursesRes.data || []).map(sc => sc.course_id);
+        const allExams = examsRes.data || [];
+        const allResults = resultsRes.data || [];
+
+        // 2. Cập nhật giao diện khóa học động
+        renderCourseCards(allCourses, allowedCourseIds, allExams, allResults);
+
+        // 3. Cập nhật câu chào mừng và tiến độ tổng quát
+        updateWelcomeHeader(allExams, allResults);
+
+        // 4. Tải lịch sử điểm và liên kết xem lại
+        renderGradeHistory(allResults);
+
     } catch (err) {
-        console.error("Lỗi lấy phân quyền học viên:", err);
-        // Fallback: Nếu lỗi kết nối, cho phép truy cập TOEIC làm mặc định để học thử
-        return ['toeic'];
+        console.error("Lỗi khởi tạo dashboard học viên:", err);
     }
 }
 
-// 2. Áp dụng hiệu ứng Lock / Mở khóa cho các thẻ khóa học
-function enforceCoursePermissions(allowedCodes) {
-    // Tìm các thẻ khóa học trong giao diện
-    const courseCards = document.querySelectorAll('.course-card-bg');
-    
-    courseCards.forEach(card => {
-        const titleEl = card.querySelector('h3');
-        if (!titleEl) return;
+// Cập nhật câu chào mừng và thống kê nhanh
+function updateWelcomeHeader(allExams, allResults) {
+    const welcomeSub = document.querySelector('main section p');
+    if (!welcomeSub) return;
 
-        const titleText = titleEl.textContent.toLowerCase();
-        let courseCode = "";
+    const totalExams = allExams.length;
+    const completedExams = new Set(allResults.map(r => r.exam_id)).size;
 
-        if (titleText.includes("ielts")) courseCode = "ielts";
-        else if (titleText.includes("toeic")) courseCode = "toeic";
-        else if (titleText.includes("cambridge")) courseCode = "cambridge";
+    if (totalExams > 0) {
+        const percent = Math.round((completedExams / totalExams) * 100);
+        welcomeSub.textContent = `Bạn đã hoàn thành ${completedExams}/${totalExams} bài tập (${percent}%). Hãy tiếp tục cố gắng nhé!`;
+    } else {
+        welcomeSub.textContent = `Chào mừng bạn đến với Hannah English. Hãy bắt đầu hành trình học tập của bạn!`;
+    }
+}
 
-        const isAllowed = allowedCodes.includes(courseCode);
+// Kết xuất các thẻ khóa học động
+function renderCourseCards(courses, allowedIds, exams, results) {
+    const container = document.getElementById('course-cards-container');
+    if (!container) return;
 
-        // Nút hành động hoặc link của card
-        const continueBtn = card.querySelector('button') || card;
+    if (courses.length === 0) {
+        container.innerHTML = `<div class="col-span-full text-center py-6 text-slate-400 italic">Chưa có khóa học nào được cấu hình trên hệ thống.</div>`;
+        return;
+    }
+
+    container.innerHTML = "";
+
+    // Định nghĩa các icon và badge tương ứng cho từng loại mã code
+    const courseMeta = {
+        ielts: { icon: 'menu_book', badge: 'Academic', color: 'bg-primary-fixed text-on-primary-fixed' },
+        toeic: { icon: 'business_center', badge: 'Professional', color: 'bg-secondary-container text-on-secondary-container' },
+        cambridge: { icon: 'workspace_premium', badge: 'Certificate', color: 'bg-tertiary-fixed text-on-tertiary-fixed-variant' }
+    };
+
+    courses.forEach(c => {
+        const codeLower = (c.code || '').toLowerCase();
+        const meta = courseMeta[codeLower] || { icon: 'school', badge: 'General', color: 'bg-slate-100 text-slate-700' };
+        const isAllowed = allowedIds.includes(c.id);
+
+        // Lọc bài tập của khóa học này
+        const courseExams = exams.filter(e => e.course_id === c.id);
+        const totalExams = courseExams.length;
+
+        // Lọc bài tập đã làm
+        const courseExamIds = courseExams.map(e => e.id);
+        const completedExams = new Set(results.filter(r => courseExamIds.includes(r.exam_id)).map(r => r.exam_id)).size;
+
+        const progressPercent = totalExams > 0 ? Math.round((completedExams / totalExams) * 100) : 0;
+
+        const card = document.createElement('div');
+        card.className = "course-card-bg p-space-lg border border-outline-variant rounded-xl hover:border-primary transition-all duration-300 relative group flex flex-col justify-between min-h-[200px]";
 
         if (!isAllowed) {
-            // Thiết kế trạng thái Bị Khóa (Locked Card UI)
-            card.classList.add('opacity-50', 'grayscale', 'relative');
-            
-            // Chèn biểu tượng khóa bảo mật ở góc
-            const lockBadge = document.createElement('div');
-            lockBadge.className = "absolute inset-0 flex flex-col items-center justify-center bg-slate-900/10 backdrop-filter backdrop-blur-[1px] rounded-xl text-[#0b1623] font-bold text-xs gap-1 select-none pointer-events-none";
-            lockBadge.innerHTML = `
-                <span class="material-symbols-outlined text-3xl text-red-600" style="font-variation-settings: 'FILL' 1;">lock</span>
-                <span class="text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded text-[10px]">Chưa cấp quyền</span>
+            // Thẻ bị khóa
+            card.classList.add('opacity-50', 'grayscale');
+            card.innerHTML = `
+                <div>
+                    <div class="flex justify-between items-start mb-space-md">
+                        <div class="w-14 h-14 bg-surface-container-high rounded-xl flex items-center justify-center text-primary border border-outline-variant">
+                            <span class="material-symbols-outlined text-4xl">${meta.icon}</span>
+                        </div>
+                        <span class="${meta.color} text-[10px] font-bold px-2 py-1 rounded uppercase">${meta.badge}</span>
+                    </div>
+                    <h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-1">${c.title}</h3>
+                    <p class="font-body-md text-body-md text-secondary mb-space-lg">${c.description || 'Chưa có mô tả chi tiết cho khóa học này.'}</p>
+                </div>
+                
+                <div class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/10 backdrop-filter backdrop-blur-[1px] rounded-xl text-[#0b1623] font-bold text-xs gap-1 select-none pointer-events-none">
+                    <span class="material-symbols-outlined text-3xl text-red-600" style="font-variation-settings: 'FILL' 1;">lock</span>
+                    <span class="text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded text-[10px]">Chưa cấp quyền</span>
+                </div>
             `;
-            card.appendChild(lockBadge);
 
-            // Gỡ bỏ hành động click
+            card.style.cursor = "pointer";
             card.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                alert("🔒 Khóa học này chưa được phân quyền cho bạn!\nVui lòng liên hệ Giáo viên hoặc Admin để đăng ký khóa học.");
+                alert(`🔒 Khóa học "${c.title}" chưa được phân quyền cho bạn!\nVui lòng liên hệ Admin hoặc Giáo viên để đăng ký khóa học.`);
             };
         } else {
-            // Mở khóa -> Click để chuyển tới trang tương ứng
-            card.style.cursor = "pointer";
-            card.onclick = () => {
-                if (courseCode === "toeic") {
-                    window.location.href = "toeic_hub.html";
-                } else if (courseCode === "ielts") {
-                    window.location.href = "ielts_exams.html";
-                } else if (courseCode === "cambridge") {
-                    window.location.href = "cambridge_hub.html";
-                } else {
-                    alert("Giao diện khóa học đang được thiết kế!");
-                }
-            };
-        }
-    });
-
-    // Xử lý nút "Tiếp tục ngay" (Hoạt động gần đây)
-    const recentActivityCard = document.querySelector('.bg-primary-container');
-    if (recentActivityCard) {
-        const textEl = recentActivityCard.querySelector('p');
-        if (textEl && textEl.textContent.toLowerCase().includes("ielts") && !allowedCodes.includes("ielts")) {
-            // Đổi hoạt động gần đây sang TOEIC nếu IELTS bị khóa
-            textEl.textContent = "TOEIC Listening: Part 1 Practice";
-            const btn = recentActivityCard.querySelector('button');
-            if (btn) {
-                btn.onclick = () => window.location.href = "toeic_hub.html";
-            }
-        } else {
-            const btn = recentActivityCard.querySelector('button');
-            if (btn) {
-                btn.onclick = () => {
-                    const text = textEl.textContent.toLowerCase();
-                    if (text.includes("ielts")) window.location.href = "student_dashboard.html";
-                    else window.location.href = "toeic_hub.html";
-                };
-            }
-        }
-    }
-}
-
-// 3. Hiển thị điểm số học tập cá nhân lên lịch sử
-async function loadStudentActivity() {
-    // Trực quan hóa điểm số gần đây của học viên đăng nhập
-    try {
-        const scoreItems = document.querySelectorAll('main aside div.space-y-space-md');
-        if (scoreItems.length === 0) return;
-
-        // Lấy kết quả làm bài của học viên hiện tại
-        const { data: results, error } = await supabase
-            .from('exam_results')
-            .select(`
-                score,
-                total_questions,
-                taken_at,
-                exams (
-                    title
-                )
-            `)
-            .eq('student_id', window.currentUser.id)
-            .order('taken_at', { ascending: false })
-            .limit(3);
-
-        if (error) throw error;
-        
-        // Lấy thẻ div chứa danh sách điểm số (Grade History)
-        const parentContainer = document.querySelector('main aside div:first-child');
-        if (!parentContainer) return;
-
-        const titleHeader = parentContainer.querySelector('h3');
-        if (!titleHeader || !titleHeader.textContent.includes("Lịch sử điểm")) return;
-
-        // Dọn dẹp các dòng tĩnh cũ
-        const scoreListContainer = parentContainer.querySelector('.space-y-space-md') || parentContainer;
-        scoreListContainer.innerHTML = "";
-
-        if (!results || results.length === 0) {
-            scoreListContainer.innerHTML = `<p class="text-xs text-slate-400 italic py-2">Bạn chưa thực hiện bài thi online nào.</p>`;
-            return;
-        }
-
-        results.forEach(res => {
-            const item = document.createElement('div');
-            item.className = "flex items-center gap-space-md p-space-sm border border-outline-variant rounded-lg bg-surface-bright";
-            
-            const accuracy = Math.round((res.score / res.total_questions) * 100);
-            const dateStr = new Date(res.taken_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-            const title = res.exams?.title || "Bài test online";
-
-            item.innerHTML = `
-                <div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center font-bold text-xs text-primary shrink-0">${accuracy}%</div>
-                <div class="flex-grow">
-                    <p class="font-label-md text-xs font-bold text-primary truncate max-w-[150px]">${title}</p>
-                    <p class="text-[10px] text-slate-400">Đúng ${res.score}/${res.total_questions} • Ngày ${dateStr}</p>
+            // Thẻ đã mở khóa
+            card.innerHTML = `
+                <div>
+                    <div class="flex justify-between items-start mb-space-md">
+                        <div class="w-14 h-14 bg-surface-container-high rounded-xl flex items-center justify-center text-primary border border-outline-variant">
+                            <span class="material-symbols-outlined text-4xl">${meta.icon}</span>
+                        </div>
+                        <span class="${meta.color} text-[10px] font-bold px-2 py-1 rounded uppercase">${meta.badge}</span>
+                    </div>
+                    <h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-1 group-hover:text-primary-container transition-colors">${c.title}</h3>
+                    <p class="font-body-md text-body-md text-secondary mb-space-lg line-clamp-2">${c.description || 'Chưa có mô tả chi tiết cho khóa học này.'}</p>
+                </div>
+                <div class="space-y-2 mt-auto">
+                    <div class="flex justify-between text-label-sm font-label-sm text-secondary">
+                        <span>Tiến độ bài tập</span>
+                        <span>${progressPercent}% (${completedExams}/${totalExams})</span>
+                    </div>
+                    <div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+                        <div class="h-full bg-primary rounded-full transition-all duration-1000" style="width: ${progressPercent}%"></div>
+                    </div>
                 </div>
             `;
-            scoreListContainer.appendChild(item);
+
+            card.style.cursor = "pointer";
+            card.onclick = () => {
+                // Chuyển hướng sang danh sách đề thi lọc theo khóa học
+                window.location.href = `my_exams.html?course_id=${c.id}`;
+            };
+        }
+
+        container.appendChild(card);
+    });
+
+    // Kích hoạt lại micro-animation của tiến độ
+    setTimeout(() => {
+        const progressBars = container.querySelectorAll('.h-full.bg-primary');
+        progressBars.forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 100);
+        });
+    }, 200);
+}
+
+// Kết xuất lịch sử điểm số của học viên
+async function renderGradeHistory(results) {
+    const listContainer = document.querySelector('main aside div.space-y-space-md');
+    if (!listContainer) return;
+
+    listContainer.innerHTML = "";
+
+    if (results.length === 0) {
+        listContainer.innerHTML = `<p class="text-xs text-slate-400 italic py-4 text-center">Bạn chưa có bài thi đã làm nào.</p>`;
+        return;
+    }
+
+    // Lấy 4 kết quả làm bài gần đây nhất
+    const recentResults = results.slice(0, 4);
+
+    // Lấy tên đề thi của các bài làm này
+    const examIds = recentResults.map(r => r.exam_id);
+    let examsMap = {};
+    if (examIds.length > 0) {
+        const { data: exams, error } = await supabase
+            .from('exams')
+            .select('id, title')
+            .in('id', examIds);
+        if (!error && exams) {
+            exams.forEach(e => {
+                examsMap[e.id] = e.title;
+            });
+        }
+    }
+
+    recentResults.forEach(res => {
+        const item = document.createElement('div');
+        item.className = "flex items-center gap-space-md border-b border-surface-container pb-space-md last:border-0 last:pb-0";
+
+        const examTitle = examsMap[res.exam_id] || "Đề thi đã xóa";
+        const accuracy = Math.round((res.score / res.total_questions) * 100);
+        const dateStr = new Date(res.taken_at).toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
         });
 
-    } catch (err) {
-        console.error("Lỗi lấy hoạt động học tập:", err);
-    }
+        item.innerHTML = `
+            <div class="w-10 h-10 bg-primary-fixed text-primary rounded-lg flex items-center justify-center font-bold text-xs shrink-0" title="Độ chính xác">
+                ${accuracy}%
+            </div>
+            <div class="flex-grow min-w-0">
+                <h4 class="font-label-md text-label-md text-on-surface font-bold truncate" title="${examTitle}">${examTitle}</h4>
+                <p class="font-label-sm text-[11px] text-slate-400">Đúng ${res.score}/${res.total_questions} • ${dateStr}</p>
+            </div>
+            <a href="result_detail.html?result_id=${res.id}" class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-primary transition-colors flex items-center" title="Xem kết quả chi tiết">
+                <span class="material-symbols-outlined text-sm">chevron_right</span>
+            </a>
+        `;
+        listContainer.appendChild(item);
+    });
 }

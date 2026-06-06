@@ -92,12 +92,25 @@
     function updatePageDynamicContent(user) {
         const nameText = user.full_name || "Học viên";
         
-        // Duyệt toàn bộ body để tìm và thay thế tên "Minh" mặc định bằng tên người dùng thực tế
-        document.body.innerHTML = document.body.innerHTML
-            .replace(/Chào buổi sáng, Minh!/g, `Chào buổi sáng, ${nameText}!`)
-            .replace(/Chào buổi sáng, Minh/g, `Chào buổi sáng, ${nameText}`)
-            .replace(/Minh!/g, `${nameText}!`)
-            .replace(/đại diện người dùng/g, `${nameText}`);
+        // Duyệt an toàn qua các Text Nodes để thay thế tên tĩnh, tránh phá hủy Event Listeners
+        function safeReplaceText(node) {
+            if (node.nodeType === 3) { // Text Node
+                let text = node.nodeValue;
+                if (text.includes("Chào buổi sáng, Minh")) {
+                    node.nodeValue = text.replace(/Chào buổi sáng, Minh/g, `Chào buổi sáng, ${nameText}`);
+                } else if (text.includes("Minh!")) {
+                    node.nodeValue = text.replace(/Minh!/g, `${nameText}!`);
+                }
+            } else {
+                // Bỏ qua các thẻ script, style và widget tài khoản
+                if (node.nodeName !== 'SCRIPT' && node.nodeName !== 'STYLE' && node.id !== 'supabase-user-widget') {
+                    for (let i = 0; i < node.childNodes.length; i++) {
+                        safeReplaceText(node.childNodes[i]);
+                    }
+                }
+            }
+        }
+        safeReplaceText(document.body);
 
         // Thay ảnh avatar mặc định bằng chữ cái đầu nếu ảnh rỗng (tăng tính cá nhân hóa)
         const avatars = document.querySelectorAll('img[alt*="đại diện"], img[alt*="avatar"], img[alt*="Ảnh đại diện"]');

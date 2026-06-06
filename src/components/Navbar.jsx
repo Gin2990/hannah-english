@@ -34,8 +34,12 @@ const Navbar = () => {
           </Link>
           
           <nav class="hidden md:flex items-center gap-6">
-            <NavLink to="/practice" className={({ isActive }) => `text-xs font-semibold pb-1 border-b-2 transition-all ${isActive ? 'text-primary border-primary font-bold' : 'text-slate-500 border-transparent hover:text-primary'}`}>Ôn luyện</NavLink>
-            <NavLink to="/mock-tests" className={({ isActive }) => `text-xs font-semibold pb-1 border-b-2 transition-all ${isActive ? 'text-primary border-primary font-bold' : 'text-slate-500 border-transparent hover:text-primary'}`}>Thi thử</NavLink>
+            {role !== 'teacher' && (
+              <>
+                <NavLink to="/practice" className={({ isActive }) => `text-xs font-semibold pb-1 border-b-2 transition-all ${isActive ? 'text-primary border-primary font-bold' : 'text-slate-500 border-transparent hover:text-primary'}`}>Ôn luyện</NavLink>
+                <NavLink to="/mock-tests" className={({ isActive }) => `text-xs font-semibold pb-1 border-b-2 transition-all ${isActive ? 'text-primary border-primary font-bold' : 'text-slate-500 border-transparent hover:text-primary'}`}>Thi thử</NavLink>
+              </>
+            )}
 
             {user && role === 'student' && (
               <>

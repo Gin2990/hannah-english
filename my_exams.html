@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>EduMetrics | Bài Tập & Đề Thi Của Tôi</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Tailwind CSS with custom styling plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-bright": "#f8f9fa",
+                        "on-tertiary-container": "#ff6a73",
+                        "on-primary-fixed-variant": "#1f477b",
+                        "outline-variant": "#c3c6d1",
+                        "primary-container": "#003366",
+                        surface: "#f8f9fa",
+                        "on-tertiary-fixed-variant": "#900723",
+                        "tertiary-fixed-dim": "#ffb3b3",
+                        "tertiary-fixed": "#ffdad9",
+                        error: "#ba1a1a",
+                        "secondary-fixed": "#e3e2e2",
+                        "surface-container": "#edeeef",
+                        "surface-dim": "#d9dadb",
+                        "surface-variant": "#e1e3e4",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#2e3132",
+                        secondary: "#5d5e5f",
+                        primary: "#001e40",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "on-secondary-fixed-variant": "#464747",
+                        outline: "#737780",
+                        "secondary-container": "#e0dfdf",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#191c1d",
+                        "on-background": "#191c1d",
+                        tertiary: "#45000b",
+                        "primary-fixed-dim": "#a7c8ff",
+                        "on-secondary": "#ffffff",
+                        background: "#f8f9fa",
+                        "on-surface-variant": "#43474f",
+                        "surface-tint": "#3a5f94",
+                        "on-tertiary-fixed": "#40000a",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-highest": "#e1e3e4",
+                        "primary-fixed": "#d5e3ff",
+                        "on-primary-container": "#799dd6",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#001b3c",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#6d0017",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#a7c8ff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-secondary-container": "#626363",
+                        "surface-container-high": "#e7e8e9",
+                        "surface-container-low": "#f3f4f5"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.125rem",
+                        lg: "0.25rem",
+                        xl: "0.5rem",
+                        full: "0.75rem"
+                    },
+                    spacing: {
+                        "space-lg": "24px",
+                        "space-sm": "8px",
+                        "space-3xl": "64px",
+                        "space-md": "16px",
+                        "space-2xl": "48px",
+                        "space-xs": "4px",
+                        gutter: "24px",
+                        "margin-mobile": "16px",
+                        "space-xl": "32px",
+                        "container-max-width": "1280px",
+                        base: "4px"
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .exam-card-bg {
+            background: linear-gradient(135deg, rgba(0, 30, 64, 0.02) 0%, rgba(255, 255, 255, 1) 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col">
+
+    <!-- TopNavBar -->
+    <header class="bg-surface border-b border-outline-variant z-50 sticky top-0">
+        <div class="flex justify-between items-center w-full px-gutter max-w-container-max-width mx-auto h-16">
+            <div class="font-headline-lg text-headline-lg font-bold text-primary cursor-pointer" onclick="window.location.href='student_dashboard.html'">EduMetrics</div>
+            <nav class="hidden md:flex items-center gap-space-lg">
+                <a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 font-label-md text-label-md" href="student_dashboard.html">Trang chủ</a>
+                <a class="text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md" href="my_exams.html">Bài tập & Đề thi</a>
+                <a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 font-label-md text-label-md" href="profile.html">Hồ sơ cá nhân</a>
+            </nav>
+            <div class="flex items-center gap-space-md">
+                <button class="p-2 text-on-surface-variant hover:text-primary transition-all duration-200">
+                    <span class="material-symbols-outlined">notifications</span>
+                </button>
+                <div class="w-10 h-10 rounded-full bg-primary-fixed overflow-hidden border border-outline-variant">
+                    <img alt="Avatar" class="w-full h-full object-cover" src="https://ui-avatars.com/api/?background=001e40&color=fff&bold=true&size=128"/>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow w-full max-w-container-max-width mx-auto px-gutter py-space-xl">
+        
+        <!-- Welcome Header -->
+        <section class="mb-space-xl">
+            <h1 class="font-headline-lg text-headline-lg text-primary mb-space-xs">Bài tập & Đề thi trực tuyến</h1>
+            <p class="font-body-md text-body-md text-secondary">Luyện tập nâng cao phản xạ, làm bài thi thử đếm ngược và theo dõi điểm số chi tiết.</p>
+        </section>
+
+        <!-- Stats Overview Row -->
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-space-lg mb-space-xl">
+            <div class="bg-white border border-outline-variant rounded-xl p-space-md flex items-center gap-4">
+                <div class="w-12 h-12 bg-primary-fixed text-primary rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">quiz</span>
+                </div>
+                <div>
+                    <span class="block text-xs font-bold text-slate-450 uppercase">Tổng số bài tập</span>
+                    <span class="text-xl font-bold text-primary" id="stat-total">--</span>
+                </div>
+            </div>
+            <div class="bg-white border border-outline-variant rounded-xl p-space-md flex items-center gap-4">
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center border border-emerald-100">
+                    <span class="material-symbols-outlined text-2xl">check_circle</span>
+                </div>
+                <div>
+                    <span class="block text-xs font-bold text-slate-450 uppercase">Đã hoàn thành</span>
+                    <span class="text-xl font-bold text-emerald-600" id="stat-completed">--</span>
+                </div>
+            </div>
+            <div class="bg-white border border-outline-variant rounded-xl p-space-md flex items-center gap-4">
+                <div class="w-12 h-12 bg-amber-55/10 text-amber-600 rounded-xl flex items-center justify-center border border-amber-100/50">
+                    <span class="material-symbols-outlined text-2xl">pending_actions</span>
+                </div>
+                <div>
+                    <span class="block text-xs font-bold text-slate-450 uppercase">Chưa làm</span>
+                    <span class="text-xl font-bold text-amber-600" id="stat-pending">--</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters & Search Controls -->
+        <section class="bg-white p-space-lg rounded-xl border border-outline-variant mb-space-xl shadow-sm">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-space-md">
+                
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-4 items-center w-full md:w-auto">
+                    <div class="flex items-center gap-2">
+                        <span class="font-label-md text-xs font-bold text-slate-700">Khóa học:</span>
+                        <select id="filter-course" class="border border-outline-variant rounded-lg px-3 py-1.5 text-xs text-slate-700 bg-slate-50 focus:ring-1 focus:ring-primary focus:border-primary">
+                            <option value="all">Tất cả khóa học</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-label-md text-xs font-bold text-slate-700">Trạng thái:</span>
+                        <select id="filter-status" class="border border-outline-variant rounded-lg px-3 py-1.5 text-xs text-slate-700 bg-slate-50 focus:ring-1 focus:ring-primary focus:border-primary">
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="pending">Chưa làm</option>
+                            <option value="completed">Đã làm</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="relative w-full md:w-72">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+                    <input id="search-exam" class="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-outline-variant rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-xs" placeholder="Tìm tên đề thi..." type="text"/>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Exam Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg" id="exams-grid">
+            <div class="col-span-full text-center py-20 text-slate-400">
+                <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                Đang tải danh sách bài tập của bạn...
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-surface-container-low border-t border-outline-variant mt-space-3xl">
+        <div class="w-full py-space-xl px-gutter max-w-container-max-width mx-auto flex flex-col md:flex-row justify-between items-center gap-space-md">
+            <div class="flex flex-col items-center md:items-start">
+                <div class="font-headline-lg text-headline-lg font-bold text-primary mb-2">EduMetrics</div>
+                <p class="font-label-sm text-label-sm text-secondary">© 2026 Hệ thống Quản lý Học thuật Hannah English. Bảo lưu mọi quyền.</p>
+            </div>
+            <div class="flex gap-space-lg">
+                <a class="text-secondary font-label-sm text-label-sm hover:underline hover:text-primary transition-all duration-200" href="#">Điều khoản</a>
+                <a class="text-secondary font-label-sm text-label-sm hover:underline hover:text-primary transition-all duration-200" href="#">Bảo mật</a>
+                <a class="text-secondary font-label-sm text-label-sm hover:underline hover:text-primary transition-all duration-200" href="#">Hỗ trợ</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth_check.js"></script>
+    <script src="js/my_exams.js"></script>
+</body>
+</html>

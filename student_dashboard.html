@@ -32,9 +32,8 @@
 <div class="font-headline-lg text-headline-lg font-bold text-primary">EduMetrics</div>
 <nav class="hidden md:flex items-center gap-space-lg">
 <a class="text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md" href="student_dashboard.html">Trang chủ</a>
-<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 font-label-md text-label-md" href="student_dashboard.html">Khóa học</a>
-<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 font-label-md text-label-md" href="#">Bảng xếp hạng</a>
-<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 font-label-md text-label-md" href="profile.html">Hồ sơ</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 font-label-md text-label-md" href="my_exams.html">Bài tập & Đề thi</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 font-label-md text-label-md" href="profile.html">Hồ sơ cá nhân</a>
 </nav>
 <div class="flex items-center gap-space-md">
 <button class="p-2 text-on-surface-variant hover:text-primary transition-all duration-200">
@@ -76,47 +75,12 @@
 <!-- My Courses Section -->
 <div>
 <h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-space-md">Khóa học của tôi</h2>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
-<!-- IELTS Card -->
-<div class="course-card-bg p-space-lg border border-outline-variant rounded-xl hover:border-primary transition-all duration-300">
-<div class="flex justify-between items-start mb-space-md">
-<div class="w-14 h-14 bg-surface-container-high rounded-xl flex items-center justify-center text-primary border border-outline-variant">
-<span class="material-symbols-outlined text-4xl">menu_book</span>
-</div>
-<span class="bg-primary-fixed text-on-primary-fixed text-[10px] font-bold px-2 py-1 rounded uppercase">Academic</span>
-</div>
-<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-1">IELTS Masterclass</h3>
-<p class="font-body-md text-body-md text-secondary mb-space-lg">Hệ thống luyện thi 4 kỹ năng chuyên sâu.</p>
-<div class="space-y-2">
-<div class="flex justify-between text-label-sm font-label-sm text-secondary">
-<span>Tiến độ</span>
-<span>65%</span>
-</div>
-<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
-<div class="h-full bg-primary rounded-full transition-all duration-1000" style="width: 65%"></div>
-</div>
-</div>
-</div>
-<!-- TOEIC Card -->
-<div class="course-card-bg p-space-lg border border-outline-variant rounded-xl hover:border-primary transition-all duration-300">
-<div class="flex justify-between items-start mb-space-md">
-<div class="w-14 h-14 bg-surface-container-high rounded-xl flex items-center justify-center text-primary border border-outline-variant">
-<span class="material-symbols-outlined text-4xl">business_center</span>
-</div>
-<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-1 rounded uppercase">Professional</span>
-</div>
-<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-1">TOEIC 800+ Target</h3>
-<p class="font-body-md text-body-md text-secondary mb-space-lg">Chiến thuật giải đề và từ vựng kinh doanh.</p>
-<div class="space-y-2">
-<div class="flex justify-between text-label-sm font-label-sm text-secondary">
-<span>Tiến độ</span>
-<span>42%</span>
-</div>
-<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
-<div class="h-full bg-primary rounded-full transition-all duration-1000" style="width: 42%"></div>
-</div>
-</div>
-</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg" id="course-cards-container">
+    <!-- Khóa học sẽ được load động từ JS ở đây -->
+    <div class="col-span-full text-center py-8 text-slate-400 text-xs">
+        <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+        Đang đồng bộ danh sách khóa học của bạn...
+    </div>
 </div>
 </div>
 </div>

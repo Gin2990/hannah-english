@@ -35,15 +35,15 @@
 <span class="font-headline-lg text-primary font-bold tracking-tight">EduMetrics</span>
 </div>
 <nav class="flex-1 px-space-md py-space-sm space-y-1">
-<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg sidebar-active transition-all" href="#">
+<a id="tab-btn-dashboard" class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg sidebar-active transition-all cursor-pointer">
 <span class="material-symbols-outlined">dashboard</span>
 <span class="font-label-md">Bảng điều khiển</span>
 </a>
-<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-secondary hover:bg-surface-container hover:text-primary transition-all" href="#">
+<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-secondary hover:bg-surface-container hover:text-primary transition-all cursor-pointer" href="#">
 <span class="material-symbols-outlined">menu_book</span>
 <span class="font-label-md">Khóa học của tôi</span>
 </a>
-<a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-secondary hover:bg-surface-container hover:text-primary transition-all" href="#">
+<a id="tab-btn-students" class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-secondary hover:bg-surface-container hover:text-primary transition-all cursor-pointer">
 <span class="material-symbols-outlined">groups</span>
 <span class="font-label-md">Quản lý sinh viên</span>
 </a>
@@ -85,6 +85,7 @@
 </div>
 </header>
 <div class="p-gutter max-w-container-max-width mx-auto w-full space-y-space-xl">
+<div id="view-dashboard" class="space-y-space-xl">
 <!-- Hero Stats / Bento Header -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
 <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-space-lg flex flex-col justify-between">
@@ -207,29 +208,34 @@
 <!-- Student Performance Table Section -->
 <section class="bg-white border border-outline-variant rounded-xl overflow-hidden">
 <div class="p-space-lg border-b border-outline-variant bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-space-md">
-<div>
-<h2 class="font-headline-lg-mobile text-primary">Hiệu suất Sinh viên</h2>
-<p class="text-secondary font-body-md mt-1">Theo dõi tiến độ học tập của các lớp đang giảng dạy</p>
-</div>
-<div class="flex items-center gap-space-sm">
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
-<input class="pl-9 pr-4 py-2 rounded border-outline-variant text-sm w-full md:w-64 focus:ring-1 focus:ring-primary" placeholder="Tìm sinh viên..." type="text"/>
-</div>
-<button class="flex items-center gap-1 border border-outline-variant px-3 py-2 rounded text-sm font-label-md text-secondary hover:bg-surface-container transition-all">
-<span class="material-symbols-outlined text-sm">filter_list</span> Bộ lọc
-                        </button>
-</div>
+    <div>
+        <h2 class="font-headline-lg-mobile text-primary">Hiệu suất Sinh viên</h2>
+        <p class="text-secondary font-body-md mt-1">Theo dõi tiến độ học tập của các lớp đang giảng dạy</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-space-sm w-full md:w-auto">
+        <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+            <input id="search-student-performance" class="pl-9 pr-4 py-2 rounded border-outline-variant text-xs w-full md:w-48 focus:ring-1 focus:ring-primary" placeholder="Tìm sinh viên..." type="text"/>
+        </div>
+        <select id="filter-exam-performance" class="border border-outline-variant rounded-lg px-3 py-2 text-xs text-slate-700 bg-slate-50 focus:ring-1 focus:ring-primary focus:border-primary w-full md:w-48">
+            <option value="all">Tất cả đề thi</option>
+        </select>
+        <select id="sort-performance" class="border border-outline-variant rounded-lg px-3 py-2 text-xs text-slate-700 bg-slate-50 focus:ring-1 focus:ring-primary focus:border-primary w-full md:w-36">
+            <option value="newest">Mới nhất</option>
+            <option value="highest">Điểm cao nhất</option>
+            <option value="lowest">Điểm thấp nhất</option>
+        </select>
+    </div>
 </div>
 <div class="overflow-x-auto">
 <table class="w-full text-left border-collapse">
 <thead class="bg-surface-container font-label-sm uppercase text-outline tracking-wider border-b border-outline-variant">
 <tr>
-<th class="px-space-lg py-4 font-semibold">Sinh viên</th>
-<th class="px-space-lg py-4 font-semibold">Khóa học</th>
-<th class="px-space-lg py-4 font-semibold text-center">Điểm trung bình</th>
-<th class="px-space-lg py-4 font-semibold">Hoạt động cuối</th>
-<th class="px-space-lg py-4 font-semibold text-right">Hành động</th>
+<th class="px-space-lg py-4 font-semibold text-xs text-slate-500">Sinh viên</th>
+<th class="px-space-lg py-4 font-semibold text-xs text-slate-500">Bài thi</th>
+<th class="px-space-lg py-4 font-semibold text-xs text-slate-500">Kết quả</th>
+<th class="px-space-lg py-4 font-semibold text-xs text-slate-500">Thời gian</th>
+<th class="px-space-lg py-4 font-semibold text-xs text-slate-500 text-right">Chi tiết</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-outline-variant">
@@ -323,6 +329,44 @@
 </div>
 </div>
 </section>
+</div>
+
+<div id="view-students" class="space-y-space-xl hidden">
+    <!-- Student enrollment management card -->
+    <section class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+        <div class="p-space-lg border-b border-outline-variant bg-surface-container-low flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+            <div>
+                <h2 class="font-headline-lg-mobile text-primary font-bold">Phân Quyền Khóa Học Học Viên</h2>
+                <p class="text-secondary font-body-md mt-1">Cấp quyền hoặc gỡ quyền truy cập các khóa học IELTS, TOEIC, Cambridge cho từng học viên.</p>
+            </div>
+            <div class="relative w-full md:w-64">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+                <input id="search-student-permission" class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-outline-variant rounded-lg focus:outline-none focus:border-primary text-xs" placeholder="Tìm kiếm học viên..." type="text"/>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-surface-container font-label-sm uppercase text-outline tracking-wider border-b border-outline-variant">
+                    <tr>
+                        <th class="px-space-lg py-4 font-semibold text-xs text-slate-500">Học viên</th>
+                        <th class="px-space-lg py-4 font-semibold text-xs text-slate-500">Khóa học được cấp quyền</th>
+                        <th class="px-space-lg py-4 font-semibold text-xs text-slate-500 text-right">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody id="student-permissions-tbody" class="divide-y divide-outline-variant">
+                    <tr>
+                        <td colspan="3" class="text-center py-8 text-slate-400 text-xs">
+                            <div class="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                            Đang tải danh sách học viên...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
 </div>
 <!-- Footer -->
 <footer class="w-full py-space-xl px-gutter max-w-container-max-width mx-auto flex flex-col md:flex-row justify-between items-center gap-space-md bg-surface-container-low border-t border-outline-variant">

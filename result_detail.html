@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>EduMetrics | Chi Tiết Kết Quả Làm Bài</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Tailwind CSS with custom styling plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#001e40",
+                        "primary-container": "#003366",
+                        "outline-variant": "#c3c6d1",
+                        background: "#f8f9fa",
+                        surface: "#ffffff"
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white border-b border-outline-variant/60 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary text-2xl font-bold">assignment_turned_in</span>
+                <div>
+                    <h1 class="font-bold text-sm text-primary tracking-tight" id="header-exam-title">Đang tải kết quả...</h1>
+                    <p class="text-[10px] text-slate-400 font-semibold">Báo cáo chi tiết bài làm học viên</p>
+                </div>
+            </div>
+            
+            <button onclick="goBackToDashboard()" class="text-xs font-bold text-primary hover:bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 transition-all flex items-center gap-1">
+                <span class="material-symbols-outlined text-xs">arrow_back</span> Quay lại Dashboard
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="max-w-4xl mx-auto w-full px-6 py-8 flex-grow">
+        
+        <!-- Loading state -->
+        <div id="loading-view" class="flex flex-col items-center justify-center py-20 gap-4">
+            <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-slate-400 text-xs font-semibold">Đang truy vấn dữ liệu chi tiết bài thi...</p>
+        </div>
+
+        <!-- Result Content Container -->
+        <div id="result-workspace" class="hidden space-y-8">
+            
+            <!-- Summary Card -->
+            <section class="bg-white border border-outline-variant/60 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="text-center md:text-left space-y-1">
+                    <span id="badge-course" class="bg-primary/10 text-primary text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">Đề thi</span>
+                    <h2 class="font-extrabold text-xl text-primary" id="exam-title">IELTS Practice Test #1</h2>
+                    <p class="text-xs text-slate-400 font-semibold" id="student-info">Học viên: Lê Minh • linh.nv@gmail.com</p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 w-full md:w-auto shrink-0">
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center min-w-[90px]">
+                        <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Đúng</span>
+                        <span class="font-bold text-lg text-primary" id="score-display">0 / 0</span>
+                    </div>
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center min-w-[90px]">
+                        <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Chính xác</span>
+                        <span class="font-bold text-lg text-emerald-600" id="accuracy-display">0%</span>
+                    </div>
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center min-w-[90px]">
+                        <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Thời gian</span>
+                        <span class="font-bold text-sm text-slate-700 block mt-1" id="time-display">0p</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Detailed Questions Section -->
+            <section class="space-y-6" id="questions-report-container">
+                <!-- Question report cards loaded dynamically -->
+            </section>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-50 border-t border-outline-variant py-6 mt-12">
+        <div class="flex flex-col md:flex-row justify-between items-center w-full px-6 max-w-7xl mx-auto gap-3 text-slate-400 text-xs">
+            <div class="font-bold text-primary">EduMetrics & Hannah English</div>
+            <div>© 2026 Portal Học Thuật. Tất cả các quyền được bảo lưu.</div>
+        </div>
+    </footer>
+
+    <!-- Supabase SDK & Configuration & Session Control -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth_check.js"></script>
+
+    <!-- Main Logic Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Chờ 1s để Session ổn định
+            setTimeout(() => {
+                if (typeof supabase !== 'undefined' && supabase) {
+                    initResultDetail();
+                }
+            }, 1000);
+        });
+
+        async function initResultDetail() {
+            console.log("Khởi chạy trang chi tiết kết quả...");
+
+            if (!window.currentUser) {
+                console.warn("Chưa đăng nhập tài khoản!");
+                window.location.href = "auth.html";
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const resultId = urlParams.get('result_id');
+
+            if (!resultId) {
+                alert("Không tìm thấy ID kết quả bài làm!");
+                goBackToDashboard();
+                return;
+            }
+
+            try {
+                // 1. Tải kết quả bài làm
+                const { data: result, error: rError } = await supabase
+                    .from('exam_results')
+                    .select(`
+                        *,
+                        profiles (
+                            id,
+                            full_name,
+                            email,
+                            role
+                        ),
+                        exams (
+                            title,
+                            questions,
+                            course_id,
+                            courses (
+                                title
+                            )
+                        )
+                    `)
+                    .eq('id', resultId)
+                    .single();
+
+                if (rError) throw rError;
+                if (!result) throw new Error("Kết quả bài làm không tồn tại!");
+
+                // 2. Kiểm tra bảo mật phân quyền (Security Check)
+                const userRole = window.currentUser.role;
+                const userId = window.currentUser.id;
+
+                // Học sinh chỉ được xem bài làm của chính mình
+                if (userRole === 'student' && result.student_id !== userId) {
+                    alert("🔒 Bạn không có quyền truy cập xem chi tiết kết quả bài làm của người khác!");
+                    window.location.href = "student_dashboard.html";
+                    return;
+                }
+
+                // 3. Render dữ liệu
+                renderWorkspace(result);
+
+            } catch (err) {
+                console.error("Lỗi lấy thông tin kết quả chi tiết:", err);
+                alert("Lỗi tải trang: " + err.message);
+                goBackToDashboard();
+            }
+        }
+
+        function renderWorkspace(res) {
+            // Ẩn loading, hiện workspace
+            document.getElementById('loading-view').classList.add('hidden');
+            document.getElementById('result-workspace').classList.remove('hidden');
+
+            // Cập nhật Header & Info
+            const examTitle = res.exams?.title || "Đề thi đã bị xóa";
+            document.getElementById('header-exam-title').textContent = examTitle;
+            document.getElementById('exam-title').textContent = examTitle;
+
+            const courseTitle = res.exams?.courses?.title || "Khóa học";
+            document.getElementById('badge-course').textContent = courseTitle;
+
+            const studentName = res.profiles?.full_name || "Học viên ẩn danh";
+            const studentEmail = res.profiles?.email || "Chưa cập nhật";
+            document.getElementById('student-info').textContent = `Học viên: ${studentName} • Email: ${studentEmail}`;
+
+            // Cập nhật stats grid
+            document.getElementById('score-display').textContent = `${res.score} / ${res.total_questions}`;
+            const accuracy = Math.round((res.score / res.total_questions) * 100);
+            document.getElementById('accuracy-display').textContent = `${accuracy}%`;
+
+            const minutes = Math.floor(res.duration_seconds / 60);
+            const seconds = res.duration_seconds % 60;
+            document.getElementById('time-display').textContent = seconds > 0 ? `${minutes}p ${seconds}s` : `${minutes}p`;
+
+            // Render câu hỏi chi tiết
+            const container = document.getElementById('questions-report-container');
+            container.innerHTML = "";
+
+            const questions = res.exams?.questions || [];
+            const studentAnswers = res.answers || {};
+
+            questions.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.id = `q-card-${index + 1}`;
+                card.className = "bg-white border border-outline-variant/60 rounded-2xl p-6 shadow-sm space-y-4 transition-all relative overflow-hidden";
+                
+                const studentAns = (studentAnswers[index + 1] || "").trim();
+                const correctAns = (q.correct || "").trim();
+
+                let isCorrect = false;
+                let answerDisplayHtml = "";
+
+                if (q.type === 'fill_in_blank') {
+                    // Dạng Điền từ
+                    const studentAnsLower = studentAns.toLowerCase();
+                    const correctAnsLower = correctAns.toLowerCase();
+                    const variants = (q.accept_variants || []).map(v => v.trim().toLowerCase());
+                    isCorrect = (studentAnsLower === correctAnsLower || variants.includes(studentAnsLower)) && studentAnsLower !== "";
+
+                    // Tạo danh sách đáp án đúng để hiển thị gợi ý
+                    let correctList = correctAns;
+                    if (q.accept_variants && q.accept_variants.length > 0) {
+                        correctList += `, ${q.accept_variants.join(', ')}`;
+                    }
+
+                    answerDisplayHtml = `
+                        <div class="space-y-2.5">
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="font-bold text-slate-500">Đáp án của bạn:</span>
+                                <span class="px-3 py-1 rounded-lg font-bold border ${isCorrect ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'}">
+                                    ${studentAns || '<i>(Bỏ trống)</i>'}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="font-bold text-slate-500">Đáp án đúng:</span>
+                                <span class="px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold">
+                                    ${correctList}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Dạng Trắc nghiệm
+                    isCorrect = studentAns.toUpperCase() === correctAns.toUpperCase() && studentAns !== "";
+                    
+                    let optionsHtml = "";
+                    const opts = q.options || [];
+
+                    opts.forEach(opt => {
+                        const letter = opt.substring(0, 1); // 'A', 'B', etc.
+                        let optClass = "border-slate-100 bg-white text-slate-700";
+                        let badgeIcon = "";
+
+                        // Highlight đáp án
+                        if (letter === correctAns) {
+                            // Đáp án đúng của hệ thống
+                            optClass = "border-emerald-500 bg-emerald-50/50 text-emerald-700 font-bold";
+                            badgeIcon = `<span class="material-symbols-outlined text-emerald-600 text-sm ml-auto" style="font-variation-settings: 'FILL' 1;">check_circle</span>`;
+                        } else if (letter === studentAns && !isCorrect) {
+                            // Đáp án sai học sinh chọn
+                            optClass = "border-red-500 bg-red-50/50 text-red-700 font-bold";
+                            badgeIcon = `<span class="material-symbols-outlined text-red-600 text-sm ml-auto" style="font-variation-settings: 'FILL' 1;">cancel</span>`;
+                        } else if (letter === studentAns && isCorrect) {
+                            // Đáp án đúng học sinh chọn (đã được bọc bởi case 1, nhưng thêm highlight)
+                            optClass = "border-emerald-500 bg-emerald-50 text-emerald-700 font-bold";
+                            badgeIcon = `<span class="material-symbols-outlined text-emerald-600 text-sm ml-auto" style="font-variation-settings: 'FILL' 1;">check_circle</span>`;
+                        }
+
+                        optionsHtml += `
+                            <div class="flex items-center gap-3 p-3 border rounded-xl select-none text-sm ${optClass}">
+                                <span class="font-bold bg-slate-100 rounded-full w-5 h-5 flex items-center justify-center text-[10px] text-slate-600 shrink-0">${letter}</span>
+                                <span class="font-medium">${opt}</span>
+                                ${badgeIcon}
+                            </div>
+                        `;
+                    });
+
+                    answerDisplayHtml = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                            ${optionsHtml}
+                        </div>
+                    `;
+                }
+
+                // Tiêu đề câu hỏi
+                card.innerHTML = `
+                    <div class="flex justify-between items-start gap-4">
+                        <span class="bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-lg text-xs font-bold shrink-0">Câu ${index + 1}</span>
+                        ${isCorrect ? 
+                            `<span class="flex items-center gap-0.5 text-xs text-emerald-600 font-bold"><span class="material-symbols-outlined text-sm font-bold">done</span> Chính xác</span>` : 
+                            `<span class="flex items-center gap-0.5 text-xs text-red-500 font-bold"><span class="material-symbols-outlined text-sm font-bold">close</span> Sai</span>`
+                        }
+                    </div>
+                    <p class="font-semibold text-slate-800 text-sm leading-relaxed">${q.question}</p>
+                    ${answerDisplayHtml}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function goBackToDashboard() {
+            if (window.currentUser && window.currentUser.role === 'student') {
+                window.location.href = "student_dashboard.html";
+            } else {
+                window.location.href = "teacher_dashboard.html";
+            }
+        }
+    </script>
+</body>
+</html>

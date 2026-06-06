@@ -261,12 +261,65 @@ const TeacherDashboard = () => {
   const [convertingDocx, setConvertingDocx] = useState(false);
   const [convertedExam, setConvertedExam] = useState(null);
 
+  // Tabs, Classes and Assignments States
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'editor', 'exams', 'classes', 'students'
+  const [studentSearch, setStudentSearch] = useState('');
+  const [studentClassFilter, setStudentClassFilter] = useState('');
+  const [classes, setClasses] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+  const [loadingClasses, setLoadingClasses] = useState(false);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
+  const [mockMode, setMockMode] = useState(false);
+
+  // Form states for class management
+  const [newClassName, setNewClassName] = useState('');
+  const [newClassCourseId, setNewClassCourseId] = useState('');
+  const [assigningStudentId, setAssigningStudentId] = useState('');
+  const [assigningClassId, setAssigningClassId] = useState('');
+  const [assignHomeworkExamId, setAssignHomeworkExamId] = useState('');
+  const [assignHomeworkTargetType, setAssignHomeworkTargetType] = useState('class'); // 'class' hoặc 'student'
+  const [assignHomeworkClassId, setAssignHomeworkClassId] = useState('');
+  const [assignHomeworkStudentId, setAssignHomeworkStudentId] = useState('');
+  const [assignHomeworkDueDate, setAssignHomeworkDueDate] = useState('');
+  const [submittingClass, setSubmittingClass] = useState(false);
+  const [submittingStudentAssign, setSubmittingStudentAssign] = useState(false);
+  const [submittingHomeworkAssign, setSubmittingHomeworkAssign] = useState(false);
+
+  // Dữ liệu giả lập (Mock Data) khi chưa chạy SQL DB migration
+  const mockClasses = [
+    { id: 'mock-class-1', name: 'IELTS IELTS-101', course_id: '', student_count: 2, assignment_count: 1 },
+    { id: 'mock-class-2', name: 'IELTS IELTS-102', course_id: '', student_count: 1, assignment_count: 0 },
+    { id: 'mock-class-3', name: 'TOEIC TOEIC-500', course_id: '', student_count: 1, assignment_count: 0 }
+  ];
+
+  const mockStudentsList = [
+    { id: 'mock-student-1', full_name: 'Nguyễn Văn A', email: 'a@hannah.edu.vn', class_id: 'mock-class-1', class_name: 'IELTS IELTS-101' },
+    { id: 'mock-student-2', full_name: 'Trần Thị B', email: 'b@hannah.edu.vn', class_id: 'mock-class-1', class_name: 'IELTS IELTS-101' },
+    { id: 'mock-student-3', full_name: 'Lê Hoàng C', email: 'c@hannah.edu.vn', class_id: 'mock-class-2', class_name: 'IELTS IELTS-102' },
+    { id: 'mock-student-4', full_name: 'Phạm Minh D', email: 'd@hannah.edu.vn', class_id: 'mock-class-3', class_name: 'TOEIC TOEIC-500' }
+  ];
+
+  const mockAssignmentsList = [
+    { id: 'mock-assign-1', exam_id: '', exam_title: 'IELTS Listening Test 01', class_id: 'mock-class-1', class_name: 'IELTS IELTS-101', student_id: null, student_name: null, due_date: '2026-06-15T23:59:59Z', created_at: '2026-06-06T10:00:00Z' },
+    { id: 'mock-assign-2', exam_id: '', exam_title: 'IELTS Reading Test 1', class_id: null, class_name: null, student_id: 'mock-student-2', student_name: 'Trần Thị B', due_date: '2026-06-12T18:00:00Z', created_at: '2026-06-06T10:15:00Z' }
+  ];
+
   const timerRef = useRef(null);
 
   useEffect(() => {
-    fetchCourses();
-    fetchPublishedExams();
-    fetchStudentAttempts();
+    const initData = async () => {
+      await fetchCourses();
+      await fetchPublishedExams();
+      await fetchStudentAttempts();
+      const dbConnected = await fetchClasses();
+      if (dbConnected) {
+        await fetchStudents();
+        await fetchAssignments();
+      }
+    };
+    initData();
   }, []);
 
   useEffect(() => {
@@ -349,6 +402,343 @@ const TeacherDashboard = () => {
       console.error("Lỗi tải lịch sử thi học viên:", err);
     } finally {
       setLoadingAttempts(false);
+    }
+  };
+
+  const fetchClasses = async () => {
+    try {
+      setLoadingClasses(true);
+      const { data, error } = await supabase
+        .from('classes')
+        .select(`
+          *,
+          courses (
+            id,
+            title
+          )
+        `)
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error("Lỗi truy vấn lớp học (tự động chuyển sang Mock Mode):", error);
+        setMockMode(true);
+        setClasses(mockClasses);
+        setStudents(mockStudentsList);
+        setAssignments(mockAssignmentsList);
+        return false;
+      }
+      setClasses(data || []);
+      return true;
+    } catch (err) {
+      console.error("Lỗi hệ thống khi nạp lớp học (tự động chuyển sang Mock Mode):", err);
+      setMockMode(true);
+      setClasses(mockClasses);
+      setStudents(mockStudentsList);
+      setAssignments(mockAssignmentsList);
+      return false;
+    } finally {
+      setLoadingClasses(false);
+    }
+  };
+
+  const fetchStudents = async () => {
+    if (mockMode) return;
+    try {
+      setLoadingStudents(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          full_name,
+          email,
+          role,
+          class_id,
+          classes!profiles_class_id_fkey (
+            name
+          )
+        `)
+        .eq('role', 'student')
+        .order('full_name', { ascending: true });
+
+      if (error) throw error;
+      
+      // Khớp cấu trúc để s.classes vẫn hợp lệ dù có modifier trong select
+      const mappedData = (data || []).map(item => ({
+        ...item,
+        classes: item.classes || null
+      }));
+      
+      setStudents(mappedData);
+    } catch (err) {
+      console.error("Lỗi tải học viên:", err);
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
+  const fetchAssignments = async () => {
+    if (mockMode) return;
+    try {
+      setLoadingAssignments(true);
+      const { data, error } = await supabase
+        .from('assignments')
+        .select(`
+          *,
+          exams (
+            title
+          ),
+          classes (
+            name
+          ),
+          profiles:student_id (
+            full_name
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setAssignments(data || []);
+    } catch (err) {
+      console.error("Lỗi tải bài tập giao:", err);
+    } finally {
+      setLoadingAssignments(false);
+    }
+  };
+
+  const handleCreateClass = async (e) => {
+    if (e) e.preventDefault();
+    if (!newClassName.trim()) {
+      alert("⚠️ Vui lòng nhập tên lớp học!");
+      return;
+    }
+    if (!newClassCourseId) {
+      alert("⚠️ Vui lòng chọn khóa học tương ứng!");
+      return;
+    }
+
+    const selectedCourse = courses.find(c => c.id === newClassCourseId);
+    const courseTitle = selectedCourse ? selectedCourse.title : 'Course';
+
+    if (mockMode) {
+      const newClassItem = {
+        id: `mock-class-${Date.now()}`,
+        name: newClassName.trim(),
+        course_id: newClassCourseId,
+        courses: { title: courseTitle },
+        student_count: 0,
+        assignment_count: 0
+      };
+      setClasses(prev => [...prev, newClassItem]);
+      setNewClassName('');
+      showToast(`[MOCK MODE] Đã tạo lớp "${newClassName.trim()}" thành công!`);
+      return;
+    }
+
+    try {
+      setSubmittingClass(true);
+      const { error } = await supabase
+        .from('classes')
+        .insert({
+          name: newClassName.trim(),
+          course_id: newClassCourseId,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+      showToast(`Đã tạo lớp "${newClassName.trim()}" thành công!`);
+      setNewClassName('');
+      fetchClasses();
+    } catch (err) {
+      alert("Lỗi khi tạo lớp học: " + err.message);
+    } finally {
+      setSubmittingClass(false);
+    }
+  };
+
+  const handleAssignStudent = async (e) => {
+    if (e) e.preventDefault();
+    if (!assigningStudentId) {
+      alert("⚠️ Vui lòng chọn học viên!");
+      return;
+    }
+
+    const targetClass = classes.find(c => c.id === assigningClassId);
+    const targetClassName = targetClass ? targetClass.name : 'Chưa xếp lớp';
+
+    if (mockMode) {
+      setStudents(prev => prev.map(s => {
+        if (s.id === assigningStudentId) {
+          return {
+            ...s,
+            class_id: assigningClassId || null,
+            classes: assigningClassId ? { name: targetClassName } : null,
+            class_name: assigningClassId ? targetClassName : null
+          };
+        }
+        return s;
+      }));
+      setAssigningStudentId('');
+      setAssigningClassId('');
+      showToast(`[MOCK MODE] Đã phân lớp học viên thành công!`);
+      return;
+    }
+
+    try {
+      setSubmittingStudentAssign(true);
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          class_id: assigningClassId || null
+        })
+        .eq('id', assigningStudentId);
+
+      if (error) throw error;
+      showToast("Đã phân lớp cho học viên thành công!");
+      setAssigningStudentId('');
+      setAssigningClassId('');
+      fetchStudents();
+      fetchClasses();
+    } catch (err) {
+      alert("Lỗi khi xếp lớp học viên: " + err.message);
+    } finally {
+      setSubmittingStudentAssign(false);
+    }
+  };
+
+  const handleUpdateStudentClass = async (studentId, classId) => {
+    const targetClass = classes.find(c => c.id === classId);
+    const targetClassName = targetClass ? targetClass.name : 'Chưa xếp lớp';
+
+    if (mockMode) {
+      setStudents(prev => prev.map(s => {
+        if (s.id === studentId) {
+          return {
+            ...s,
+            class_id: classId || null,
+            classes: classId ? { name: targetClassName } : null,
+            class_name: classId ? targetClassName : null
+          };
+        }
+        return s;
+      }));
+      showToast(`[MOCK MODE] Đã chuyển lớp cho học viên sang "${targetClassName}"!`);
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          class_id: classId || null
+        })
+        .eq('id', studentId);
+
+      if (error) throw error;
+      showToast(`Đã xếp học viên vào lớp "${targetClassName}" thành công!`);
+      fetchStudents();
+      fetchClasses();
+    } catch (err) {
+      alert("Lỗi khi xếp lớp học viên: " + err.message);
+    }
+  };
+
+  const handleAssignHomework = async (e) => {
+    if (e) e.preventDefault();
+    if (!assignHomeworkExamId) {
+      alert("⚠️ Vui lòng chọn bài tập/đề thi cần giao!");
+      return;
+    }
+    if (assignHomeworkTargetType === 'class' && !assignHomeworkClassId) {
+      alert("⚠️ Vui lòng chọn lớp học!");
+      return;
+    }
+    if (assignHomeworkTargetType === 'student' && !assignHomeworkStudentId) {
+      alert("⚠️ Vui lòng chọn học viên!");
+      return;
+    }
+
+    const selectedExam = publishedExams.find(ex => ex.id === assignHomeworkExamId) || { title: 'Đề thi đã chọn' };
+    const targetClass = classes.find(c => c.id === assignHomeworkClassId);
+    const targetStudent = students.find(s => s.id === assignHomeworkStudentId);
+
+    if (mockMode) {
+      const newAssignItem = {
+        id: `mock-assign-${Date.now()}`,
+        exam_id: assignHomeworkExamId,
+        exam_title: selectedExam.title,
+        class_id: assignHomeworkTargetType === 'class' ? assignHomeworkClassId : null,
+        class_name: assignHomeworkTargetType === 'class' ? targetClass?.name : null,
+        student_id: assignHomeworkTargetType === 'student' ? assignHomeworkStudentId : null,
+        student_name: assignHomeworkTargetType === 'student' ? targetStudent?.full_name : null,
+        due_date: assignHomeworkDueDate ? new Date(assignHomeworkDueDate).toISOString() : null,
+        created_at: new Date().toISOString()
+      };
+      setAssignments(prev => [newAssignItem, ...prev]);
+      
+      if (assignHomeworkTargetType === 'class') {
+        setClasses(prev => prev.map(c => c.id === assignHomeworkClassId ? { ...c, assignment_count: (c.assignment_count || 0) + 1 } : c));
+      }
+
+      setAssignHomeworkExamId('');
+      setAssignHomeworkClassId('');
+      setAssignHomeworkStudentId('');
+      setAssignHomeworkDueDate('');
+      showToast(`[MOCK MODE] Đã giao bài tập thành công!`);
+      return;
+    }
+
+    try {
+      setSubmittingHomeworkAssign(true);
+      const payload = {
+        exam_id: assignHomeworkExamId,
+        class_id: assignHomeworkTargetType === 'class' ? assignHomeworkClassId : null,
+        student_id: assignHomeworkTargetType === 'student' ? assignHomeworkStudentId : null,
+        due_date: assignHomeworkDueDate ? new Date(assignHomeworkDueDate).toISOString() : null,
+        created_by: user?.id
+      };
+
+      const { error } = await supabase
+        .from('assignments')
+        .insert(payload);
+
+      if (error) throw error;
+      showToast("Giao bài tập/thi thử cho học viên thành công!");
+      setAssignHomeworkExamId('');
+      setAssignHomeworkClassId('');
+      setAssignHomeworkStudentId('');
+      setAssignHomeworkDueDate('');
+      fetchAssignments();
+    } catch (err) {
+      alert("Lỗi khi giao bài tập: " + err.message);
+    } finally {
+      setSubmittingHomeworkAssign(false);
+    }
+  };
+
+  const handleDeleteAssignment = async (assignId) => {
+    if (!window.confirm("🗑️ Bạn có chắc muốn thu hồi bài tập này không?")) return;
+
+    if (mockMode) {
+      const targetAssign = assignments.find(a => a.id === assignId);
+      if (targetAssign && targetAssign.class_id) {
+        setClasses(prev => prev.map(c => c.id === targetAssign.class_id ? { ...c, assignment_count: Math.max(0, (c.assignment_count || 0) - 1) } : c));
+      }
+      setAssignments(prev => prev.filter(a => a.id !== assignId));
+      showToast(`[MOCK MODE] Đã thu hồi bài tập thành công!`);
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('assignments')
+        .delete()
+        .eq('id', assignId);
+
+      if (error) throw error;
+      showToast("Đã thu hồi bài tập thành công!");
+      fetchAssignments();
+    } catch (err) {
+      alert("Lỗi khi thu hồi bài tập: " + err.message);
     }
   };
 
@@ -1082,25 +1472,255 @@ const TeacherDashboard = () => {
       </section>
 
       <div className="max-w-[1440px] mx-auto px-6 mt-8 space-y-8">
-        
-        {/* Stats */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Tổng số học viên trực tuyến</p>
-            <h3 className="text-2xl font-extrabold text-[#001e40] mt-1">{uniqueStudentsCount} học viên</h3>
-          </div>
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Tổng số đề & bài tập</p>
-            <h3 className="text-2xl font-extrabold text-[#001e40] mt-1">{publishedExams.length} bài đăng</h3>
-          </div>
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Lượt làm bài tập hệ thống</p>
-            <h3 className="text-2xl font-extrabold text-[#001e40] mt-1">{studentAttempts.length} lượt nộp bài</h3>
-          </div>
-        </section>
+        {/* Navigation Tabs */}
+        <div className="flex border-b border-slate-200 gap-6 mb-6 select-none shrink-0 overflow-x-auto scrollbar-none">
+          <button
+            type="button"
+            onClick={() => setActiveTab('overview')}
+            className={`pb-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${activeTab === 'overview' ? 'text-blue-700 border-blue-700 font-extrabold' : 'text-slate-500 border-transparent hover:text-blue-700'}`}
+          >
+            <span className="material-symbols-outlined text-base">dashboard</span>
+            Tổng Quan
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('editor')}
+            className={`pb-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${activeTab === 'editor' ? 'text-blue-700 border-blue-700 font-extrabold' : 'text-slate-500 border-transparent hover:text-blue-700'}`}
+          >
+            <span className="material-symbols-outlined text-base">edit_document</span>
+            Biên Soạn Đề Thi
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('exams')}
+            className={`pb-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${activeTab === 'exams' ? 'text-blue-700 border-blue-700 font-extrabold' : 'text-slate-500 border-transparent hover:text-blue-700'}`}
+          >
+            <span className="material-symbols-outlined text-base">database</span>
+            Kho Đề & Kết Quả
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('classes')}
+            className={`pb-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${activeTab === 'classes' ? 'text-blue-700 border-blue-700 font-extrabold' : 'text-slate-500 border-transparent hover:text-blue-700'}`}
+          >
+            <span className="material-symbols-outlined text-base">domain</span>
+            Quản Lý Lớp Học
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('students')}
+            className={`pb-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${activeTab === 'students' ? 'text-blue-700 border-blue-700 font-extrabold' : 'text-slate-500 border-transparent hover:text-blue-700'}`}
+          >
+            <span className="material-symbols-outlined text-base">group</span>
+            Quản Lý Học Viên
+          </button>
+        </div>
 
-        {/* BỘ BIÊN SOẠN ĐỀ THI WORD (.DOCX) - TÍCH HỢP CONVERTER & PREVIEW TRỰC TIẾP */}
-        <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+        {activeTab === 'overview' && (
+          <div className="space-y-8 animate-fade-in font-semibold">
+            {/* Stats Cards */}
+            <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Học Viên Trực Tuyến</p>
+                  <h3 className="text-2xl font-extrabold text-[#001e40] mt-1">{uniqueStudentsCount} học viên</h3>
+                </div>
+                <span className="material-symbols-outlined text-blue-600 bg-blue-50 p-3 rounded-2xl text-2xl font-bold">group</span>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Lớp Học Hoạt Động</p>
+                  <h3 className="text-2xl font-extrabold text-[#001e40] mt-1">{classes.length} lớp</h3>
+                </div>
+                <span className="material-symbols-outlined text-emerald-600 bg-emerald-50 p-3 rounded-2xl text-2xl font-bold">domain</span>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Tổng Đề & Bài Giảng</p>
+                  <h3 className="text-2xl font-extrabold text-[#001e40] mt-1">{publishedExams.length} bài đăng</h3>
+                </div>
+                <span className="material-symbols-outlined text-purple-600 bg-purple-50 p-3 rounded-2xl text-2xl font-bold">menu_book</span>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Lượt Làm Bài Hệ Thống</p>
+                  <h3 className="text-2xl font-extrabold text-[#001e40] mt-1">{studentAttempts.length} lượt nộp</h3>
+                </div>
+                <span className="material-symbols-outlined text-indigo-600 bg-indigo-50 p-3 rounded-2xl text-2xl font-bold">assignment_turned_in</span>
+              </div>
+            </section>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Bảng kiểm soát lớp học */}
+              <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+                <div className="p-5 border-b border-slate-150 bg-slate-50/50 flex justify-between items-center">
+                  <div>
+                    <h3 className="font-display text-sm font-bold text-[#001e40]">Kiểm Soát Học Viên Từng Lớp</h3>
+                    <p className="text-slate-400 text-[9px]">Số lượng học viên và bài tập được phân phối theo lớp học.</p>
+                  </div>
+                  <button 
+                    onClick={() => setActiveTab('classes')}
+                    className="text-[10px] font-bold text-blue-700 hover:underline flex items-center gap-1 bg-transparent border-0"
+                  >
+                    <span>Quản lý</span>
+                    <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                  </button>
+                </div>
+                <div className="overflow-x-auto max-h-[350px] overflow-y-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-50 text-slate-500 border-b border-slate-150 text-[9px] font-extrabold uppercase tracking-wider sticky top-0 z-10">
+                        <th className="py-3 px-5">Tên lớp học</th>
+                        <th className="py-3 px-5">Số học viên</th>
+                        <th className="py-3 px-5">Bài tập đã giao</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                      {classes.map(cls => {
+                        const studentCount = mockMode 
+                          ? (cls.student_count || 0)
+                          : students.filter(s => s.class_id === cls.id).length;
+                        
+                        const assignCount = mockMode
+                          ? (cls.assignment_count || 0)
+                          : assignments.filter(a => a.class_id === cls.id).length;
+
+                        return (
+                          <tr key={cls.id} className="hover:bg-slate-50/30 transition-all">
+                            <td className="py-3 px-5 font-bold text-[#001e40]">{cls.name}</td>
+                            <td className="py-3 px-5">
+                              <span className="px-2 py-0.5 bg-blue-50 text-blue-750 rounded-full font-bold text-[9px]">
+                                {studentCount} học viên
+                              </span>
+                            </td>
+                            <td className="py-3 px-5">
+                              <span className="px-2 py-0.5 bg-indigo-50 text-indigo-750 rounded-full font-bold text-[9px]">
+                                {assignCount} bài giao
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {classes.length === 0 && (
+                        <tr>
+                          <td colSpan="3" className="py-8 text-center text-slate-400 italic">
+                            Chưa có lớp học nào được tạo.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              {/* Thống kê bài giảng đã đăng */}
+              <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+                <div className="p-5 border-b border-slate-150 bg-slate-50/50 flex justify-between items-center">
+                  <div>
+                    <h3 className="font-display text-sm font-bold text-[#001e40]">Phân Loại Bài Giảng & Đề Thi</h3>
+                    <p className="text-slate-400 text-[9px]">Thống kê chi tiết các đề thi và bài tập ôn luyện theo khóa học.</p>
+                  </div>
+                  <button 
+                    onClick={() => setActiveTab('exams')}
+                    className="text-[10px] font-bold text-blue-700 hover:underline flex items-center gap-1 bg-transparent border-0"
+                  >
+                    <span>Xem kho đề</span>
+                    <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                  </button>
+                </div>
+                <div className="overflow-x-auto max-h-[350px] overflow-y-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-50 text-slate-500 border-b border-slate-150 text-[9px] font-extrabold uppercase tracking-wider sticky top-0 z-10">
+                        <th className="py-3 px-5">Khóa học</th>
+                        <th className="py-3 px-5">Luyện tập (Practice)</th>
+                        <th className="py-3 px-5">Thi thử (Full Test)</th>
+                        <th className="py-3 px-5">Tổng số đề</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                      {courses.map(course => {
+                        const courseExams = publishedExams.filter(e => e.course_id === course.id);
+                        const practiceCount = courseExams.filter(e => e.type === 'homework').length;
+                        const testCount = courseExams.filter(e => e.type === 'test').length;
+                        return (
+                          <tr key={course.id} className="hover:bg-slate-50/30 transition-all">
+                            <td className="py-3 px-5 font-bold text-[#001e40]">{course.title}</td>
+                            <td className="py-3 px-5 text-emerald-600 font-bold">{practiceCount} bài tập</td>
+                            <td className="py-3 px-5 text-rose-600 font-bold">{testCount} đề thi</td>
+                            <td className="py-3 px-5">
+                              <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full font-bold text-[9px]">
+                                {courseExams.length} bài đăng
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {courses.length === 0 && (
+                        <tr>
+                          <td colSpan="4" className="py-8 text-center text-slate-400 italic">
+                            Chưa có khóa học nào được đăng ký.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+            
+            {/* Lượt nộp bài gần đây */}
+            <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+              <div className="p-5 border-b border-slate-150 bg-slate-50/50">
+                <h3 className="font-display text-sm font-bold text-[#001e40]">Lượt Nộp Bài Mới Nhất</h3>
+                <p className="text-slate-400 text-[9px]">Theo dõi điểm số và thời gian làm bài mới nộp của học viên.</p>
+              </div>
+              <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 border-b border-slate-150 text-[9px] font-extrabold uppercase tracking-wider sticky top-0 z-10">
+                      <th className="py-3 px-5">Học viên</th>
+                      <th className="py-3 px-5">Tên bài thi / bài tập</th>
+                      <th className="py-3 px-5">Kết quả</th>
+                      <th className="py-3 px-5">Thời gian nộp</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                    {studentAttempts.slice(0, 5).map(att => {
+                      const studentName = att.profiles?.full_name || "Học viên ẩn danh";
+                      const scoreDisplay = `${att.score} / ${att.total_questions}`;
+                      const takenAtLabel = new Date(att.taken_at).toLocaleString('vi-VN');
+                      return (
+                        <tr key={att.id} className="hover:bg-slate-50/30 transition-all">
+                          <td className="py-3 px-5 font-bold text-[#001e40]">{studentName}</td>
+                          <td className="py-3 px-5 text-slate-500 truncate max-w-xs">{att.exams?.title}</td>
+                          <td className="py-3 px-5">
+                            <span className="px-2 py-0.5 bg-blue-50 text-blue-750 border border-blue-100 rounded-full font-bold text-[9px]">
+                              {scoreDisplay}
+                            </span>
+                          </td>
+                          <td className="py-3 px-5 text-slate-400 text-[10px]">{takenAtLabel}</td>
+                        </tr>
+                      );
+                    })}
+                    {studentAttempts.length === 0 && (
+                      <tr>
+                        <td colSpan="4" className="py-8 text-center text-slate-400 italic">
+                          Chưa có lượt nộp bài nào trên hệ thống.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {activeTab === 'editor' && (
+          <>
+            {/* BỘ BIÊN SOẠN ĐỀ THI WORD (.DOCX) - TÍCH HỢP CONVERTER & PREVIEW TRỰC TIẾP */}
+            <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 border-b border-slate-150 bg-slate-50/50">
             <h2 className="font-display text-base font-bold text-[#001e40]">Bộ Biên Soạn Đề Thi Trực Tuyến Tự Động</h2>
             <p className="text-slate-400 text-[10px] mt-0.5">Tải lên tệp đề thi và đáp án Word để tự động bóc tách bài đọc, câu hỏi và xem trước Study4 tức thì.</p>
@@ -1594,53 +2214,66 @@ const TeacherDashboard = () => {
 
           </section>
         )}
+      </>
+    )}
 
         {/* Hàng chứa Kho đề thi và Kết quả học viên (Nằm bên dưới, chia thành 2 cột song song trên màn hình rộng) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
-          {/* Published Exams / Practice */}
-          <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col max-h-[500px]">
-            <div className="p-5 border-b border-slate-150 bg-slate-50/50">
-              <h3 className="font-display text-sm font-bold text-[#001e40]">Kho Bài Giảng & Đề Đã Đăng</h3>
-              <p className="text-slate-400 text-[9px]">Lọc, tìm kiếm hoặc xóa hoàn toàn dữ liệu đề thi trên bảng lưu trữ.</p>
-            </div>
+        {activeTab === 'exams' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in font-semibold">
+            
+            {/* Published Exams / Practice */}
+            <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col max-h-[500px]">
+              <div className="p-5 border-b border-slate-150 bg-slate-50/50">
+                <h3 className="font-display text-sm font-bold text-[#001e40]">Kho Bài Giảng & Đề Đã Đăng</h3>
+                <p className="text-slate-400 text-[9px]">Lọc, tìm kiếm hoặc xóa hoàn toàn dữ liệu đề thi trên bảng lưu trữ.</p>
+              </div>
 
-            <div className="flex-grow overflow-y-auto p-4 space-y-3 custom-preview-scrollbar">
-              {publishedExams.map(ex => (
-                <div key={ex.id} className="p-3 border border-slate-100 hover:border-blue-500/20 rounded-2xl bg-white transition-all flex items-center justify-between gap-3 group">
-                  <div className="flex-grow min-w-0 space-y-1">
-                    <h4 className="font-extrabold text-xs text-[#001e40] truncate" title={ex.title}>{ex.title}</h4>
-                    <div className="flex flex-wrap items-center gap-x-2 text-[9px] font-bold text-slate-450">
-                      <span className="text-blue-700 uppercase">{ex.courses?.title?.split(' ')[0]}</span>
-                      <span>•</span>
-                      <span className={`px-1 rounded ${ex.type === 'homework' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                        {ex.type === 'homework' ? 'Bài tập' : 'Full Test'}
-                      </span>
-                      <span>•</span>
-                      <span>{ex.duration || 60} phút</span>
-                      <span>•</span>
-                      <span>{ex.question_count} câu hỏi</span>
+              <div className="flex-grow overflow-y-auto p-4 space-y-3 custom-preview-scrollbar">
+                {publishedExams.map(ex => (
+                  <div key={ex.id} className="p-3 border border-slate-100 hover:border-blue-500/20 rounded-2xl bg-white transition-all flex items-center justify-between gap-3 group">
+                    <div className="flex-grow min-w-0 space-y-1">
+                      <h4 className="font-extrabold text-xs text-[#001e40] truncate" title={ex.title}>{ex.title}</h4>
+                      <div className="flex flex-wrap items-center gap-x-2 text-[9px] font-bold text-slate-450">
+                        <span className="text-blue-700 uppercase">{ex.courses?.title?.split(' ')[0]}</span>
+                        <span>•</span>
+                        <span className={`px-1 rounded ${ex.type === 'homework' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                          {ex.type === 'homework' ? 'Bài tập' : 'Full Test'}
+                        </span>
+                        <span>•</span>
+                        <span>{ex.duration || 60} phút</span>
+                        <span>•</span>
+                        <span>{ex.question_count} câu hỏi</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <a 
+                        href={`/exam-taker/${ex.id}?mode=teacher_review`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-800 rounded-xl text-[10px] font-extrabold transition-all border border-emerald-200"
+                        title="Xem lại đề thi & đáp án"
+                      >
+                        <span className="material-symbols-outlined text-[14px] font-bold">visibility</span>
+                        <span>Xem đề</span>
+                      </a>
+                      <button 
+                        onClick={() => handleStartEdit(ex)}
+                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        title="Chỉnh sửa đề thi"
+                      >
+                        <span className="material-symbols-outlined text-[16px] font-bold">edit</span>
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteExam(ex.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        title="Xóa đề vĩnh viễn"
+                      >
+                        <span className="material-symbols-outlined text-[16px] font-bold">delete_forever</span>
+                      </button>
                     </div>
                   </div>
-
-                  <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1.5 shrink-0 transition-all">
-                    <button 
-                      onClick={() => handleStartEdit(ex)}
-                      className="p-1 text-slate-450 hover:text-blue-650 transition-all"
-                      title="Chỉnh sửa đề thi"
-                    >
-                      <span className="material-symbols-outlined text-[16px] font-bold">edit</span>
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteExam(ex.id)}
-                      className="p-1 text-slate-450 hover:text-red-650 transition-all"
-                      title="Xóa đề vĩnh viễn"
-                    >
-                      <span className="material-symbols-outlined text-[16px] font-bold">delete_forever</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
 
               {publishedExams.length === 0 && (
                 <p className="text-center py-10 text-slate-400 italic text-xs">Chưa có bài tập/đề thi nào.</p>
@@ -1681,7 +2314,530 @@ const TeacherDashboard = () => {
           </section>
 
         </div>
+      )}
 
+      {/* TAB 4: QUẢN LÝ LỚP HỌC */}
+      {activeTab === 'classes' && (
+        <div className="space-y-8 animate-fade-in font-semibold">
+          {/* Warning banner if mockMode is active */}
+          {mockMode && (
+            <div className="bg-amber-50/70 border border-amber-200 rounded-3xl p-5 flex items-start gap-4 shadow-sm">
+              <span className="material-symbols-outlined text-amber-600 font-bold text-2xl">warning</span>
+              <div className="space-y-1">
+                <h4 className="text-amber-850 font-bold text-sm">Chế độ giả lập (Mock Mode) đang kích hoạt</h4>
+                <p className="text-amber-700 text-xs leading-relaxed font-medium">
+                  Hệ thống tự động chuyển sang chế độ giả lập dữ liệu do chưa phát hiện thấy bảng <code className="bg-amber-100 px-1 py-0.5 rounded text-amber-900 font-mono">classes</code> và <code className="bg-amber-100 px-1 py-0.5 rounded text-amber-900 font-mono">assignments</code> trong cơ sở dữ liệu Supabase của bạn.
+                </p>
+                <p className="text-amber-700 text-xs font-semibold mt-1">
+                  👉 Hướng dẫn: Copy và chạy các lệnh SQL trong file <a href="file:///d:/RINNDL/web%20ti%E1%BA%BFng%20anh/CAP_NHAT_DATABASE.sql" className="underline font-bold text-amber-800">CAP_NHAT_DATABASE.sql</a> trong Supabase SQL Editor để đồng bộ cấu trúc cơ sở dữ liệu thực tế.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Overview Table of Classes */}
+          <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-150 bg-slate-50/50">
+              <h3 className="font-display text-base font-bold text-[#001e40]">Danh Sách Lớp Học & Bài Giảng</h3>
+              <p className="text-slate-400 text-[10px] mt-0.5 font-semibold text-slate-500">Kiểm soát số lượng học viên, số bài giảng đã đăng của từng lớp học.</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 border-b border-slate-150 text-[10px] font-extrabold uppercase tracking-wider">
+                    <th className="py-3.5 px-6">Tên lớp học</th>
+                    <th className="py-3.5 px-6">Khóa học đích</th>
+                    <th className="py-3.5 px-6">Số học viên</th>
+                    <th className="py-3.5 px-6">Số bài đã giao</th>
+                    <th className="py-3.5 px-6 text-right">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {classes.map(cls => {
+                    const studentCount = mockMode 
+                      ? (cls.student_count || 0)
+                      : students.filter(s => s.class_id === cls.id).length;
+                    
+                    const assignCount = mockMode
+                      ? (cls.assignment_count || 0)
+                      : assignments.filter(a => a.class_id === cls.id).length;
+
+                    const targetCourse = courses.find(c => c.id === cls.course_id);
+                    const courseName = targetCourse ? targetCourse.title : (cls.courses?.title || 'Chưa rõ');
+
+                    return (
+                      <tr key={cls.id} className="hover:bg-slate-50/30 transition-all font-medium text-slate-700">
+                        <td className="py-4 px-6 font-bold text-[#001e40]">{cls.name}</td>
+                        <td className="py-4 px-6 text-slate-550">{courseName}</td>
+                        <td className="py-4 px-6">
+                          <span className="px-2.5 py-0.5 bg-blue-50 text-blue-750 rounded-full font-bold text-[10px]">
+                            {studentCount} học viên
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className="px-2.5 py-0.5 bg-indigo-50 text-indigo-750 rounded-full font-bold text-[10px]">
+                            {assignCount} bài giao
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!window.confirm(`🗑️ Bạn có chắc muốn xóa lớp "${cls.name}"?`)) return;
+                              if (mockMode) {
+                                setClasses(prev => prev.filter(c => c.id !== cls.id));
+                                setStudents(prev => prev.map(s => s.class_id === cls.id ? { ...s, class_id: null, class_name: null } : s));
+                                showToast("[MOCK MODE] Đã xóa lớp học thành công!");
+                                return;
+                              }
+                              try {
+                                const { error } = await supabase.from('classes').delete().eq('id', cls.id);
+                                if (error) throw error;
+                                showToast("Đã xóa lớp học thành công!");
+                                fetchClasses();
+                                fetchStudents();
+                              } catch (err) {
+                                alert("Lỗi khi xóa lớp: " + err.message);
+                              }
+                            }}
+                            className="text-slate-455 hover:text-red-650 transition-all p-1"
+                            title="Xóa lớp học"
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {classes.length === 0 && (
+                    <tr>
+                      <td colSpan="5" className="py-10 text-center text-slate-400 italic">
+                        Chưa có lớp học nào được tạo.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* Submanagement tools grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column: Create Class */}
+            <div className="space-y-8">
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                  <span className="material-symbols-outlined text-blue-600 font-bold text-xl">domain_add</span>
+                  <h4 className="font-display text-sm font-bold text-[#001e40]">Tạo Lớp Học Mới</h4>
+                </div>
+                <form onSubmit={handleCreateClass} className="space-y-4 text-xs font-semibold">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Tên lớp học</label>
+                    <input
+                      type="text"
+                      value={newClassName}
+                      onChange={(e) => setNewClassName(e.target.value)}
+                      placeholder="Vd: IELTS IELTS-103, TOEIC-650, ..."
+                      className="w-full border border-slate-200 focus:border-blue-655 rounded-xl py-2 px-3 focus:outline-none bg-white font-medium text-slate-800"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Khóa học tương ứng</label>
+                    <select
+                      value={newClassCourseId}
+                      onChange={(e) => setNewClassCourseId(e.target.value)}
+                      className="w-full border border-slate-200 focus:border-blue-655 rounded-xl py-2.5 px-3 focus:outline-none bg-white font-semibold text-slate-850"
+                    >
+                      <option value="">-- Chọn Khóa Học Target --</option>
+                      {courses.map(c => (
+                        <option key={c.id} value={c.id}>{c.title} ({c.code.toUpperCase()})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={submittingClass}
+                    className="w-full bg-blue-700 hover:bg-blue-800 text-white rounded-xl py-2.5 transition-all font-bold active:scale-95 shadow disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  >
+                    {submittingClass ? 'Đang tạo...' : 'TẠO LỚP HỌC'}
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {/* Right Column: Assign Homework to Class */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-150">
+                <span className="material-symbols-outlined text-indigo-600 font-bold text-xl">assignment_turned_in</span>
+                <h4 className="font-display text-sm font-bold text-[#001e40]">Giao Bài Tập Cho Lớp Học</h4>
+              </div>
+              <form 
+                onSubmit={(e) => {
+                  setAssignHomeworkTargetType('class');
+                  handleAssignHomework(e);
+                }} 
+                className="space-y-4 text-xs font-semibold"
+              >
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Chọn đề thi / bài tập</label>
+                  <select
+                    value={assignHomeworkExamId}
+                    onChange={(e) => setAssignHomeworkExamId(e.target.value)}
+                    className="w-full border border-slate-200 focus:border-blue-655 rounded-xl py-2.5 px-3 focus:outline-none bg-white font-semibold text-slate-850"
+                  >
+                    <option value="">-- Chọn Bài Tập/Đề Thi Đã Đăng --</option>
+                    {publishedExams.map(ex => (
+                      <option key={ex.id} value={ex.id}>
+                        [{ex.type === 'homework' ? 'Bài tập' : 'Full Test'}] {ex.title} ({ex.courses?.title?.split(' ')[0]})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Chọn lớp học nhận bài</label>
+                  <select
+                    value={assignHomeworkClassId}
+                    onChange={(e) => setAssignHomeworkClassId(e.target.value)}
+                    className="w-full border border-slate-200 focus:border-blue-655 rounded-xl py-2.5 px-3 focus:outline-none bg-white font-semibold text-slate-850"
+                  >
+                    <option value="">-- Chọn Lớp Học Nhận Bài --</option>
+                    {classes.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Hạn chót nộp bài (Due date)</label>
+                  <input
+                    type="datetime-local"
+                    value={assignHomeworkDueDate}
+                    onChange={(e) => setAssignHomeworkDueDate(e.target.value)}
+                    className="w-full border border-slate-200 focus:border-blue-655 rounded-xl py-2 px-3 focus:outline-none bg-white font-medium text-slate-800"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submittingHomeworkAssign}
+                  className="w-full bg-indigo-650 hover:bg-indigo-700 text-white rounded-xl py-2.5 transition-all font-bold active:scale-95 shadow disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {submittingHomeworkAssign ? 'Đang giao...' : 'PHÂN PHÁT BÀI TẬP LỚP'}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* List of Active Class Assignments */}
+          <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-150 bg-slate-50/50">
+              <h3 className="font-display text-base font-bold text-[#001e40]">Danh Sách Bài Tập Lớp Đã Giao</h3>
+              <p className="text-slate-400 text-[10px] mt-0.5 font-semibold text-slate-500">Theo dõi và thu hồi các bài tập, bài kiểm tra đang được giao cho các lớp học.</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 border-b border-slate-150 text-[10px] font-extrabold uppercase tracking-wider">
+                    <th className="py-3.5 px-6">Tên đề thi / bài tập</th>
+                    <th className="py-3.5 px-6">Lớp học nhận</th>
+                    <th className="py-3.5 px-6">Hạn chót nộp bài</th>
+                    <th className="py-3.5 px-6">Ngày giao bài</th>
+                    <th className="py-3.5 px-6 text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {assignments.filter(ass => ass.class_id !== null).map(ass => {
+                    const examTitle = ass.exams?.title || ass.exam_title || 'Đề thi đã xóa';
+                    const targetLabel = `Lớp: ${ass.classes?.name || ass.class_name || 'Lớp đã xóa'}`;
+                    
+                    const dueDateLabel = ass.due_date 
+                      ? new Date(ass.due_date).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) 
+                      : 'Không giới hạn';
+                    
+                    const createdAtLabel = new Date(ass.created_at).toLocaleDateString('vi-VN');
+
+                    return (
+                      <tr key={ass.id} className="hover:bg-slate-50/30 transition-all">
+                        <td className="py-4 px-6 font-bold text-[#001e40]">{examTitle}</td>
+                        <td className="py-4 px-6">
+                          <span className="px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-blue-50 text-blue-800">
+                            {targetLabel}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-rose-655 font-bold">{dueDateLabel}</td>
+                        <td className="py-4 px-6 text-slate-450">{createdAtLabel}</td>
+                        <td className="py-4 px-6 text-right">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAssignment(ass.id)}
+                            className="text-red-500 hover:text-red-700 transition-all p-1 flex items-center justify-center inline-flex"
+                            title="Thu hồi bài tập"
+                          >
+                            <span className="material-symbols-outlined text-lg">cancel</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {assignments.filter(ass => ass.class_id !== null).length === 0 && (
+                    <tr>
+                      <td colSpan="5" className="py-10 text-center text-slate-400 italic">
+                        Chưa có bài tập lớp nào được giao.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* TAB 5: QUẢN LÝ HỌC VIÊN */}
+      {activeTab === 'students' && (
+        <div className="space-y-8 animate-fade-in font-semibold">
+          {/* Warning banner if mockMode is active */}
+          {mockMode && (
+            <div className="bg-amber-50/70 border border-amber-200 rounded-3xl p-5 flex items-start gap-4 shadow-sm">
+              <span className="material-symbols-outlined text-amber-600 font-bold text-2xl">warning</span>
+              <div className="space-y-1">
+                <h4 className="text-amber-850 font-bold text-sm">Chế độ giả lập (Mock Mode) đang kích hoạt</h4>
+                <p className="text-amber-700 text-xs leading-relaxed font-medium">
+                  Hệ thống tự động chuyển sang chế độ giả lập dữ liệu do chưa phát hiện thấy bảng <code className="bg-amber-100 px-1 py-0.5 rounded text-amber-900 font-mono">classes</code> và <code className="bg-amber-100 px-1 py-0.5 rounded text-amber-900 font-mono">assignments</code> trong cơ sở dữ liệu Supabase của bạn.
+                </p>
+                <p className="text-amber-700 text-xs font-semibold mt-1">
+                  👉 Hướng dẫn: Copy và chạy các lệnh SQL trong file <a href="file:///d:/RINNDL/web%20ti%E1%BA%BFng%20anh/CAP_NHAT_DATABASE.sql" className="underline font-bold text-amber-800">CAP_NHAT_DATABASE.sql</a> trong Supabase SQL Editor để đồng bộ cấu trúc cơ sở dữ liệu thực tế.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Filter controls */}
+          <div className="flex flex-col md:flex-row gap-4 bg-white border border-slate-200 p-5 rounded-3xl shadow-sm justify-between items-center">
+            <div className="w-full md:max-w-md relative">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-450 text-lg">search</span>
+              <input
+                type="text"
+                value={studentSearch}
+                onChange={(e) => setStudentSearch(e.target.value)}
+                placeholder="Tìm học viên theo tên hoặc email..."
+                className="w-full border border-slate-200 focus:border-blue-655 rounded-xl py-2 pl-10 pr-4 focus:outline-none bg-white text-xs font-medium text-slate-800"
+              />
+            </div>
+
+            <div className="w-full md:w-64 flex items-center gap-2">
+              <span className="text-[10px] font-extrabold uppercase text-slate-500 whitespace-nowrap">Lọc Lớp:</span>
+              <select
+                value={studentClassFilter}
+                onChange={(e) => setStudentClassFilter(e.target.value)}
+                className="w-full border border-slate-200 focus:border-blue-655 rounded-xl py-2 px-3 focus:outline-none bg-white font-semibold text-slate-850 text-xs"
+              >
+                <option value="">Tất cả các lớp</option>
+                {classes.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+                <option value="none">Chưa xếp lớp</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Students List Table */}
+          <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-150 bg-slate-50/50">
+              <h3 className="font-display text-base font-bold text-[#001e40]">Bảng Quản Lý Học Viên</h3>
+              <p className="text-slate-400 text-[10px] mt-0.5 font-semibold text-slate-500">Xem danh sách học viên hiện có và thay đổi lớp trực tiếp bằng ô lựa chọn.</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 border-b border-slate-150 text-[10px] font-extrabold uppercase tracking-wider">
+                    <th className="py-3.5 px-6">Tên học viên</th>
+                    <th className="py-3.5 px-6">Email đăng ký</th>
+                    <th className="py-3.5 px-6">Lớp học hiện tại</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {students
+                    .filter(s => {
+                      const matchesSearch = s.full_name?.toLowerCase().includes(studentSearch.toLowerCase()) || 
+                                            s.email?.toLowerCase().includes(studentSearch.toLowerCase());
+                      const matchesClass = !studentClassFilter 
+                        ? true 
+                        : studentClassFilter === 'none' 
+                          ? !s.class_id 
+                          : s.class_id === studentClassFilter;
+                      return matchesSearch && matchesClass;
+                    })
+                    .map(student => {
+                      return (
+                        <tr key={student.id} className="hover:bg-slate-50/30 transition-all">
+                          <td className="py-4 px-6 font-bold text-[#001e40]">{student.full_name || 'Chưa đặt tên'}</td>
+                          <td className="py-4 px-6 text-slate-505">{student.email || 'N/A'}</td>
+                          <td className="py-4 px-6">
+                            <select
+                              value={student.class_id || ''}
+                              onChange={(e) => handleUpdateStudentClass(student.id, e.target.value)}
+                              className="border border-slate-200 focus:border-blue-650 rounded-xl py-1 px-2 focus:outline-none bg-white font-semibold text-slate-800 text-xs"
+                            >
+                              <option value="">Chưa xếp lớp</option>
+                              {classes.map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  {students.filter(s => {
+                    const matchesSearch = s.full_name?.toLowerCase().includes(studentSearch.toLowerCase()) || 
+                                          s.email?.toLowerCase().includes(studentSearch.toLowerCase());
+                    const matchesClass = !studentClassFilter 
+                      ? true 
+                      : studentClassFilter === 'none' 
+                        ? !s.class_id 
+                        : s.class_id === studentClassFilter;
+                    return matchesSearch && matchesClass;
+                  }).length === 0 && (
+                    <tr>
+                      <td colSpan="3" className="py-10 text-center text-slate-400 italic">
+                        Không tìm thấy học viên nào phù hợp.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* Individual student assignment section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column: Form to assign homework to individual student */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 lg:col-span-1">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-150">
+                <span className="material-symbols-outlined text-[#001e40] font-bold text-xl">person</span>
+                <h4 className="font-display text-sm font-bold text-[#001e40]">Giao Bài Tập Cho Học Viên</h4>
+              </div>
+              <form 
+                onSubmit={(e) => {
+                  setAssignHomeworkTargetType('student');
+                  handleAssignHomework(e);
+                }}
+                className="space-y-4 text-xs font-semibold"
+              >
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Chọn đề thi / bài tập</label>
+                  <select
+                    value={assignHomeworkExamId}
+                    onChange={(e) => setAssignHomeworkExamId(e.target.value)}
+                    className="w-full border border-slate-200 focus:border-[#001e40] rounded-xl py-2 px-3 focus:outline-none bg-white font-semibold text-slate-800"
+                  >
+                    <option value="">-- Chọn Bài Tập/Đề Thi --</option>
+                    {publishedExams.map(ex => (
+                      <option key={ex.id} value={ex.id}>
+                        [{ex.type === 'homework' ? 'Bài tập' : 'Full Test'}] {ex.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Chọn học viên nhận bài</label>
+                  <select
+                    value={assignHomeworkStudentId}
+                    onChange={(e) => setAssignHomeworkStudentId(e.target.value)}
+                    className="w-full border border-slate-200 focus:border-[#001e40] rounded-xl py-2 px-3 focus:outline-none bg-white font-semibold text-slate-800"
+                  >
+                    <option value="">-- Chọn Học Viên --</option>
+                    {students.map(s => (
+                      <option key={s.id} value={s.id}>{s.full_name} ({s.email})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">Hạn chót nộp bài</label>
+                  <input
+                    type="datetime-local"
+                    value={assignHomeworkDueDate}
+                    onChange={(e) => setAssignHomeworkDueDate(e.target.value)}
+                    className="w-full border border-slate-200 focus:border-[#001e40] rounded-xl py-2 px-3 focus:outline-none bg-white font-medium text-slate-800"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submittingHomeworkAssign}
+                  className="w-full bg-[#001e40] hover:bg-[#003366] text-white rounded-xl py-2.5 transition-all font-bold active:scale-95 shadow disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {submittingHomeworkAssign ? 'Đang giao...' : 'PHÂN PHÁT BÀI TẬP CÁ NHÂN'}
+                </button>
+              </form>
+            </div>
+
+            {/* Right Column: List of individual student assignments */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 lg:col-span-2">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-150">
+                <span className="material-symbols-outlined text-[#001e40] font-bold text-xl">assignment_ind</span>
+                <h4 className="font-display text-sm font-bold text-[#001e40]">Danh Sách Bài Tập Cá Nhân Đã Giao</h4>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 border-b border-slate-150 text-[10px] font-extrabold uppercase tracking-wider">
+                      <th className="py-3.5 px-6">Tên đề / bài tập</th>
+                      <th className="py-3.5 px-6">Học viên nhận</th>
+                      <th className="py-3.5 px-6">Hạn chót</th>
+                      <th className="py-3.5 px-6">Ngày giao</th>
+                      <th className="py-3.5 px-6 text-right">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                    {assignments.filter(ass => ass.student_id !== null).map(ass => {
+                      const examTitle = ass.exams?.title || ass.exam_title || 'Đề thi đã xóa';
+                      const targetLabel = ass.profiles?.full_name || ass.student_name || 'Học viên đã xóa';
+                      const dueDateLabel = ass.due_date 
+                        ? new Date(ass.due_date).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) 
+                        : 'Không giới hạn';
+                      const createdAtLabel = new Date(ass.created_at).toLocaleDateString('vi-VN');
+
+                      return (
+                        <tr key={ass.id} className="hover:bg-slate-50/30 transition-all">
+                          <td className="py-4 px-6 font-bold text-[#001e40]">{examTitle}</td>
+                          <td className="py-4 px-6">
+                            <span className="px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-amber-50 text-amber-800">
+                              {targetLabel}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 text-rose-650 font-bold">{dueDateLabel}</td>
+                          <td className="py-4 px-6 text-slate-450">{createdAtLabel}</td>
+                          <td className="py-4 px-6 text-right">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteAssignment(ass.id)}
+                              className="text-red-500 hover:text-red-700 transition-all p-1 inline-flex items-center justify-center"
+                              title="Thu hồi bài tập"
+                            >
+                              <span className="material-symbols-outlined text-lg">cancel</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {assignments.filter(ass => ass.student_id !== null).length === 0 && (
+                      <tr>
+                        <td colSpan="5" className="py-10 text-center text-slate-400 italic">
+                          Chưa có bài tập cá nhân nào được giao.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
 
       {/* Edit Exam Modal */}
