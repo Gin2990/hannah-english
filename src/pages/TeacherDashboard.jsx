@@ -642,17 +642,18 @@ const TeacherDashboard = () => {
     }
   };
 
-  const handleAssignHomework = async (e) => {
+  const handleAssignHomework = async (e, targetTypeOverride = null) => {
     if (e) e.preventDefault();
     if (!assignHomeworkExamId) {
       alert("⚠️ Vui lòng chọn bài tập/đề thi cần giao!");
       return;
     }
-    if (assignHomeworkTargetType === 'class' && !assignHomeworkClassId) {
+    const targetType = targetTypeOverride || assignHomeworkTargetType;
+    if (targetType === 'class' && !assignHomeworkClassId) {
       alert("⚠️ Vui lòng chọn lớp học!");
       return;
     }
-    if (assignHomeworkTargetType === 'student' && !assignHomeworkStudentId) {
+    if (targetType === 'student' && !assignHomeworkStudentId) {
       alert("⚠️ Vui lòng chọn học viên!");
       return;
     }
@@ -666,16 +667,16 @@ const TeacherDashboard = () => {
         id: `mock-assign-${Date.now()}`,
         exam_id: assignHomeworkExamId,
         exam_title: selectedExam.title,
-        class_id: assignHomeworkTargetType === 'class' ? assignHomeworkClassId : null,
-        class_name: assignHomeworkTargetType === 'class' ? targetClass?.name : null,
-        student_id: assignHomeworkTargetType === 'student' ? assignHomeworkStudentId : null,
-        student_name: assignHomeworkTargetType === 'student' ? targetStudent?.full_name : null,
+        class_id: targetType === 'class' ? assignHomeworkClassId : null,
+        class_name: targetType === 'class' ? targetClass?.name : null,
+        student_id: targetType === 'student' ? assignHomeworkStudentId : null,
+        student_name: targetType === 'student' ? targetStudent?.full_name : null,
         due_date: assignHomeworkDueDate ? new Date(assignHomeworkDueDate + 'T23:59:59').toISOString() : null,
         created_at: new Date().toISOString()
       };
       setAssignments(prev => [newAssignItem, ...prev]);
       
-      if (assignHomeworkTargetType === 'class') {
+      if (targetType === 'class') {
         setClasses(prev => prev.map(c => c.id === assignHomeworkClassId ? { ...c, assignment_count: (c.assignment_count || 0) + 1 } : c));
       }
 
@@ -691,8 +692,8 @@ const TeacherDashboard = () => {
       setSubmittingHomeworkAssign(true);
       const payload = {
         exam_id: assignHomeworkExamId,
-        class_id: assignHomeworkTargetType === 'class' ? assignHomeworkClassId : null,
-        student_id: assignHomeworkTargetType === 'student' ? assignHomeworkStudentId : null,
+        class_id: targetType === 'class' ? assignHomeworkClassId : null,
+        student_id: targetType === 'student' ? assignHomeworkStudentId : null,
         due_date: assignHomeworkDueDate ? new Date(assignHomeworkDueDate + 'T23:59:59').toISOString() : null,
         created_by: user?.id
       };
@@ -2474,7 +2475,7 @@ const TeacherDashboard = () => {
               <form 
                 onSubmit={(e) => {
                   setAssignHomeworkTargetType('class');
-                  handleAssignHomework(e);
+                  handleAssignHomework(e, 'class');
                 }} 
                 className="space-y-4 text-xs font-semibold"
               >
@@ -2528,9 +2529,9 @@ const TeacherDashboard = () => {
                 <button
                   type="submit"
                   disabled={submittingHomeworkAssign}
-                  className="w-full bg-indigo-650 hover:bg-indigo-700 text-white rounded-xl py-2.5 transition-all font-bold active:scale-95 shadow disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-2.5 transition-all font-bold active:scale-95 shadow disabled:opacity-50 flex items-center justify-center gap-1.5"
                 >
-                  {submittingHomeworkAssign ? 'Đang giao...' : 'PHÂN PHÁT BÀI TẬP LỚP'}
+                  {submittingHomeworkAssign ? 'Đang giao...' : 'GIAO BÀI TẬP CHO LỚP'}
                 </button>
               </form>
             </div>
@@ -2728,7 +2729,7 @@ const TeacherDashboard = () => {
               <form 
                 onSubmit={(e) => {
                   setAssignHomeworkTargetType('student');
-                  handleAssignHomework(e);
+                  handleAssignHomework(e, 'student');
                 }}
                 className="space-y-4 text-xs font-semibold"
               >
@@ -2784,7 +2785,7 @@ const TeacherDashboard = () => {
                   disabled={submittingHomeworkAssign}
                   className="w-full bg-[#001e40] hover:bg-[#003366] text-white rounded-xl py-2.5 transition-all font-bold active:scale-95 shadow disabled:opacity-50 flex items-center justify-center gap-1.5"
                 >
-                  {submittingHomeworkAssign ? 'Đang giao...' : 'PHÂN PHÁT BÀI TẬP CÁ NHÂN'}
+                  {submittingHomeworkAssign ? 'Đang giao...' : 'GIAO BÀI TẬP CÁ NHÂN'}
                 </button>
               </form>
             </div>
