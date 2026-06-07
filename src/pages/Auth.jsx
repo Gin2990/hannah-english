@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAuth } from '../context/AuthContext';
 
 const Auth = () => {
-  const [mode, setMode] = useState('signin'); // 'signin' or 'signup'
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { session } = useAuth();
+  
+  const queryParams = new URLSearchParams(location.search);
+  const initialMode = queryParams.get('mode') === 'signup' ? 'signup' : 'signin';
+  
+  const [mode, setMode] = useState(initialMode); // 'signin' or 'signup'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -14,9 +21,17 @@ const Auth = () => {
   // Trạng thái kết nối Supabase để hỗ trợ chẩn đoán lỗi tại chỗ
   const [dbStatus, setDbStatus] = useState('checking'); // 'checking', 'connected', 'connected_missing_tables', 'error', 'unconfigured'
   const [dbError, setDbError] = useState('');
-  
-  const { session } = useAuth();
-  const navigate = useNavigate();
+
+  // Tự động chuyển mode khi đường dẫn thay đổi
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const modeParam = params.get('mode');
+    if (modeParam === 'signup') {
+      setMode('signup');
+    } else if (modeParam === 'signin') {
+      setMode('signin');
+    }
+  }, [location.search]);
 
   // Kiểm tra kết nối trực tiếp đến database khi mở trang đăng nhập
   useEffect(() => {

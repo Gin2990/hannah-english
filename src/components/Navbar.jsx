@@ -71,12 +71,29 @@ const Navbar = () => {
             <input class="pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-primary text-xs w-48" placeholder="Tìm kiếm..." type="text"/>
           </div>
           
-          <button 
-            onClick={handleAuthAction}
-            class="bg-primary text-white px-4 py-1.5 rounded-lg font-semibold text-xs hover:bg-primary-container transition-all active:scale-95 shadow-sm"
-          >
-            {user ? 'Đăng xuất' : 'Đăng nhập'}
-          </button>
+          {user ? (
+            <button 
+              onClick={handleAuthAction}
+              class="bg-primary text-white px-4 py-1.5 rounded-lg font-semibold text-xs hover:bg-primary-container transition-all active:scale-95 shadow-sm"
+            >
+              Đăng xuất
+            </button>
+          ) : (
+            <div class="flex items-center gap-2">
+              <button 
+                onClick={() => navigate('/auth?mode=signin')}
+                class="text-slate-700 border border-slate-200 bg-white hover:bg-slate-50 hover:text-primary px-4 py-1.5 rounded-lg font-semibold text-xs transition-all active:scale-95 shadow-sm"
+              >
+                Đăng nhập
+              </button>
+              <button 
+                onClick={() => navigate('/auth?mode=signup')}
+                class="bg-primary text-white px-4 py-1.5 rounded-lg font-semibold text-xs hover:bg-primary-container transition-all active:scale-95 shadow-sm"
+              >
+                Đăng ký
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>
