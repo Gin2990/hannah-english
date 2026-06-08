@@ -615,40 +615,38 @@ const ExamTaker = () => {
                 </div>
               </div>
 
-              {useCountdown && (
-                <div className="flex items-center gap-4 ml-auto min-w-0 shrink-0">
-                  {/* Submit Button next to Timer */}
-                  <button 
-                    onClick={() => isSubmitted ? setShowResult(true) : handleSubmit(true, false)}
-                    className={`px-4 py-2.5 font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow active:scale-97 flex items-center justify-center gap-1.5 shrink-0 ${
-                      isSubmitted 
-                        ? 'bg-emerald-650 hover:bg-emerald-750 text-white' 
-                        : 'bg-[#001e40] hover:bg-[#003366] text-white'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-sm font-bold">
-                      {isSubmitted ? 'bar_chart' : 'done_all'}
-                    </span> 
-                    <span>{isSubmitted ? 'XEM ĐIỂM' : 'NỘP BÀI'}</span>
-                  </button>
+              <div className="flex items-center gap-4 ml-auto min-w-0 shrink-0">
+                {/* Submit Button next to Timer */}
+                <button 
+                  onClick={() => isSubmitted ? setShowResult(true) : handleSubmit(true, false)}
+                  className={`px-4 py-2.5 font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow active:scale-97 flex items-center justify-center gap-1.5 shrink-0 ${
+                    isSubmitted 
+                      ? 'bg-emerald-650 hover:bg-emerald-750 text-white' 
+                      : 'bg-[#001e40] hover:bg-[#003366] text-white'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-sm font-bold">
+                    {isSubmitted ? 'bar_chart' : 'done_all'}
+                  </span> 
+                  <span>{isSubmitted ? 'XEM ĐIỂM' : 'NỘP BÀI'}</span>
+                </button>
 
-                  {/* Countdown Timer */}
-                  <div className="flex flex-col items-center justify-center bg-white border border-indigo-150 px-4 py-2 rounded-xl shadow-sm min-w-[95px] shrink-0">
-                    <span className="text-[9px] font-extrabold text-slate-455 uppercase tracking-wider">Thời gian</span>
-                    <span className={`font-mono text-sm font-bold text-[#001e40] ${timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
-                      {formatTimer()}
-                    </span>
-                  </div>
-                  
-                  {/* Compact Answer Map */}
-                  <div className="flex flex-col gap-1 min-w-max">
-                    <span className="text-[9px] font-extrabold text-slate-455 uppercase tracking-wider">Bản đồ câu hỏi</span>
-                    <div className="overflow-x-auto pr-1 py-0.5 custom-scrollbar">
-                      {renderCompactQuestionMap()}
-                    </div>
+                {/* Countdown Timer */}
+                <div className="flex flex-col items-center justify-center bg-white border border-indigo-150 px-4 py-2 rounded-xl shadow-sm min-w-[95px] shrink-0">
+                  <span className="text-[9px] font-extrabold text-slate-455 uppercase tracking-wider">Thời gian</span>
+                  <span className={`font-mono text-sm font-bold text-[#001e40] ${useCountdown && timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
+                    {formatTimer()}
+                  </span>
+                </div>
+                
+                {/* Compact Answer Map */}
+                <div className="flex flex-col gap-1 min-w-max">
+                  <span className="text-[9px] font-extrabold text-slate-455 uppercase tracking-wider">Bản đồ câu hỏi</span>
+                  <div className="overflow-x-auto pr-1 py-0.5 custom-scrollbar">
+                    {renderCompactQuestionMap()}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         )}
@@ -657,10 +655,10 @@ const ExamTaker = () => {
         <main className="flex-grow flex flex-col lg:flex-row gap-6 p-6 overflow-hidden min-h-0">
           
           {/* COLUMN 1: PASSAGE TEXT OR PDF VIEWER (Left) */}
-          <div className={`bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col lg:h-full relative overflow-hidden min-w-0 ${useCountdown ? 'w-full lg:w-[70%]' : 'flex-grow'}`}>
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col lg:h-full relative overflow-hidden min-w-0 w-full lg:w-[70%]">
             
-            {/* Header section of Column 1 for timed reading tests (placing controls next to passage tabs) */}
-            {!activeAudioUrl && useCountdown && (
+            {/* Header section of Column 1 for reading tests (placing controls next to passage tabs) */}
+            {!activeAudioUrl && (
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 mb-4 border-b border-slate-200 shrink-0">
                 {/* Left side: Tabs if Full Test, otherwise an icon and text label */}
                 {isFullTest ? (
@@ -723,7 +721,7 @@ const ExamTaker = () => {
             )}
 
             {/* Standard tabs for non-timed or audio tests */}
-            {(activeAudioUrl || !useCountdown) && isFullTest && (
+            {activeAudioUrl && isFullTest && (
               <div className="flex overflow-x-auto gap-1 border-b border-slate-200 pb-3 mb-4 shrink-0 max-w-full custom-scrollbar">
                 {exam.test_parts.map((p, idx) => (
                   <button
@@ -754,7 +752,7 @@ const ExamTaker = () => {
             </div>
           </div>
 {/* COLUMN 2: INTERACTIVE BUBBLE SHEET / QUESTIONS LIST (Middle) */}
-          <div className={`shrink-0 bg-white border border-slate-200 p-5 shadow-sm flex flex-col lg:h-full overflow-hidden min-w-0 w-full ${useCountdown ? 'lg:w-[30%]' : 'lg:w-[42%]'}`}>
+          <div className="shrink-0 bg-white border border-slate-200 p-5 shadow-sm flex flex-col lg:h-full overflow-hidden min-w-0 w-full lg:w-[30%]">
             <div className="border-b border-slate-150 pb-3 mb-3 shrink-0 flex justify-between items-center">
               <h3 className="font-extrabold text-xs text-[#001e40] uppercase tracking-wider flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-blue-650 text-base">fact_check</span>
@@ -1041,70 +1039,7 @@ const ExamTaker = () => {
 
           </div>
 
-          {/* COLUMN 3: STICKY CONTROL & NAVIGATION SIDEBAR (Right) */}
-          {!useCountdown && (
-            <div className="w-full lg:w-48 shrink-0 flex flex-col gap-4 lg:h-full overflow-hidden">
-              
-              {/* Timer card */}
-              <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex flex-col justify-center items-center shadow-sm shrink-0 gap-2">
-                <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider text-center">
-                  {useCountdown ? 'Thời gian còn lại' : 'Thời gian làm bài'}
-                </span>
-                <span className={`font-bold text-2xl font-mono text-[#001e40] ${useCountdown && timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
-                  {formatTimer()}
-                </span>
-                
-                <button 
-                  onClick={() => isSubmitted ? setShowResult(true) : handleSubmit(true, false)}
-                  className={`w-full font-extrabold text-[10px] py-3 rounded-xl transition-all shadow active:scale-97 flex items-center justify-center gap-1 ${
-                    isSubmitted 
-                      ? 'bg-emerald-650 hover:bg-emerald-750 text-white' 
-                      : 'bg-[#001e40] hover:bg-[#003366] text-white'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-xs">
-                    {isSubmitted ? 'bar_chart' : 'done_all'}
-                  </span> 
-                  {isSubmitted ? 'XEM LẠI ĐIỂM SỐ' : 'NỘP BÀI'}
-                </button>
-              </div>
-
-              {/* Answer Map navigation for entire full test to easily jump sections */}
-              {isFullTest && (
-                <div className="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col shadow-sm flex-grow min-h-0 overflow-hidden">
-                  <span className="block text-[9px] font-extrabold text-slate-450 uppercase tracking-wider mb-2 pb-2 border-b border-slate-100 shrink-0">
-                    Bản đồ câu hỏi toàn bài
-                  </span>
-                  <div className="flex-grow overflow-y-auto pr-1 custom-scrollbar space-y-3.5 min-h-0">
-                    {exam.test_parts.map((part, pIdx) => {
-                      if (!part.questions || part.questions.length === 0) return null;
-                      return (
-                        <div key={part.part_code} className="space-y-1.5">
-                          <h4 className="text-[8px] font-extrabold text-slate-500 uppercase tracking-wider">
-                            {part.part_name}
-                          </h4>
-                          <div className="flex flex-wrap gap-1.5">
-                            {part.questions.map((q) => {
-                              const isActive = activePartIdx === pIdx;
-                              return (
-                                <button
-                                  key={q.id}
-                                  onClick={() => handleMapClick(pIdx, q.id)}
-                                  className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all border shrink-0 ${getButtonColorClass(q, isActive)}`}
-                                >
-                                  {q.id}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {/* COLUMN 3 removed since layout is unified to 7/3 ratio */}
         </main>
 
         {/* Result Modal Overlay */}
