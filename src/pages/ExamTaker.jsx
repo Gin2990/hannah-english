@@ -618,21 +618,6 @@ const ExamTaker = () => {
               </div>
 
               <div className="flex items-center gap-4 ml-auto min-w-0 shrink-0">
-                {/* Submit Button next to Timer */}
-                <button 
-                  onClick={() => isSubmitted ? setShowResult(true) : handleSubmit(true, false)}
-                  className={`px-4 py-2.5 font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow active:scale-97 flex items-center justify-center gap-1.5 shrink-0 ${
-                    isSubmitted 
-                      ? 'bg-emerald-650 hover:bg-emerald-750 text-white' 
-                      : 'bg-[#001e40] hover:bg-[#003366] text-white'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-sm font-bold">
-                    {isSubmitted ? 'bar_chart' : 'done_all'}
-                  </span> 
-                  <span>{isSubmitted ? 'XEM ĐIỂM' : 'NỘP BÀI'}</span>
-                </button>
-
                 {/* Countdown Timer */}
                 <div className="flex flex-col items-center justify-center bg-white border border-indigo-150 px-4 py-2 rounded-xl shadow-sm min-w-[95px] shrink-0">
                   <span className="text-[9px] font-extrabold text-slate-455 uppercase tracking-wider">Thời gian</span>
@@ -648,6 +633,21 @@ const ExamTaker = () => {
                     {renderCompactQuestionMap()}
                   </div>
                 </div>
+
+                {/* Submit Button next to Timer */}
+                <button 
+                  onClick={() => isSubmitted ? setShowResult(true) : handleSubmit(true, false)}
+                  className={`px-4 py-2.5 font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow active:scale-97 flex items-center justify-center gap-1.5 shrink-0 ${
+                    isSubmitted 
+                      ? 'bg-emerald-650 hover:bg-emerald-750 text-white' 
+                      : 'bg-[#001e40] hover:bg-[#003366] text-white'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-sm font-bold">
+                    {isSubmitted ? 'bar_chart' : 'done_all'}
+                  </span> 
+                  <span>{isSubmitted ? 'XEM ĐIỂM' : 'NỘP BÀI'}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -688,6 +688,22 @@ const ExamTaker = () => {
 
                 {/* Right side: Controls (Submit button, Timer, Map) */}
                 <div className="flex items-center gap-2.5 min-w-0 shrink-0">
+                  {/* Countdown Timer */}
+                  <div className="flex flex-col items-center justify-center bg-white border border-indigo-150 px-2 py-1.5 rounded-xl shadow-sm min-w-[75px] shrink-0">
+                    <span className="text-[8px] font-extrabold text-slate-455 uppercase tracking-wider">Thời gian</span>
+                    <span className={`font-mono text-xs font-bold text-[#001e40] ${useCountdown && timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
+                      {formatTimer()}
+                    </span>
+                  </div>
+                  
+                  {/* Compact Answer Map */}
+                  <div className="flex flex-col gap-0.5 min-w-max">
+                    <span className="text-[8px] font-extrabold text-slate-455 uppercase tracking-wider">Bản đồ câu hỏi</span>
+                    <div className="overflow-x-auto pr-1 py-0.5 custom-scrollbar">
+                      {renderCompactQuestionMap(true)}
+                    </div>
+                  </div>
+
                   {/* Submit Button */}
                   <button 
                     onClick={() => isSubmitted ? setShowResult(true) : handleSubmit(true, false)}
@@ -702,22 +718,6 @@ const ExamTaker = () => {
                     </span> 
                     <span>{isSubmitted ? 'XEM ĐIỂM' : 'NỘP BÀI'}</span>
                   </button>
-
-                  {/* Countdown Timer */}
-                  <div className="flex flex-col items-center justify-center bg-white border border-indigo-150 px-2 py-1.5 rounded-xl shadow-sm min-w-[75px] shrink-0">
-                    <span className="text-[8px] font-extrabold text-slate-455 uppercase tracking-wider">Thời gian</span>
-                    <span className={`font-mono text-xs font-bold text-[#001e40] ${timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
-                      {formatTimer()}
-                    </span>
-                  </div>
-                  
-                  {/* Compact Answer Map */}
-                  <div className="flex flex-col gap-0.5 min-w-max">
-                    <span className="text-[8px] font-extrabold text-slate-455 uppercase tracking-wider">Bản đồ câu hỏi</span>
-                    <div className="overflow-x-auto pr-1 py-0.5 custom-scrollbar">
-                      {renderCompactQuestionMap(true)}
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
