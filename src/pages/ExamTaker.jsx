@@ -166,29 +166,53 @@ const ExamTaker = () => {
 
       setExam(data);
 
-      // Đọc cấu hình thời gian làm bài từ Trang Intro (chỉ áp dụng cho Bài Tập)
       const queryParams = new URLSearchParams(location.search);
-      const timeLimitParam = queryParams.get('timeLimit'); // 'unlimited' hoặc số phút
+      const resultId = queryParams.get('resultId');
 
-      if (data.type === 'homework') {
-        if (!timeLimitParam || timeLimitParam === 'unlimited') {
-          // Luyện tập tự do -> Đếm tiến
-          setUseCountdown(false);
-          setTotalTime(0);
-          setTimeRemaining(0);
-        } else {
-          // Luyện tập có chọn giới hạn thời gian -> Đếm ngược
-          const selectedMinutes = parseInt(timeLimitParam);
-          setUseCountdown(true);
-          setTotalTime(selectedMinutes * 60);
-          setTimeRemaining(selectedMinutes * 60);
+      if (resultId) {
+        // Load past student attempt
+        const { data: resultData, error: resultErr } = await supabase
+          .from('exam_results')
+          .select('*')
+          .eq('id', resultId)
+          .single();
+        
+        if (!resultErr && resultData) {
+          setStudentAnswers(resultData.answers || {});
+          setIsSubmitted(true);
+          setShowResult(true);
+          setScoreData({
+            score: resultData.score,
+            total: resultData.total_questions,
+            accuracy: resultData.total_questions > 0 ? Math.round((resultData.score / resultData.total_questions) * 100) : 0,
+            timeTaken: Math.ceil(resultData.duration_seconds / 60)
+          });
+          setElapsedSeconds(resultData.duration_seconds || 0);
         }
       } else {
-        // Đề thi thử Full Test -> Bắt buộc Đếm ngược thời gian chuẩn của đề
-        const defaultSeconds = data.duration * 60;
-        setUseCountdown(true);
-        setTotalTime(defaultSeconds);
-        setTimeRemaining(defaultSeconds);
+        // Đọc cấu hình thời gian làm bài từ Trang Intro (chỉ áp dụng cho Bài Tập)
+        const timeLimitParam = queryParams.get('timeLimit'); // 'unlimited' hoặc số phút
+
+        if (data.type === 'homework') {
+          if (!timeLimitParam || timeLimitParam === 'unlimited') {
+            // Luyện tập tự do -> Đếm tiến
+            setUseCountdown(false);
+            setTotalTime(0);
+            setTimeRemaining(0);
+          } else {
+            // Luyện tập có chọn giới hạn thời gian -> Đếm ngược
+            const selectedMinutes = parseInt(timeLimitParam);
+            setUseCountdown(true);
+            setTotalTime(selectedMinutes * 60);
+            setTimeRemaining(selectedMinutes * 60);
+          }
+        } else {
+          // Đề thi thử Full Test -> Bắt buộc Đếm ngược thời gian chuẩn của đề
+          const defaultSeconds = data.duration * 60;
+          setUseCountdown(true);
+          setTotalTime(defaultSeconds);
+          setTimeRemaining(defaultSeconds);
+        }
       }
     } catch (err) {
       console.error("Lỗi nạp phòng thi:", err);
@@ -491,6 +515,18 @@ const ExamTaker = () => {
               />
               <span>Hiển thị đáp án chi tiết</span>
             </label>
+          </div>
+        )}
+
+        {isSubmitted && !isTeacherMode && (
+          <div className="bg-indigo-50 border-b border-indigo-200 py-2.5 px-6 flex items-center justify-between text-[11px] font-bold text-indigo-800 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-indigo-600 text-sm">assignment_turned_in</span>
+              <span>BẠN ĐANG XEM LẠI BÀI LÀM (KẾT QUẢ ĐÃ ĐƯỢC LƯU VÀO HỆ THỐNG)</span>
+            </div>
+            <div className="text-indigo-900 font-extrabold text-[11px]">
+              Đúng: {scoreData.score}/{scoreData.total} ({scoreData.accuracy}%) • Thời gian: {scoreData.timeTaken} phút
+            </div>
           </div>
         )}
 

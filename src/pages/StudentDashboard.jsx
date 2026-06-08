@@ -42,6 +42,7 @@ const StudentDashboard = () => {
           taken_at,
           exam_id,
           exams (
+            id,
             title,
             course_id,
             type,
@@ -373,6 +374,7 @@ const StudentDashboard = () => {
                   <th className="py-3.5 px-6">Đúng / Tổng câu</th>
                   <th className="py-3.5 px-6">Độ chính xác</th>
                   <th className="py-3.5 px-6 text-right">Điểm quy đổi</th>
+                  <th className="py-3.5 px-6 text-center">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -428,12 +430,35 @@ const StudentDashboard = () => {
                           {scoreDisplay} {isToeic ? 'Điểm' : 'Band'}
                         </span>
                       </td>
+                      <td className="py-4 px-6 text-center">
+                        {exam ? (
+                          <div className="flex justify-center items-center gap-2">
+                            <Link
+                              to={`/exam-taker/${attempt.exam_id}?resultId=${attempt.id}`}
+                              target="_blank"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl font-bold text-[10px] transition-all hover:scale-105 active:scale-95 shadow-sm"
+                            >
+                              <span className="material-symbols-outlined text-[13px] font-bold">visibility</span>
+                              <span>Xem lại</span>
+                            </Link>
+                            <button
+                              onClick={() => handleStartExam(exam)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#001e40] hover:bg-[#003366] text-white rounded-xl font-bold text-[10px] transition-all hover:scale-105 active:scale-95 shadow-sm"
+                            >
+                              <span className="material-symbols-outlined text-[13px] font-bold">replay</span>
+                              <span>Làm lại</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic">Không khả dụng</span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
                 {examResults.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="py-12 text-center text-slate-400 italic font-semibold">
+                    <td colSpan="7" className="py-12 text-center text-slate-400 italic font-semibold">
                       Bạn chưa hoàn thành bài thi trực tuyến nào trên hệ thống.
                     </td>
                   </tr>
