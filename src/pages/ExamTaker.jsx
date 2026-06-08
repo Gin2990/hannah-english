@@ -595,23 +595,14 @@ const ExamTaker = () => {
                   </span>
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 </div>
-                <div className="flex-grow">
-                  {activeAudioUrl.includes('drive.google.com') || activeAudioUrl.includes('docs.google.com') ? (
-                    <iframe
-                      key={activeAudioUrl}
-                      src={convertGoogleDrivePdfLink(activeAudioUrl)}
-                      className="w-full h-[45px] rounded-xl border-0 bg-transparent"
-                      allow="autoplay"
-                    />
-                  ) : (
-                    <audio
-                      key={activeAudioUrl}
-                      src={convertGoogleDriveAudioLink(activeAudioUrl)}
-                      controls
-                      className="w-full h-8 outline-none"
-                      controlsList="nodownload"
-                    />
-                  )}
+                <div className="flex-grow flex items-center">
+                  <audio
+                    key={activeAudioUrl}
+                    src={convertGoogleDriveAudioLink(activeAudioUrl)}
+                    controls
+                    className="w-full h-9 outline-none"
+                    controlsList="nodownload"
+                  />
                 </div>
               </div>
 
@@ -1177,23 +1168,14 @@ const ExamTaker = () => {
                   </div>
                 </div>
                 
-                <div className="flex-grow w-full">
-                  {activeAudioUrl.includes('drive.google.com') || activeAudioUrl.includes('docs.google.com') ? (
-                    <iframe
-                      key={activeAudioUrl}
-                      src={convertGoogleDrivePdfLink(activeAudioUrl)}
-                      className="w-full h-[55px] rounded-xl border-0 bg-transparent"
-                      allow="autoplay"
-                    />
-                  ) : (
-                    <audio 
-                      key={activeAudioUrl}
-                      src={convertGoogleDriveAudioLink(activeAudioUrl)} 
-                      controls 
-                      className="w-full h-8 rounded-lg outline-none cursor-pointer"
-                      controlsList="nodownload"
-                    />
-                  )}
+                <div className="flex-grow w-full flex items-center">
+                  <audio 
+                    key={activeAudioUrl}
+                    src={convertGoogleDriveAudioLink(activeAudioUrl)} 
+                    controls 
+                    className="w-full h-9 rounded-lg outline-none cursor-pointer"
+                    controlsList="nodownload"
+                  />
                 </div>
               </div>
             )}
