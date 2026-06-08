@@ -584,7 +584,7 @@ const ExamTaker = () => {
         {activeAudioUrl && (
           <div className="px-6 pt-4 shrink-0 bg-transparent animate-fade-in">
             <div className="w-full mx-auto bg-indigo-50 border border-indigo-200/85 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-6">
-              <div className="flex items-center gap-4 flex-grow max-w-[600px] shrink-0">
+              <div className="flex items-center gap-4 flex-grow max-w-[520px] shrink-0">
                 <div className="flex items-center gap-2 text-indigo-900 shrink-0">
                   <span className="material-symbols-outlined text-lg font-bold">headphones</span>
                   <span className="text-[10px] font-extrabold uppercase tracking-wider">
@@ -640,7 +640,7 @@ const ExamTaker = () => {
                   </div>
                   
                   {/* Compact Answer Map */}
-                  <div className="flex flex-col gap-1 max-w-[420px] lg:max-w-[580px] min-w-0">
+                  <div className="flex flex-col gap-1 min-w-max">
                     <span className="text-[9px] font-extrabold text-slate-455 uppercase tracking-wider">Bản đồ câu hỏi</span>
                     <div className="overflow-x-auto pr-1 py-0.5 custom-scrollbar">
                       {renderCompactQuestionMap()}
