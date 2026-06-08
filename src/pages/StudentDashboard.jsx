@@ -114,12 +114,10 @@ const StudentDashboard = () => {
   // Tính toán các nhóm bài tập và thông báo dựa trên dữ liệu thật
   const completedExamIds = new Set(examResults.map(r => r.exam_id));
 
-  // 1. Bài cần hoàn thành (Chưa làm, hạn nộp ở tương lai hoặc không giới hạn)
+  // 1. Bài cần hoàn thành (Chưa làm, bao gồm cả bài trong hạn và quá hạn)
   const pendingAssignments = assignments.filter(ass => {
     if (!ass.exams) return false;
-    if (completedExamIds.has(ass.exam_id)) return false;
-    if (!ass.due_date) return true;
-    return new Date(ass.due_date) >= new Date();
+    return !completedExamIds.has(ass.exam_id);
   });
 
   // 2. Bài quá hạn (Chưa làm, hạn nộp ở quá khứ)
@@ -267,6 +265,7 @@ const StudentDashboard = () => {
                   const exam = ass.exams;
                   const isTest = exam.type === 'test';
                   const courseLabel = exam.courses.code.toUpperCase();
+                  const isOverdue = ass.due_date && new Date(ass.due_date) < new Date();
                   const dueDateLabel = ass.due_date 
                     ? `Hạn nộp: ${new Date(ass.due_date).toLocaleString('vi-VN')}` 
                     : 'Không giới hạn thời gian nộp';
@@ -280,7 +279,9 @@ const StudentDashboard = () => {
                           }`}>
                             {courseLabel} • {isTest ? 'Thi thử' : 'Luyện tập'}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-semibold">{dueDateLabel}</span>
+                          <span className={`text-[10px] font-semibold ${isOverdue ? 'text-rose-600 font-bold' : 'text-slate-400'}`}>
+                            {dueDateLabel} {isOverdue && '• QUÁ HẠN'}
+                          </span>
                         </div>
                         <h4 className="font-extrabold text-sm text-[#001e40] leading-snug truncate" title={exam.title}>
                           {exam.title}
