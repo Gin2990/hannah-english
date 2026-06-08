@@ -341,6 +341,56 @@ const ExamTaker = () => {
     setShowResult(true);
   };
 
+  const renderCompactQuestionMap = () => {
+    let allQuestionsList = [];
+    if (exam?.test_parts && exam.test_parts.length > 0) {
+      exam.test_parts.forEach(p => {
+        if (p.questions) allQuestionsList = [...allQuestionsList, ...p.questions];
+      });
+    } else {
+      allQuestionsList = exam?.questions || [];
+    }
+
+    if (allQuestionsList.length === 0) return null;
+
+    const half = Math.ceil(allQuestionsList.length / 2);
+    const row1 = allQuestionsList.slice(0, half);
+    const row2 = allQuestionsList.slice(half);
+
+    const renderRow = (rowItems, startIdxOffset) => (
+      <div className="flex gap-1 flex-nowrap">
+        {rowItems.map((q, idx) => {
+          const qIndex = startIdxOffset + idx + 1;
+          const qLabel = isFullTest ? q.id : qIndex;
+          
+          let partIndex = 0;
+          if (isFullTest) {
+            partIndex = exam.test_parts.findIndex(p => p.questions.some(pq => pq.id === q.id));
+          }
+          const isActive = isFullTest ? (activePartIdx === partIndex) : true;
+          
+          return (
+            <button
+              key={q.id}
+              onClick={() => handleMapClick(partIndex, q.id)}
+              className={`w-5 h-5 text-[8px] font-bold flex items-center justify-center rounded transition-all border shrink-0 ${getButtonColorClass(q, isActive)}`}
+              title={`Câu ${qLabel}`}
+            >
+              {qLabel}
+            </button>
+          );
+        })}
+      </div>
+    );
+
+    return (
+      <div className="flex flex-col gap-1 min-w-0">
+        {renderRow(row1, 0)}
+        {renderRow(row2, half)}
+      </div>
+    );
+  };
+
   const formatTimer = () => {
     if (isTeacherMode) return "Teacher Mode";
     const time = useCountdown ? timeRemaining : elapsedSeconds;
@@ -534,33 +584,55 @@ const ExamTaker = () => {
         {activeAudioUrl && (
           <div className="px-6 pt-4 shrink-0 bg-transparent">
             <div className="w-full mx-auto bg-indigo-50 border border-indigo-200/85 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2 text-indigo-900 shrink-0">
-                <span className="material-symbols-outlined text-lg font-bold">headphones</span>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider">
-                  {isFullTest 
-                    ? (currentPart?.audio_url ? `Audio: ${currentPart.part_name}` : 'Audio Toàn Bài Thi') 
-                    : 'File nghe bài tập'}
-                </span>
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <div className="flex items-center gap-4 shrink-0">
+                <div className="flex items-center gap-2 text-indigo-900 shrink-0">
+                  <span className="material-symbols-outlined text-lg font-bold">headphones</span>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider">
+                    {isFullTest 
+                      ? (currentPart?.audio_url ? `Audio: ${currentPart.part_name}` : 'Audio Toàn Bài Thi') 
+                      : 'File nghe bài tập'}
+                  </span>
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                </div>
+                <div className={`${useCountdown ? 'w-[280px] md:w-[350px] shrink-0' : 'flex-grow max-w-xl'}`}>
+                  {activeAudioUrl.includes('drive.google.com') || activeAudioUrl.includes('docs.google.com') ? (
+                    <iframe
+                      key={activeAudioUrl}
+                      src={convertGoogleDrivePdfLink(activeAudioUrl)}
+                      className="w-full h-[45px] rounded-xl border-0 bg-transparent"
+                      allow="autoplay"
+                    />
+                  ) : (
+                    <audio
+                      key={activeAudioUrl}
+                      src={convertGoogleDriveAudioLink(activeAudioUrl)}
+                      controls
+                      className="w-full h-8 outline-none"
+                      controlsList="nodownload"
+                    />
+                  )}
+                </div>
               </div>
-              <div className="flex-grow max-w-full">
-                {activeAudioUrl.includes('drive.google.com') || activeAudioUrl.includes('docs.google.com') ? (
-                  <iframe
-                    key={activeAudioUrl}
-                    src={convertGoogleDrivePdfLink(activeAudioUrl)}
-                    className="w-full h-[55px] rounded-xl border-0 bg-transparent"
-                    allow="autoplay"
-                  />
-                ) : (
-                  <audio
-                    key={activeAudioUrl}
-                    src={convertGoogleDriveAudioLink(activeAudioUrl)}
-                    controls
-                    className="w-full h-8 outline-none"
-                    controlsList="nodownload"
-                  />
-                )}
-              </div>
+
+              {useCountdown && (
+                <div className="flex items-center gap-6 ml-auto min-w-0">
+                  {/* Countdown Timer */}
+                  <div className="flex flex-col items-center justify-center bg-white border border-indigo-150 px-3 py-1 rounded-xl shadow-sm min-w-[80px] shrink-0">
+                    <span className="text-[8px] font-extrabold text-slate-400 uppercase tracking-wider">Thời gian</span>
+                    <span className={`font-mono text-xs font-bold text-[#001e40] ${timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
+                      {formatTimer()}
+                    </span>
+                  </div>
+                  
+                  {/* Compact Answer Map */}
+                  <div className="flex flex-col gap-1 max-w-[320px] md:max-w-[420px] min-w-0">
+                    <span className="text-[8px] font-extrabold text-slate-400 uppercase tracking-wider">Bản đồ câu hỏi</span>
+                    <div className="overflow-x-auto pr-1 py-0.5 custom-scrollbar">
+                      {renderCompactQuestionMap()}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -569,7 +641,7 @@ const ExamTaker = () => {
         <main className="flex-grow flex flex-col lg:flex-row gap-6 p-6 overflow-hidden min-h-0">
           
           {/* COLUMN 1: PASSAGE TEXT OR PDF VIEWER (Left) */}
-          <div className="flex-grow bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col lg:h-full relative overflow-hidden min-w-0">
+          <div className={`bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col lg:h-full relative overflow-hidden min-w-0 ${useCountdown ? 'w-full lg:w-[70%]' : 'flex-grow'}`}>
             
             {/* 1. TABS SWAPPER FOR FULL TEST INSIDE SPLIT SCREEN */}
             {isFullTest && (
@@ -603,7 +675,7 @@ const ExamTaker = () => {
             </div>
           </div>
 {/* COLUMN 2: INTERACTIVE BUBBLE SHEET / QUESTIONS LIST (Middle) */}
-          <div className="w-full lg:w-[42%] shrink-0 bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col lg:h-full overflow-hidden min-w-0">
+          <div className={`shrink-0 bg-white border border-slate-200 p-5 shadow-sm flex flex-col lg:h-full overflow-hidden min-w-0 w-full ${useCountdown ? 'lg:w-[30%]' : 'lg:w-[42%]'}`}>
             <div className="border-b border-slate-150 pb-3 mb-3 shrink-0 flex justify-between items-center">
               <h3 className="font-extrabold text-xs text-[#001e40] uppercase tracking-wider flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-blue-650 text-base">fact_check</span>
@@ -613,6 +685,24 @@ const ExamTaker = () => {
                 {Object.keys(studentAnswers).filter(k => currentQuestions.some(q => q.id === parseInt(k) || q.id === k)).length} / {currentQuestions.length} câu
               </span>
             </div>
+
+            {/* Compact Countdown & Map for reading/writing tests with a time limit (no top audio bar) */}
+            {!activeAudioUrl && useCountdown && (
+              <div className="bg-slate-50 border border-slate-200 p-3 rounded-2xl flex items-center justify-between shadow-sm shrink-0 gap-4 mb-4">
+                <div className="flex flex-col items-center justify-center bg-white border border-slate-150 px-2 py-1 rounded-xl shadow-sm min-w-[70px] shrink-0">
+                  <span className="text-[7px] font-extrabold text-slate-400 uppercase tracking-wider">Thời gian</span>
+                  <span className={`font-mono text-[11px] font-bold text-[#001e40] ${timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
+                    {formatTimer()}
+                  </span>
+                </div>
+                <div className="flex-grow min-w-0">
+                  <span className="block text-[7px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Bản đồ câu hỏi</span>
+                  <div className="overflow-x-auto pr-1 py-0.5 custom-scrollbar">
+                    {renderCompactQuestionMap()}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex-grow overflow-y-auto pr-1 space-y-4 custom-scrollbar text-xs min-h-0">
               {(() => {
@@ -887,70 +977,91 @@ const ExamTaker = () => {
                 </div>
               )}
             </div>
-          </div>
 
-          {/* COLUMN 3: STICKY CONTROL & NAVIGATION SIDEBAR (Right) */}
-          <div className="w-full lg:w-48 shrink-0 flex flex-col gap-4 lg:h-full overflow-hidden">
-            
-            {/* Timer card */}
-            <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex flex-col justify-center items-center shadow-sm shrink-0 gap-2">
-              <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider text-center">
-                {useCountdown ? 'Thời gian còn lại' : 'Thời gian làm bài'}
-              </span>
-              <span className={`font-bold text-2xl font-mono text-[#001e40] ${useCountdown && timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
-                {formatTimer()}
-              </span>
-              
-              <button 
-                onClick={() => isSubmitted ? setShowResult(true) : handleSubmit(true, false)}
-                className={`w-full font-extrabold text-[10px] py-3 rounded-xl transition-all shadow active:scale-97 flex items-center justify-center gap-1 ${
-                  isSubmitted 
-                    ? 'bg-emerald-650 hover:bg-emerald-750 text-white' 
-                    : 'bg-[#001e40] hover:bg-[#003366] text-white'
-                }`}
-              >
-                <span className="material-symbols-outlined text-xs">
-                  {isSubmitted ? 'bar_chart' : 'done_all'}
-                </span> 
-                {isSubmitted ? 'XEM LẠI ĐIỂM SỐ' : 'NỘP BÀI'}
-              </button>
-            </div>
-
-            {/* Answer Map navigation for entire full test to easily jump sections */}
-            {isFullTest && (
-              <div className="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col shadow-sm flex-grow min-h-0 overflow-hidden">
-                <span className="block text-[9px] font-extrabold text-slate-450 uppercase tracking-wider mb-2 pb-2 border-b border-slate-100 shrink-0">
-                  Bản đồ câu hỏi toàn bài
-                </span>
-                <div className="flex-grow overflow-y-auto pr-1 custom-scrollbar space-y-3.5 min-h-0">
-                  {exam.test_parts.map((part, pIdx) => {
-                    if (!part.questions || part.questions.length === 0) return null;
-                    return (
-                      <div key={part.part_code} className="space-y-1.5">
-                        <h4 className="text-[8px] font-extrabold text-slate-500 uppercase tracking-wider">
-                          {part.part_name}
-                        </h4>
-                        <div className="flex flex-wrap gap-1.5">
-                          {part.questions.map((q) => {
-                            const isActive = activePartIdx === pIdx;
-                            return (
-                              <button
-                                key={q.id}
-                                onClick={() => handleMapClick(pIdx, q.id)}
-                                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all border shrink-0 ${getButtonColorClass(q, isActive)}`}
-                              >
-                                {q.id}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+            {/* Submit button at the bottom of Column 2 when sidebar is removed in 7/3 layout */}
+            {useCountdown && (
+              <div className="pt-3 border-t border-slate-150 mt-3 shrink-0">
+                <button 
+                  onClick={() => isSubmitted ? setShowResult(true) : handleSubmit(true, false)}
+                  className={`w-full py-2.5 font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow active:scale-97 flex items-center justify-center gap-1.5 ${
+                    isSubmitted 
+                      ? 'bg-emerald-650 hover:bg-emerald-750 text-white' 
+                      : 'bg-[#001e40] hover:bg-[#003366] text-white'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-xs">
+                    {isSubmitted ? 'bar_chart' : 'done_all'}
+                  </span> 
+                  <span>{isSubmitted ? 'XEM LẠI ĐIỂM SỐ' : 'NỘP BÀI'}</span>
+                </button>
               </div>
             )}
           </div>
+
+          {/* COLUMN 3: STICKY CONTROL & NAVIGATION SIDEBAR (Right) */}
+          {!useCountdown && (
+            <div className="w-full lg:w-48 shrink-0 flex flex-col gap-4 lg:h-full overflow-hidden">
+              
+              {/* Timer card */}
+              <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex flex-col justify-center items-center shadow-sm shrink-0 gap-2">
+                <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider text-center">
+                  {useCountdown ? 'Thời gian còn lại' : 'Thời gian làm bài'}
+                </span>
+                <span className={`font-bold text-2xl font-mono text-[#001e40] ${useCountdown && timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
+                  {formatTimer()}
+                </span>
+                
+                <button 
+                  onClick={() => isSubmitted ? setShowResult(true) : handleSubmit(true, false)}
+                  className={`w-full font-extrabold text-[10px] py-3 rounded-xl transition-all shadow active:scale-97 flex items-center justify-center gap-1 ${
+                    isSubmitted 
+                      ? 'bg-emerald-650 hover:bg-emerald-750 text-white' 
+                      : 'bg-[#001e40] hover:bg-[#003366] text-white'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-xs">
+                    {isSubmitted ? 'bar_chart' : 'done_all'}
+                  </span> 
+                  {isSubmitted ? 'XEM LẠI ĐIỂM SỐ' : 'NỘP BÀI'}
+                </button>
+              </div>
+
+              {/* Answer Map navigation for entire full test to easily jump sections */}
+              {isFullTest && (
+                <div className="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col shadow-sm flex-grow min-h-0 overflow-hidden">
+                  <span className="block text-[9px] font-extrabold text-slate-450 uppercase tracking-wider mb-2 pb-2 border-b border-slate-100 shrink-0">
+                    Bản đồ câu hỏi toàn bài
+                  </span>
+                  <div className="flex-grow overflow-y-auto pr-1 custom-scrollbar space-y-3.5 min-h-0">
+                    {exam.test_parts.map((part, pIdx) => {
+                      if (!part.questions || part.questions.length === 0) return null;
+                      return (
+                        <div key={part.part_code} className="space-y-1.5">
+                          <h4 className="text-[8px] font-extrabold text-slate-500 uppercase tracking-wider">
+                            {part.part_name}
+                          </h4>
+                          <div className="flex flex-wrap gap-1.5">
+                            {part.questions.map((q) => {
+                              const isActive = activePartIdx === pIdx;
+                              return (
+                                <button
+                                  key={q.id}
+                                  onClick={() => handleMapClick(pIdx, q.id)}
+                                  className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all border shrink-0 ${getButtonColorClass(q, isActive)}`}
+                                >
+                                  {q.id}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </main>
 
         {/* Result Modal Overlay */}

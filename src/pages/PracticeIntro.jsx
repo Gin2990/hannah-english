@@ -160,9 +160,12 @@ const PracticeIntro = () => {
             className="w-full text-xs font-bold text-[#001e40] border border-[#c3c6d1] rounded-2xl py-3 px-4 focus:outline-none focus:border-[#001e40] bg-white cursor-pointer"
           >
             <option value="unlimited">-- Làm tự do (Không giới hạn thời gian) --</option>
-            {exercise?.allowed_durations && exercise.allowed_durations.map(dur => (
-              <option key={dur} value={dur}>{dur} phút</option>
-            ))}
+            <option value="10">10 phút</option>
+            <option value="15">15 phút</option>
+            <option value="20">20 phút</option>
+            <option value="30">30 phút</option>
+            <option value="40">40 phút</option>
+            <option value="45">45 phút</option>
           </select>
         </div>
 
