@@ -317,7 +317,7 @@ const StudentDashboard = () => {
             
           </div>
 
-          {/* Right Column: Activity Notifications & Score History (col-span-4) */}
+          {/* Right Column: Activity Notifications (col-span-4) */}
           <div className="col-span-12 lg:col-span-4 flex flex-col gap-8">
             
             {/* Activity Notifications */}
@@ -347,51 +347,101 @@ const StudentDashboard = () => {
               </div>
             </section>
 
-            {/* Score History */}
-            <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
-              <div className="p-5 border-b border-slate-150 bg-slate-50/50 flex justify-between items-center">
-                <h3 className="font-display text-xs font-extrabold uppercase tracking-widest text-[#001e40]">Lịch sử điểm số</h3>
-                <Link to="/profile" className="text-[#001e40] font-bold text-xs hover:underline flex items-center gap-0.5">
-                  <span>Chi tiết</span>
-                  <span className="material-symbols-outlined text-xs">arrow_forward</span>
-                </Link>
-              </div>
-
-              <div className="p-5 space-y-4 max-h-[300px] overflow-y-auto custom-preview-scrollbar">
-                {examResults.map((attempt, idx) => {
-                  const accuracy = attempt.total_questions > 0 ? Math.round((attempt.score / attempt.total_questions) * 100) : 0;
-                  const dateStr = new Date(attempt.taken_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                  
-                  const isToeic = attempt.exams?.courses?.code?.toLowerCase() === 'toeic';
-                  const scoreDisplay = isToeic ? `${Math.round(accuracy * 9.9)}` : `${(accuracy / 10).toFixed(1)}`;
-
-                  return (
-                    <div key={idx} className="flex items-center gap-4 border-b border-slate-50 pb-4 last:border-0 last:pb-0">
-                      <div className="w-12 h-12 bg-indigo-50/50 text-[#001b3c] rounded-xl flex items-center justify-center font-extrabold text-sm shrink-0 border border-blue-150">
-                        {scoreDisplay}
-                      </div>
-                      <div className="flex-grow overflow-hidden">
-                        <h4 className="font-extrabold text-xs text-[#001e40] truncate" title={attempt.exams?.title}>
-                          {attempt.exams?.title || "Bài thi online"}
-                        </h4>
-                        <p className="text-[9px] text-slate-400 font-bold mt-0.5">
-                          Đúng {attempt.score}/{attempt.total_questions} • Ngày {dateStr}
-                        </p>
-                      </div>
-                      <span className="material-symbols-outlined text-slate-400 text-sm font-bold">chevron_right</span>
-                    </div>
-                  );
-                })}
-
-                {examResults.length === 0 && (
-                  <p className="text-xs text-slate-400 italic py-8 text-center font-semibold">Bạn chưa thực hiện bài thi trực tuyến nào.</p>
-                )}
-              </div>
-            </section>
-
           </div>
 
         </div>
+
+        {/* Full-width Score History Section */}
+        <section className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-slate-150 bg-slate-50/50 flex justify-between items-center">
+            <div>
+              <h3 className="font-display text-base font-bold text-[#001e40]">Lịch Sử Kết Quả Luyện Thi</h3>
+              <p className="text-slate-400 text-[10px] mt-0.5">Bảng thống kê điểm số và quá trình làm bài của bạn trên hệ thống.</p>
+            </div>
+            <span className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-full font-bold text-[10px] text-blue-700">
+              Đã làm {examResults.length} bài
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-slate-50 text-slate-500 border-b border-slate-150 text-[10px] font-extrabold uppercase tracking-wider">
+                  <th className="py-3.5 px-6">Đề thi / Bài tập</th>
+                  <th className="py-3.5 px-6">Khóa học</th>
+                  <th className="py-3.5 px-6">Thời gian nộp</th>
+                  <th className="py-3.5 px-6">Đúng / Tổng câu</th>
+                  <th className="py-3.5 px-6">Độ chính xác</th>
+                  <th className="py-3.5 px-6 text-right">Điểm quy đổi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                {examResults.map((attempt, idx) => {
+                  const accuracy = attempt.total_questions > 0 ? Math.round((attempt.score / attempt.total_questions) * 100) : 0;
+                  const dateStr = new Date(attempt.taken_at).toLocaleString('vi-VN', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  });
+                  
+                  const isToeic = attempt.exams?.courses?.code?.toLowerCase() === 'toeic';
+                  const scoreDisplay = isToeic ? `${Math.round(accuracy * 9.9)}` : `${(accuracy / 10).toFixed(1)}`;
+                  const exam = attempt.exams;
+                  const isTest = exam?.type === 'test';
+                  
+                  return (
+                    <tr key={idx} className="hover:bg-slate-50/30 transition-all">
+                      <td className="py-4 px-6">
+                        <div className="space-y-1">
+                          <span className={`px-2 py-0.5 rounded-lg text-[9px] font-extrabold uppercase tracking-wider ${
+                            isTest ? 'bg-rose-50 text-rose-700 border border-rose-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                          }`}>
+                            {isTest ? 'Thi thử' : 'Luyện tập'}
+                          </span>
+                          <p className="font-bold text-[#001e40] mt-1">{exam?.title || "Đề thi đã xóa"}</p>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 text-slate-500">
+                        {exam?.courses?.title || 'N/A'}
+                      </td>
+                      <td className="py-4 px-6 text-slate-450">
+                        {dateStr}
+                      </td>
+                      <td className="py-4 px-6 font-bold text-slate-600">
+                        {attempt.score} / {attempt.total_questions}
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-2 max-w-[120px]">
+                          <div className="flex-grow h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full ${accuracy >= 80 ? 'bg-emerald-500' : accuracy >= 50 ? 'bg-indigo-500' : 'bg-rose-500'}`}
+                              style={{ width: `${accuracy}%` }}
+                            />
+                          </div>
+                          <span className="font-extrabold text-[10px] text-slate-500 shrink-0">{accuracy}%</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 text-right font-extrabold text-[#001e40] text-sm">
+                        <span className="px-2.5 py-1 bg-indigo-50 text-indigo-800 rounded-lg border border-indigo-150">
+                          {scoreDisplay} {isToeic ? 'Điểm' : 'Band'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {examResults.length === 0 && (
+                  <tr>
+                    <td colSpan="6" className="py-12 text-center text-slate-400 italic font-semibold">
+                      Bạn chưa hoàn thành bài thi trực tuyến nào trên hệ thống.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
       </main>
     </div>
