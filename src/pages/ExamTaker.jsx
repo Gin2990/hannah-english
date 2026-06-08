@@ -358,7 +358,7 @@ const ExamTaker = () => {
     const row2 = allQuestionsList.slice(half);
 
     const renderRow = (rowItems, startIdxOffset) => (
-      <div className="flex gap-1 flex-nowrap">
+      <div className="flex gap-1.5 flex-nowrap">
         {rowItems.map((q, idx) => {
           const qIndex = startIdxOffset + idx + 1;
           const qLabel = isFullTest ? q.id : qIndex;
@@ -373,7 +373,7 @@ const ExamTaker = () => {
             <button
               key={q.id}
               onClick={() => handleMapClick(partIndex, q.id)}
-              className={`w-5 h-5 text-[8px] font-bold flex items-center justify-center rounded transition-all border shrink-0 ${getButtonColorClass(q, isActive)}`}
+              className={`w-7 h-7 text-[10px] font-extrabold flex items-center justify-center rounded-lg transition-all border shrink-0 ${getButtonColorClass(q, isActive)}`}
               title={`Câu ${qLabel}`}
             >
               {qLabel}
@@ -384,7 +384,7 @@ const ExamTaker = () => {
     );
 
     return (
-      <div className="flex flex-col gap-1 min-w-0">
+      <div className="flex flex-col gap-1.5 min-w-0">
         {renderRow(row1, 0)}
         {renderRow(row2, half)}
       </div>
@@ -582,9 +582,9 @@ const ExamTaker = () => {
 
         {/* Top Audio Player Bar if isListening and activeAudioUrl exists */}
         {activeAudioUrl && (
-          <div className="px-6 pt-4 shrink-0 bg-transparent">
-            <div className="w-full mx-auto bg-indigo-50 border border-indigo-200/85 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4 shrink-0">
+          <div className="px-6 pt-4 shrink-0 bg-transparent animate-fade-in">
+            <div className="w-full mx-auto bg-indigo-50 border border-indigo-200/85 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-6">
+              <div className="flex items-center gap-4 flex-grow max-w-[600px] shrink-0">
                 <div className="flex items-center gap-2 text-indigo-900 shrink-0">
                   <span className="material-symbols-outlined text-lg font-bold">headphones</span>
                   <span className="text-[10px] font-extrabold uppercase tracking-wider">
@@ -594,7 +594,7 @@ const ExamTaker = () => {
                   </span>
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 </div>
-                <div className={`${useCountdown ? 'w-[280px] md:w-[350px] shrink-0' : 'flex-grow max-w-xl'}`}>
+                <div className="flex-grow">
                   {activeAudioUrl.includes('drive.google.com') || activeAudioUrl.includes('docs.google.com') ? (
                     <iframe
                       key={activeAudioUrl}
@@ -615,18 +615,33 @@ const ExamTaker = () => {
               </div>
 
               {useCountdown && (
-                <div className="flex items-center gap-6 ml-auto min-w-0">
+                <div className="flex items-center gap-4 ml-auto min-w-0 shrink-0">
+                  {/* Submit Button next to Timer */}
+                  <button 
+                    onClick={() => isSubmitted ? setShowResult(true) : handleSubmit(true, false)}
+                    className={`px-4 py-2.5 font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow active:scale-97 flex items-center justify-center gap-1.5 shrink-0 ${
+                      isSubmitted 
+                        ? 'bg-emerald-650 hover:bg-emerald-750 text-white' 
+                        : 'bg-[#001e40] hover:bg-[#003366] text-white'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-sm font-bold">
+                      {isSubmitted ? 'bar_chart' : 'done_all'}
+                    </span> 
+                    <span>{isSubmitted ? 'XEM ĐIỂM' : 'NỘP BÀI'}</span>
+                  </button>
+
                   {/* Countdown Timer */}
-                  <div className="flex flex-col items-center justify-center bg-white border border-indigo-150 px-3 py-1 rounded-xl shadow-sm min-w-[80px] shrink-0">
-                    <span className="text-[8px] font-extrabold text-slate-400 uppercase tracking-wider">Thời gian</span>
-                    <span className={`font-mono text-xs font-bold text-[#001e40] ${timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
+                  <div className="flex flex-col items-center justify-center bg-white border border-indigo-150 px-4 py-2 rounded-xl shadow-sm min-w-[95px] shrink-0">
+                    <span className="text-[9px] font-extrabold text-slate-455 uppercase tracking-wider">Thời gian</span>
+                    <span className={`font-mono text-sm font-bold text-[#001e40] ${timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
                       {formatTimer()}
                     </span>
                   </div>
                   
                   {/* Compact Answer Map */}
-                  <div className="flex flex-col gap-1 max-w-[320px] md:max-w-[420px] min-w-0">
-                    <span className="text-[8px] font-extrabold text-slate-400 uppercase tracking-wider">Bản đồ câu hỏi</span>
+                  <div className="flex flex-col gap-1 max-w-[420px] lg:max-w-[580px] min-w-0">
+                    <span className="text-[9px] font-extrabold text-slate-455 uppercase tracking-wider">Bản đồ câu hỏi</span>
                     <div className="overflow-x-auto pr-1 py-0.5 custom-scrollbar">
                       {renderCompactQuestionMap()}
                     </div>
@@ -689,14 +704,33 @@ const ExamTaker = () => {
             {/* Compact Countdown & Map for reading/writing tests with a time limit (no top audio bar) */}
             {!activeAudioUrl && useCountdown && (
               <div className="bg-slate-50 border border-slate-200 p-3 rounded-2xl flex items-center justify-between shadow-sm shrink-0 gap-4 mb-4">
-                <div className="flex flex-col items-center justify-center bg-white border border-slate-150 px-2 py-1 rounded-xl shadow-sm min-w-[70px] shrink-0">
-                  <span className="text-[7px] font-extrabold text-slate-400 uppercase tracking-wider">Thời gian</span>
-                  <span className={`font-mono text-[11px] font-bold text-[#001e40] ${timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
-                    {formatTimer()}
-                  </span>
+                <div className="flex items-center gap-3 shrink-0">
+                  {/* Submit Button next to Timer */}
+                  <button 
+                    onClick={() => isSubmitted ? setShowResult(true) : handleSubmit(true, false)}
+                    className={`px-3 py-2.5 font-extrabold rounded-xl text-[10px] uppercase tracking-wider transition-all shadow active:scale-97 flex items-center justify-center gap-1.5 shrink-0 ${
+                      isSubmitted 
+                        ? 'bg-emerald-650 hover:bg-emerald-750 text-white' 
+                        : 'bg-[#001e40] hover:bg-[#003366] text-white'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-xs font-bold">
+                      {isSubmitted ? 'bar_chart' : 'done_all'}
+                    </span> 
+                    <span>{isSubmitted ? 'XEM ĐIỂM' : 'NỘP BÀI'}</span>
+                  </button>
+
+                  {/* Countdown Timer */}
+                  <div className="flex flex-col items-center justify-center bg-white border border-slate-150 px-3 py-2 rounded-xl shadow-sm min-w-[90px] shrink-0">
+                    <span className="text-[8px] font-extrabold text-slate-455 uppercase tracking-wider">Thời gian</span>
+                    <span className={`font-mono text-xs font-bold text-[#001e40] ${timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
+                      {formatTimer()}
+                    </span>
+                  </div>
                 </div>
+                
                 <div className="flex-grow min-w-0">
-                  <span className="block text-[7px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Bản đồ câu hỏi</span>
+                  <span className="block text-[9px] font-extrabold text-slate-455 uppercase tracking-wider mb-1">Bản đồ câu hỏi</span>
                   <div className="overflow-x-auto pr-1 py-0.5 custom-scrollbar">
                     {renderCompactQuestionMap()}
                   </div>
@@ -978,24 +1012,6 @@ const ExamTaker = () => {
               )}
             </div>
 
-            {/* Submit button at the bottom of Column 2 when sidebar is removed in 7/3 layout */}
-            {useCountdown && (
-              <div className="pt-3 border-t border-slate-150 mt-3 shrink-0">
-                <button 
-                  onClick={() => isSubmitted ? setShowResult(true) : handleSubmit(true, false)}
-                  className={`w-full py-2.5 font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow active:scale-97 flex items-center justify-center gap-1.5 ${
-                    isSubmitted 
-                      ? 'bg-emerald-650 hover:bg-emerald-750 text-white' 
-                      : 'bg-[#001e40] hover:bg-[#003366] text-white'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-xs">
-                    {isSubmitted ? 'bar_chart' : 'done_all'}
-                  </span> 
-                  <span>{isSubmitted ? 'XEM LẠI ĐIỂM SỐ' : 'NỘP BÀI'}</span>
-                </button>
-              </div>
-            )}
           </div>
 
           {/* COLUMN 3: STICKY CONTROL & NAVIGATION SIDEBAR (Right) */}
