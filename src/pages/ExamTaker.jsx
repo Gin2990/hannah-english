@@ -596,13 +596,24 @@ const ExamTaker = () => {
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 </div>
                 <div className="flex-grow flex items-center">
-                  <audio
-                    key={activeAudioUrl}
-                    src={convertGoogleDriveAudioLink(activeAudioUrl)}
-                    controls
-                    className="w-full h-9 outline-none"
-                    controlsList="nodownload"
-                  />
+                  {activeAudioUrl.includes('drive.google.com') || activeAudioUrl.includes('docs.google.com') ? (
+                    <div className="w-full overflow-hidden rounded-xl h-[40px] flex items-center bg-transparent relative">
+                      <iframe
+                        key={activeAudioUrl}
+                        src={convertGoogleDrivePdfLink(activeAudioUrl)}
+                        className="min-w-[calc(100%+44px)] w-[calc(100%+44px)] h-[48px] border-0 bg-transparent shrink-0"
+                        allow="autoplay"
+                      />
+                    </div>
+                  ) : (
+                    <audio
+                      key={activeAudioUrl}
+                      src={convertGoogleDriveAudioLink(activeAudioUrl)}
+                      controls
+                      className="w-full h-9 outline-none"
+                      controlsList="nodownload"
+                    />
+                  )}
                 </div>
               </div>
 
@@ -1169,13 +1180,24 @@ const ExamTaker = () => {
                 </div>
                 
                 <div className="flex-grow w-full flex items-center">
-                  <audio 
-                    key={activeAudioUrl}
-                    src={convertGoogleDriveAudioLink(activeAudioUrl)} 
-                    controls 
-                    className="w-full h-9 rounded-lg outline-none cursor-pointer"
-                    controlsList="nodownload"
-                  />
+                  {activeAudioUrl.includes('drive.google.com') || activeAudioUrl.includes('docs.google.com') ? (
+                    <div className="w-full overflow-hidden rounded-xl h-[40px] flex items-center bg-transparent relative">
+                      <iframe
+                        key={activeAudioUrl}
+                        src={convertGoogleDrivePdfLink(activeAudioUrl)}
+                        className="min-w-[calc(100%+44px)] w-[calc(100%+44px)] h-[48px] border-0 bg-transparent shrink-0"
+                        allow="autoplay"
+                      />
+                    </div>
+                  ) : (
+                    <audio 
+                      key={activeAudioUrl}
+                      src={convertGoogleDriveAudioLink(activeAudioUrl)} 
+                      controls 
+                      className="w-full h-9 rounded-lg outline-none cursor-pointer"
+                      controlsList="nodownload"
+                    />
+                  )}
                 </div>
               </div>
             )}
