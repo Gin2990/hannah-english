@@ -341,7 +341,7 @@ const ExamTaker = () => {
     setShowResult(true);
   };
 
-  const renderCompactQuestionMap = () => {
+  const renderCompactQuestionMap = (isReading = false) => {
     let allQuestionsList = [];
     if (exam?.test_parts && exam.test_parts.length > 0) {
       exam.test_parts.forEach(p => {
@@ -357,8 +357,12 @@ const ExamTaker = () => {
     const row1 = allQuestionsList.slice(0, half);
     const row2 = allQuestionsList.slice(half);
 
+    const btnClass = isReading 
+      ? 'w-[22px] h-[22px] text-[8.5px] rounded-md' 
+      : 'w-7 h-7 text-[10px] font-extrabold rounded-lg';
+
     const renderRow = (rowItems, startIdxOffset) => (
-      <div className="flex gap-1.5 flex-nowrap">
+      <div className={`flex ${isReading ? 'gap-1' : 'gap-1.5'} flex-nowrap`}>
         {rowItems.map((q, idx) => {
           const qIndex = startIdxOffset + idx + 1;
           const qLabel = isFullTest ? q.id : qIndex;
@@ -373,7 +377,7 @@ const ExamTaker = () => {
             <button
               key={q.id}
               onClick={() => handleMapClick(partIndex, q.id)}
-              className={`w-7 h-7 text-[10px] font-extrabold flex items-center justify-center rounded-lg transition-all border shrink-0 ${getButtonColorClass(q, isActive)}`}
+              className={`${btnClass} flex items-center justify-center transition-all border shrink-0 ${getButtonColorClass(q, isActive)}`}
               title={`Câu ${qLabel}`}
             >
               {qLabel}
@@ -384,7 +388,7 @@ const ExamTaker = () => {
     );
 
     return (
-      <div className="flex flex-col gap-1.5 min-w-0">
+      <div className={`flex flex-col ${isReading ? 'gap-1' : 'gap-1.5'} min-w-0`}>
         {renderRow(row1, 0)}
         {renderRow(row2, half)}
       </div>
@@ -683,35 +687,35 @@ const ExamTaker = () => {
                 )}
 
                 {/* Right side: Controls (Submit button, Timer, Map) */}
-                <div className="flex items-center gap-4 min-w-0 shrink-0">
+                <div className="flex items-center gap-2.5 min-w-0 shrink-0">
                   {/* Submit Button */}
                   <button 
                     onClick={() => isSubmitted ? setShowResult(true) : handleSubmit(true, false)}
-                    className={`px-4 py-2.5 font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow active:scale-97 flex items-center justify-center gap-1.5 shrink-0 ${
+                    className={`px-3 py-2 font-extrabold rounded-xl text-[10px] uppercase tracking-wider transition-all shadow active:scale-97 flex items-center justify-center gap-1 shrink-0 ${
                       isSubmitted 
                         ? 'bg-emerald-650 hover:bg-emerald-750 text-white' 
                         : 'bg-[#001e40] hover:bg-[#003366] text-white'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-sm font-bold">
+                    <span className="material-symbols-outlined text-[13px] font-bold">
                       {isSubmitted ? 'bar_chart' : 'done_all'}
                     </span> 
                     <span>{isSubmitted ? 'XEM ĐIỂM' : 'NỘP BÀI'}</span>
                   </button>
 
                   {/* Countdown Timer */}
-                  <div className="flex flex-col items-center justify-center bg-white border border-indigo-150 px-4 py-2 rounded-xl shadow-sm min-w-[95px] shrink-0">
-                    <span className="text-[9px] font-extrabold text-slate-455 uppercase tracking-wider">Thời gian</span>
-                    <span className={`font-mono text-sm font-bold text-[#001e40] ${timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
+                  <div className="flex flex-col items-center justify-center bg-white border border-indigo-150 px-2 py-1.5 rounded-xl shadow-sm min-w-[75px] shrink-0">
+                    <span className="text-[8px] font-extrabold text-slate-455 uppercase tracking-wider">Thời gian</span>
+                    <span className={`font-mono text-xs font-bold text-[#001e40] ${timeRemaining <= 300 ? 'text-red-500 animate-pulse' : ''}`}>
                       {formatTimer()}
                     </span>
                   </div>
                   
                   {/* Compact Answer Map */}
-                  <div className="flex flex-col gap-1 min-w-max">
-                    <span className="text-[9px] font-extrabold text-slate-455 uppercase tracking-wider">Bản đồ câu hỏi</span>
+                  <div className="flex flex-col gap-0.5 min-w-max">
+                    <span className="text-[8px] font-extrabold text-slate-455 uppercase tracking-wider">Bản đồ câu hỏi</span>
                     <div className="overflow-x-auto pr-1 py-0.5 custom-scrollbar">
-                      {renderCompactQuestionMap()}
+                      {renderCompactQuestionMap(true)}
                     </div>
                   </div>
                 </div>
