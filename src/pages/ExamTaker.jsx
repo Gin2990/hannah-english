@@ -532,12 +532,9 @@ const ExamTaker = () => {
                 {hasPassageContent ? 'menu_book' : 'picture_as_pdf'}
               </span>
               <div>
-                <h1 className="font-extrabold text-sm text-[#001e40] truncate max-w-xs sm:max-w-md">{exam.title}</h1>
-                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                  {exam.type === 'homework' 
-                    ? (hasPassageContent ? 'Luyện tập rèn luyện (Study4 style)' : 'Luyện tập PDF + Phiếu câu hỏi') 
-                    : (hasPassageContent ? 'Thi thử trực tuyến (Study4 style)' : 'Thi thử PDF + Phiếu câu hỏi')}
-                </p>
+                <span className="font-extrabold text-sm text-[#001e40] truncate max-w-xs sm:max-w-md block" style={{ letterSpacing: 'normal' }}>
+                  {exam.title}
+                </span>
               </div>
             </div>
             
@@ -1142,10 +1139,9 @@ const ExamTaker = () => {
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-[#001e40] text-2xl font-bold">timer</span>
             <div>
-              <h1 className="font-extrabold text-sm text-[#001e40] truncate max-w-xs sm:max-w-md">{exam?.title}</h1>
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                {exam?.type === 'homework' ? 'Chế độ: Bài tập ôn luyện' : 'Chế độ: Thi thử Full Test'}
-              </p>
+              <span className="font-extrabold text-sm text-[#001e40] truncate max-w-xs sm:max-w-md block" style={{ letterSpacing: 'normal' }}>
+                {exam?.title}
+              </span>
             </div>
           </div>
           
