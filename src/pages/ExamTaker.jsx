@@ -180,7 +180,7 @@ const ExamTaker = () => {
         if (!resultErr && resultData) {
           setStudentAnswers(resultData.answers || {});
           setIsSubmitted(true);
-          setShowResult(true);
+          setShowResult(false);
           setScoreData({
             score: resultData.score,
             total: resultData.total_questions,
